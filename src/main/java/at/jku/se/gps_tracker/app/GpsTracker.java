@@ -1,13 +1,7 @@
 package at.jku.se.gps_tracker.app;
 
-import java.io.File;
-import java.util.List;
-
-import org.apache.commons.io.FileUtils;
-
 import at.jku.se.gps_tracker.model.DataModel;
 import at.jku.se.gps_tracker.model.ImportExport;
-import at.jku.se.gps_tracker.model.Track;
 import at.jku.se.gps_tracker.controller.TrackManagerController;
 import javafx.application.Application;
 import javafx.fxml.FXMLLoader;
@@ -24,9 +18,10 @@ public class GpsTracker extends Application implements ImportExport {
 	public void start(Stage primaryStage) throws Exception {
 		// TODO Auto-generated method stub
 		// folder for complete testing = C:\\Users\\Ozan\\Desktop\\WINF-Studium\\4. Semester\\PR - Software Engineering\\Theorie\\test data
+		
 		DataModel model = new DataModel();
 		FXMLLoader loader = new FXMLLoader(getClass().getResource("/fxml/TrackManager.fxml"));
-		TrackManagerController start = new TrackManagerController(model, primaryStage);
+		TrackManagerController start = new TrackManagerController(model);
 		 
 		loader.setController(start);
 		 

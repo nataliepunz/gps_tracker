@@ -2,13 +2,8 @@ package at.jku.se.gps_tracker.model;
 
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.OutputStream;
-import java.io.StringWriter;
-import java.io.Writer;
 import java.time.Duration;
 import java.time.Instant;
 import java.time.LocalDate;
@@ -16,49 +11,26 @@ import java.time.LocalTime;
 import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.List;
-
 import org.apache.commons.io.FilenameUtils;
-import org.w3c.dom.Document;
-import org.w3c.dom.Element;
-import org.xml.sax.SAXException;
-
-import javafx.event.Event;
-import javafx.geometry.Pos;
-import javafx.scene.Scene;
-import javafx.scene.control.Button;
-import javafx.scene.control.Label;
-import javafx.scene.control.TextField;
-import javafx.scene.layout.BorderPane;
-import javafx.scene.layout.VBox;
-import javafx.scene.text.Text;
-import javafx.stage.Stage;
-
-import javax.xml.parsers.DocumentBuilder;
-import javax.xml.parsers.DocumentBuilderFactory;
+import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
 import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.stream.XMLInputFactory;
-import javax.xml.stream.XMLOutputFactory;
 import javax.xml.stream.XMLStreamException;
 import javax.xml.stream.XMLStreamReader;
-import javax.xml.stream.XMLStreamWriter;
-import javax.xml.transform.OutputKeys;
-import javax.xml.transform.Transformer;
-import javax.xml.transform.TransformerConfigurationException;
 import javax.xml.transform.TransformerException;
-import javax.xml.transform.TransformerFactory;
 import javax.xml.transform.TransformerFactoryConfigurationError;
-import javax.xml.transform.dom.DOMSource;
-import javax.xml.transform.stream.StreamResult;
+
 
 public interface ImportExport {
 	
-	default List<Track> updateTracks(List<File> files){
-		List<Track> toBeReturnedTracks = new ArrayList<>();
+	default ObservableList<Track> updateTracks(List<File> files){
+		ObservableList<Track> toBeReturnedTracks = FXCollections.observableArrayList();
 		for(File file : files) {
 			if(FilenameUtils.getExtension(file.getAbsolutePath()).equals("gpx")) {
 				try {
 					toBeReturnedTracks.add(readGPXTrack(file.getAbsolutePath()));
-				} catch (IOException | XMLStreamException | ParserConfigurationException | SAXException | TransformerFactoryConfigurationError | TransformerException e) {
+				} catch (IOException | XMLStreamException | ParserConfigurationException | TransformerFactoryConfigurationError | TransformerException e) {
 					// TODO Auto-generated catch block
 					e.printStackTrace();
 				}
@@ -67,7 +39,7 @@ public interface ImportExport {
 		return toBeReturnedTracks;
 	}
 	
-	default Track readGPXTrack(String file) throws XMLStreamException, ParserConfigurationException, SAXException, IOException, TransformerFactoryConfigurationError, TransformerException {
+	default Track readGPXTrack(String file) throws XMLStreamException, ParserConfigurationException, IOException, TransformerFactoryConfigurationError, TransformerException {
 		// for Track itself
 		List<TrackPoint> helpList = new ArrayList<>();
 		LocalDate trackDate = null;
@@ -76,7 +48,6 @@ public interface ImportExport {
 		double trackDistance = 0;
 		int totalElevation = 0;
 		Duration totalDuration = Duration.ofSeconds(0);
-		String activity = null;
 		
 		// for TrackPoints themselves
 		int trackPointNr = 1;
@@ -105,10 +76,12 @@ public interface ImportExport {
 		while (streamReader.hasNext()) {
 			if (streamReader.isStartElement()) {
 				switch (streamReader.getLocalName()) {
+					/*
 					case "gpx":{
 						if(streamReader.getAttributeValue(null,"activity")!=null) activity = streamReader.getAttributeValue(null,"activity");
 						break;
 					}
+					*/
 					case "trkpt": {
 						elevation = 0;
 						elevationChange = 0;
@@ -178,9 +151,9 @@ public interface ImportExport {
 				
 		streamReader.close();
 		
-		if (activity==null) activity = chooseAndWriteActivity(file);
+		//if (activity==null) activity = chooseAndWriteActivity(file);
 		
-		return new Track(activity, FilenameUtils.getBaseName(file), trackDate, trackTime, trackDistance, totalDuration, totalElevation, helpList);
+		return new Track(/* activity, */ FilenameUtils.getBaseName(file), trackDate, trackTime, trackDistance, totalDuration, totalElevation, helpList);
 	}
 	
 	
@@ -204,7 +177,7 @@ public interface ImportExport {
 
 	    return Math.sqrt(distance);
 	}
-	
+	/*
 	public static String chooseAndWriteActivity(String file) throws XMLStreamException, ParserConfigurationException, SAXException, IOException, TransformerFactoryConfigurationError, TransformerException {
 		Stage chooser = new Stage();
 		chooser.setTitle("Wählen Sie eine Aktivität aus für diesen GPS-Track");
@@ -236,5 +209,5 @@ public interface ImportExport {
 		
 		return choosenActivity.getText();
 	}
-	
+	*/
 }

@@ -7,7 +7,7 @@ import java.util.List;
 
 public class Track {
 	
-	private String activity;
+	//private String activity;
 	private String name;
 	private LocalDate date;
 	private LocalTime startTime;
@@ -20,29 +20,27 @@ public class Track {
     private int elevation;
     private List<TrackPoint> trackPoints;
     
-    public Track(String activity, String name, LocalDate date, LocalTime startTime, double distance, Duration duration, int elevation, List<TrackPoint> trackPoints) {
-		this.activity = activity;
+    public Track(/*String activity, */String name, LocalDate date, LocalTime startTime, double distance, Duration duration, int elevation, List<TrackPoint> trackPoints) {
+		//this.activity = activity;
 		this.name = name;
 		this.date = date;
 		this.startTime = startTime;
 		this.distance = distance;
 		this.duration = duration;
-		this.pace = pace;
-		this.speed = speed;
 		this.elevation = elevation;
 		this.trackPoints = trackPoints;
 	}
     
-    public Track(String activity, String name, LocalDate date, LocalTime startTime, double distance, Duration duration, int averageBPM, int maxBPM, int elevation, List<TrackPoint> trackPoints) {
-		this(activity,name, date, startTime, distance, duration, elevation, trackPoints);
+    public Track(/*String activity, */String name, LocalDate date, LocalTime startTime, double distance, Duration duration, int averageBPM, int maxBPM, int elevation, List<TrackPoint> trackPoints) {
+		this(/* activity, */name, date, startTime, distance, duration, elevation, trackPoints);
 		this.averageBPM = averageBPM;
 		this.maxBPM = maxBPM;
 	}
-
+    /*
 	public String getActivity() {
 		return activity;
 	}
-
+	*/
 	public String getName() {
 		return name;
 	}
@@ -79,7 +77,7 @@ public class Track {
 	
 	@Override
 	public String toString() {
-		return this.activity;
+		return this.name;
 	}
 
     }
