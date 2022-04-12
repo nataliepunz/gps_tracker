@@ -5,7 +5,9 @@ import java.time.LocalDate;
 import java.time.LocalTime;
 import java.util.List;
 
-public class Track {
+import javafx.beans.property.SimpleStringProperty;
+
+public class Track implements Visualization {
 	
 	//private String activity;
 	private String name;

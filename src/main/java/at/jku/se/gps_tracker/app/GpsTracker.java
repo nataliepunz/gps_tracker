@@ -7,6 +7,7 @@ import javafx.application.Application;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
+import javafx.scene.image.Image;
 import javafx.stage.Stage;
 
 public class GpsTracker extends Application implements ImportExport {
@@ -28,6 +29,7 @@ public class GpsTracker extends Application implements ImportExport {
 		Parent root = loader.load();
 		 
 		primaryStage.setTitle("TrackStar");
+		primaryStage.getIcons().add(new Image(getClass().getResourceAsStream("/icon/icon.png")));
 		primaryStage.setScene(new Scene(root,800,600));
 		primaryStage.show();
 		primaryStage.setOnCloseRequest(c -> System.exit(1));

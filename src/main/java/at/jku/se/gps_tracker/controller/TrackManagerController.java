@@ -2,10 +2,14 @@ package at.jku.se.gps_tracker.controller;
 
 import java.io.IOException;
 import java.net.URL;
+import java.time.LocalDate;
+import java.time.LocalTime;
+import java.util.List;
 import java.util.ResourceBundle;
 
 import at.jku.se.gps_tracker.model.DataModel;
 import at.jku.se.gps_tracker.model.Track;
+import at.jku.se.gps_tracker.model.Visualization;
 import javafx.collections.FXCollections;
 import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
@@ -15,6 +19,9 @@ import javafx.fxml.FXMLLoader;
 import javafx.fxml.Initializable;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
+import javafx.scene.control.MenuBar;
+import javafx.scene.control.TableColumn;
+import javafx.scene.control.TableView;
 import javafx.stage.Stage;
 
 public class TrackManagerController implements Initializable {
@@ -57,6 +64,11 @@ public class TrackManagerController implements Initializable {
 		System.out.println("test nach");
 	}
 	
+	@FXML
+	private void closeApplication(ActionEvent event) {
+		System.exit(1);
+	}
+	
 	private void setUpLists() {
 		trackList = FXCollections.observableArrayList(model.getTracks());
 		model.getTracks().addListener((ListChangeListener<? super Track>) c -> {
@@ -83,6 +95,9 @@ public class TrackManagerController implements Initializable {
 	        setUpMenuItems();
 	    });
 	}
+	
+	@FXML
+	private MenuBar menubar;
 	
 	private void setUpMenuItems() {
 		
