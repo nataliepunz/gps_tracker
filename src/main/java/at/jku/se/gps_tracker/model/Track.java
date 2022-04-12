@@ -20,8 +20,7 @@ public class Track {
     private int elevation;
     private List<TrackPoint> trackPoints;
     
-    public Track(String activity, String name, LocalDate date, LocalTime startTime, double distance, Duration duration,
-			double pace, double speed, int elevation, List<TrackPoint> trackPoints) {
+    public Track(String activity, String name, LocalDate date, LocalTime startTime, double distance, Duration duration, int elevation, List<TrackPoint> trackPoints) {
 		this.activity = activity;
 		this.name = name;
 		this.date = date;
@@ -34,9 +33,8 @@ public class Track {
 		this.trackPoints = trackPoints;
 	}
     
-    public Track(String activity, String name, LocalDate date, LocalTime startTime, double distance, Duration duration,
-			double pace, double speed, int averageBPM, int maxBPM, int elevation, List<TrackPoint> trackPoints) {
-		this(activity,name, date, startTime, distance, duration, pace, speed, elevation, trackPoints);
+    public Track(String activity, String name, LocalDate date, LocalTime startTime, double distance, Duration duration, int averageBPM, int maxBPM, int elevation, List<TrackPoint> trackPoints) {
+		this(activity,name, date, startTime, distance, duration, elevation, trackPoints);
 		this.averageBPM = averageBPM;
 		this.maxBPM = maxBPM;
 	}
