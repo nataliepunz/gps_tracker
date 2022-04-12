@@ -31,6 +31,13 @@ public class Track implements Visualization {
 		this.duration = duration;
 		this.elevation = elevation;
 		this.trackPoints = trackPoints;
+		if(distance==0 || duration.getSeconds()==0) {
+			this.speed = 0;
+			this.pace = 0;
+		} else {
+			this.speed = (double) distance/duration.getSeconds();
+			this.pace = (double) duration.getSeconds()/distance;
+		}
 	}
     
     public Track(/*String activity, */String name, LocalDate date, LocalTime startTime, double distance, Duration duration, int averageBPM, int maxBPM, int elevation, List<TrackPoint> trackPoints) {

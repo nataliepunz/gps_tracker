@@ -9,14 +9,14 @@ import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 
 public class DataModel implements ImportExport {
-	private ObservableList<Track> tracks;
+	private ObservableList<Track> trackList;
 	private String currentDirectory;
 	private ObservableList<String> directoryFolders;
 	private String currentDirectoryFolder;
 	private String[] extensions;
 	
 	public DataModel() {
-		tracks = FXCollections.observableArrayList();
+		trackList = FXCollections.observableArrayList();
 		extensions = new String[] { "gpx", "tcx" };
 	}
 	
@@ -37,13 +37,13 @@ public class DataModel implements ImportExport {
 	public void updateModel() {
 		List<File> files = (List<File>) FileUtils.listFiles(new File(currentDirectory+"\\"+currentDirectoryFolder), extensions, true);
 		long start = System.nanoTime();
-		tracks = updateTracks(files);
+		updateTracks(trackList,files);
 		long end = System.nanoTime();
-		System.out.println("Zeit fürs Parsen von "+ tracks.size() +" gpx-Dateien: "+(double) (end-start)/1000000);
+		System.out.println("Zeit fürs Parsen von "+ trackList.size() +" gpx-Dateien: "+(double) (end-start)/1000000);
 	}
 	
 	public ObservableList<Track> getTracks(){
-		return this.tracks;
+		return this.trackList;
 	}
 	
 	public ObservableList<String> getDirectoryFolders() {

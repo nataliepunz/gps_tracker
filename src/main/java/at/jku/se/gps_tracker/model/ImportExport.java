@@ -12,8 +12,6 @@ import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.List;
 import org.apache.commons.io.FilenameUtils;
-import javafx.collections.FXCollections;
-import javafx.collections.ObservableList;
 import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.stream.XMLInputFactory;
 import javax.xml.stream.XMLStreamException;
@@ -24,19 +22,17 @@ import javax.xml.transform.TransformerFactoryConfigurationError;
 
 public interface ImportExport {
 	
-	default ObservableList<Track> updateTracks(List<File> files){
-		ObservableList<Track> toBeReturnedTracks = FXCollections.observableArrayList();
+	default void updateTracks(List<Track> trackList, List<File> files){
 		for(File file : files) {
 			if(FilenameUtils.getExtension(file.getAbsolutePath()).equals("gpx")) {
 				try {
-					toBeReturnedTracks.add(readGPXTrack(file.getAbsolutePath()));
+					trackList.add(readGPXTrack(file.getAbsolutePath()));
 				} catch (IOException | XMLStreamException | ParserConfigurationException | TransformerFactoryConfigurationError | TransformerException e) {
 					// TODO Auto-generated catch block
 					e.printStackTrace();
 				}
 			}
 		}
-		return toBeReturnedTracks;
 	}
 	
 	default Track readGPXTrack(String file) throws XMLStreamException, ParserConfigurationException, IOException, TransformerFactoryConfigurationError, TransformerException {

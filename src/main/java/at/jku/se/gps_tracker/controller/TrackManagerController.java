@@ -69,6 +69,12 @@ public class TrackManagerController implements Initializable {
 		System.exit(1);
 	}
 	
+	//TODO je nach Index entsprechend holen! (erster Eintrag ausgewählt --> hier erste (bzw 0 auswählen!)
+	@FXML
+	private void changeCategory(ActionEvent event) {
+		model.setCurrentDirectoryFolder(0);
+	}
+	
 	private void setUpLists() {
 		trackList = FXCollections.observableArrayList(model.getTracks());
 		model.getTracks().addListener((ListChangeListener<? super Track>) c -> {
@@ -102,6 +108,10 @@ public class TrackManagerController implements Initializable {
 	private void setUpMenuItems() {
 		
 	}
+	
+	@FXML
+	private TableView mainTable;
+	//Implementierungstipps: https://stackoverflow.com/a/45013059
 
 	@Override
 	public void initialize(URL arg0, ResourceBundle arg1) {
