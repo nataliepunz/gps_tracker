@@ -1,6 +1,8 @@
 package at.jku.se.gps_tracker.model;
 
 import java.io.File;
+import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 
 import org.apache.commons.io.FileUtils;
@@ -14,6 +16,7 @@ public class DataModel implements ImportExport {
 	private ObservableList<String> directoryFolders;
 	private String currentDirectoryFolder;
 	private String[] extensions;
+	private HashSet<String> readFiles;
 	
 	public DataModel() {
 		trackList = FXCollections.observableArrayList();
@@ -25,6 +28,7 @@ public class DataModel implements ImportExport {
 		this.currentDirectory = currentDirectory;
 		this.directoryFolders = FXCollections.observableArrayList(new File(this.currentDirectory).list((dir, name) -> new File(dir, name).isDirectory()));
 		if(!directoryFolders.isEmpty()){
+			readFiles = new HashSet<>();
 			setCurrentDirectoryFolder(0);
 		}
 	}
@@ -37,12 +41,12 @@ public class DataModel implements ImportExport {
 	public void updateModel() {
 		List<File> files = (List<File>) FileUtils.listFiles(new File(currentDirectory+"\\"+currentDirectoryFolder), extensions, true);
 		long start = System.nanoTime();
-		updateTracks(trackList,files);
+		updateTracks(trackList,files,readFiles);
 		long end = System.nanoTime();
 		System.out.println("Zeit fürs Parsen von "+ trackList.size() +" gpx-Dateien: "+(double) (end-start)/1000000);
 	}
 	
-	public ObservableList<Track> getTracks(){
+	public ObservableList<Track> getTrackList(){
 		return this.trackList;
 	}
 	

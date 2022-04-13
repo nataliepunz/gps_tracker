@@ -29,6 +29,7 @@ public class StartViewController {
         window.setMaxHeight(200);
         window.setMaxWidth(200);
         window.setAlwaysOnTop(true);
+        window.setOnCloseRequest(c -> System.exit(1));
         File selectedDirectory = directoryChooser.showDialog(window);
         this.model.setCurrrentDirectory(selectedDirectory.getAbsolutePath());
 	}

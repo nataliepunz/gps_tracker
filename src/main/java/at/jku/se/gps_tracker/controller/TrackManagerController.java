@@ -76,8 +76,8 @@ public class TrackManagerController implements Initializable {
 	}
 	
 	private void setUpLists() {
-		trackList = FXCollections.observableArrayList(model.getTracks());
-		model.getTracks().addListener((ListChangeListener<? super Track>) c -> {
+		trackList = FXCollections.observableArrayList(model.getTrackList());
+		model.getTrackList().addListener((ListChangeListener<? super Track>) c -> {
 	        while (c.next()) {
 	            if (c.wasAdded()) {
 	            	trackList.addAll(c.getFrom(), c.getAddedSubList());

@@ -2,6 +2,7 @@ package at.jku.se.gps_tracker.model;
 
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.time.Duration;
@@ -10,6 +11,7 @@ import java.time.LocalDate;
 import java.time.LocalTime;
 import java.time.ZoneId;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import org.apache.commons.io.FilenameUtils;
 import javax.xml.parsers.ParserConfigurationException;
@@ -22,12 +24,19 @@ import javax.xml.transform.TransformerFactoryConfigurationError;
 
 public interface ImportExport {
 	
-	default void updateTracks(List<Track> trackList, List<File> files){
+	default void updateTracks(List<Track> trackList, List<File> files, HashSet<String> readFiles){
 		for(File file : files) {
 			if(FilenameUtils.getExtension(file.getAbsolutePath()).equals("gpx")) {
 				try {
 					trackList.add(readGPXTrack(file.getAbsolutePath()));
 				} catch (IOException | XMLStreamException | ParserConfigurationException | TransformerFactoryConfigurationError | TransformerException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+			} else if (FilenameUtils.getExtension(file.getAbsolutePath()).equals("tcx")) {
+				try {
+					trackList.add(readTCXTrack(file.getAbsolutePath()));
+				} catch (IOException | XMLStreamException e) {
 					// TODO Auto-generated catch block
 					e.printStackTrace();
 				}
@@ -83,8 +92,8 @@ public interface ImportExport {
 						elevationChange = 0;
 						timeRecorded = null;
 						timeNeeded = null;
-						latitude = Double.valueOf(streamReader.getAttributeValue(null, "lat"));
-						longtitude = Double.valueOf(streamReader.getAttributeValue(null, "lon"));
+						latitude = Double.parseDouble(streamReader.getAttributeValue(null, "lat"));
+						longtitude = Double.parseDouble(streamReader.getAttributeValue(null, "lon"));
 						if(!prevCoordinatesSet) {
 							prevLatitude = latitude;
 							prevLongtitude = longtitude;
@@ -95,7 +104,7 @@ public interface ImportExport {
 							if (streamReader.isStartElement()) {
 								switch (streamReader.getLocalName()) {
 									case "ele":{
-										elevation = Double.valueOf(streamReader.getElementText());
+										elevation = Double.parseDouble(streamReader.getElementText());
 										if(!prevElevationSet) {
 											prevElevation = elevation;
 											prevElevationSet=true;
@@ -206,4 +215,59 @@ public interface ImportExport {
 		return choosenActivity.getText();
 	}
 	*/
+	
+	default Track readTCXTrack (String file) throws XMLStreamException, FileNotFoundException {
+		
+		List<TrackPoint> helpList = new ArrayList<TrackPoint>();
+		Instant startTime = null;
+		LocalDate trackDate = null;
+		LocalTime trackTime = null;
+		boolean trackDetailSet = false;
+		double trackDistance = 0;
+		int totalElevation = 0;
+		Duration totalDuration = Duration.ofSeconds(0);
+		
+		XMLInputFactory inputFactory = XMLInputFactory.newInstance();
+		InputStream in = new FileInputStream(file);
+		XMLStreamReader streamReader = inputFactory.createXMLStreamReader(in);
+		
+		while (streamReader.hasNext()) {
+			if (streamReader.isStartElement()) {
+				System.out.println(streamReader.getLocalName());
+				switch (streamReader.getLocalName()) {
+					case "Lap":{
+						if(startTime==null) {
+							startTime = Instant.parse(streamReader.getAttributeValue(null, "StartTime"));
+							trackTime = LocalTime.ofInstant(startTime, ZoneId.systemDefault());
+							trackDate = LocalDate.ofInstant(startTime, ZoneId.systemDefault());
+						}
+						while(streamReader.hasNext()) {
+							streamReader.next();
+							if (streamReader.isStartElement()) {
+								System.out.println(streamReader.getLocalName());
+								switch (streamReader.getLocalName()) {
+									case "TotalTimeSeconds":{
+										totalDuration = totalDuration.plusSeconds((long) Double.parseDouble(streamReader.getElementText()));
+										break;
+									}
+									case "DistanceMeters":{
+										trackDistance+= Double.parseDouble(streamReader.getElementText());
+										break;
+									}
+								}
+							}
+							
+							if(streamReader.isEndElement() && "Lap".equals(streamReader.getLocalName())) {
+								break;
+							}
+						}
+						break;
+					}
+				}
+			}
+			streamReader.next();
+		}
+		streamReader.close();
+		return new Track(FilenameUtils.getBaseName(file), null, null, 0, null, 0, 0, 0, null);
+	}
 }
