@@ -46,8 +46,8 @@ public interface ImportExport {
 			readFiles.add(file);
 		}
 		copyReadFiles.removeAll(copyFiles);
-		for(String s : readFiles) {
-			removeTrack(s);
+		for(String s : copyReadFiles) {
+			removeTrack(trackList,s);
 		}
 		readFiles.removeAll(copyReadFiles);
 	}
@@ -164,6 +164,7 @@ public interface ImportExport {
 		}
 				
 		streamReader.close();
+		in.close();
 		
 		//if (activity==null) activity = chooseAndWriteActivity(file);
 		
@@ -230,7 +231,7 @@ public interface ImportExport {
 	}
 	*/
 	
-	default Track readTCXTrack (String file) throws XMLStreamException, FileNotFoundException {
+	default Track readTCXTrack (String file) throws XMLStreamException, IOException {
 		
 		List<TrackPoint> helpList = new ArrayList<TrackPoint>();
 		Instant startTime = null;
@@ -414,7 +415,10 @@ public interface ImportExport {
 			}
 			streamReader.next();
 		}
+		
 		streamReader.close();
+		in.close();
+		
 		if(averageBPMCount!=0) averageBPM = averageBPM/averageBPMCount;
 		
 		if(totalDuration.getSeconds()==0 || trackDistance==0) {
@@ -424,8 +428,12 @@ public interface ImportExport {
 		}
 	}
 	
-	default void removeTrack(String track) {
-		trackList.rem
+	default void removeTrack(List<Track> trackList, String track) {
+		Track toBeRemoved = trackList.stream()
+										.filter(t -> t.getName().equals(FilenameUtils.getName(track)))
+										.findAny()
+										.orElse(null);
+		if(toBeRemoved!=null) trackList.remove(toBeRemoved);
 	}
 	
 }
