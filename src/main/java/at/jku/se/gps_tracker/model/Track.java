@@ -5,8 +5,6 @@ import java.time.LocalDate;
 import java.time.LocalTime;
 import java.util.List;
 
-import javafx.beans.property.SimpleStringProperty;
-
 public class Track implements Visualization {
 	
 	//private String activity;
@@ -15,14 +13,14 @@ public class Track implements Visualization {
 	private LocalTime startTime;
 	private double distance;
     private Duration duration;
-    private double pace;
+    private Duration pace;
     private double speed;
     private int averageBPM;
     private int maxBPM;
-    private int elevation;
+    private double elevation;
     private List<TrackPoint> trackPoints;
     
-    public Track(/*String activity, */String name, LocalDate date, LocalTime startTime, double distance, Duration duration, int elevation, List<TrackPoint> trackPoints) {
+    public Track(/*String activity, */String name, LocalDate date, LocalTime startTime, double distance, Duration duration, double pace, double speed, double elevation, List<TrackPoint> trackPoints) {
 		//this.activity = activity;
 		this.name = name;
 		this.date = date;
@@ -31,17 +29,12 @@ public class Track implements Visualization {
 		this.duration = duration;
 		this.elevation = elevation;
 		this.trackPoints = trackPoints;
-		if(distance==0 || duration.getSeconds()==0) {
-			this.speed = 0;
-			this.pace = 0;
-		} else {
-			this.speed = (double) distance/duration.getSeconds();
-			this.pace = (double) duration.getSeconds()/distance;
-		}
+		this.speed = speed;
+		this.pace = Duration.ofSeconds((long) pace);
 	}
     
-    public Track(/*String activity, */String name, LocalDate date, LocalTime startTime, double distance, Duration duration, int averageBPM, int maxBPM, int elevation, List<TrackPoint> trackPoints) {
-		this(/* activity, */name, date, startTime, distance, duration, elevation, trackPoints);
+    public Track(/*String activity, */String name, LocalDate date, LocalTime startTime, double distance, Duration duration, double pace, double speed, int averageBPM, int maxBPM, double elevation, List<TrackPoint> trackPoints) {
+		this(/* activity, */name, date, startTime, distance, duration, pace, speed, elevation, trackPoints);
 		this.averageBPM = averageBPM;
 		this.maxBPM = maxBPM;
 	}
@@ -68,7 +61,7 @@ public class Track implements Visualization {
 	public Duration getDuration() {
 		return duration;
 	}
-	public double getPace() {
+	public Duration getPace() {
 		return pace;
 	}
 	public double getSpeed() {
@@ -81,7 +74,7 @@ public class Track implements Visualization {
 		return maxBPM;
 	}
 	public int getElevation() {
-		return elevation;
+		return (int) elevation;
 	}
 	
 	@Override

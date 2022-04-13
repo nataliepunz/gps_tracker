@@ -6,33 +6,25 @@ public class TrackPoint {
 	private int number;
 	private double distance;
     private Duration duration;
-    private double pace;
+    private Duration pace;
     private double speed;
     private int averageBPM;
     private int maxBPM;
     private double elevation;
-    
-    public TrackPoint(int number, double distance, double elevation) {
-    	this.number=number;
-    	this.distance=distance;
-    	this.elevation=elevation;
-    }
-    
-    public TrackPoint(int number, double distance, Duration duration, double elevation) {
-		this(number, distance,elevation);
+     
+   
+    public TrackPoint(int number, double distance, Duration duration, double pace, double speed, double elevation) {
+		this.number=number;
+		this.distance=distance;
 		this.duration = duration;
-		if(distance==0 || duration.getSeconds()==0) {
-			this.speed = 0;
-			this.pace = 0;
-		} else {
-			this.speed = (double) distance/duration.getSeconds();
-			this.pace = (double) duration.getSeconds()/distance;
-		}
+		this.pace=Duration.ofSeconds((long)pace);
+		this.speed=speed;
+		this.elevation=elevation;
 	}
-
-	public TrackPoint(int number, double distance, Duration duration, int averageBPM,
+    
+	public TrackPoint(int number, double distance, Duration duration, double pace, double speed, int averageBPM,
 			int maxBPM, double elevation) {
-		this(number,distance,duration,elevation);
+		this(number,distance,duration,pace,speed,elevation);
 		this.averageBPM = averageBPM;
 		this.maxBPM = maxBPM;
 	}
@@ -46,7 +38,7 @@ public class TrackPoint {
 	public Duration getDuration() {
 		return duration;
 	}
-	public double getPace() {
+	public Duration getPace() {
 		return pace;
 	}
 	public double getSpeed() {

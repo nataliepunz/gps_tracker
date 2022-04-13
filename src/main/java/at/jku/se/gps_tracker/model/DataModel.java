@@ -6,6 +6,7 @@ import java.util.HashSet;
 import java.util.List;
 
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.io.FilenameUtils;
 
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
@@ -39,11 +40,13 @@ public class DataModel implements ImportExport {
 	}
 	
 	public void updateModel() {
-		List<File> files = (List<File>) FileUtils.listFiles(new File(currentDirectory+"\\"+currentDirectoryFolder), extensions, true);
+		List<File> filesAsFile = (List<File>) FileUtils.listFiles(new File(currentDirectory+"\\"+currentDirectoryFolder), extensions, true);
+		HashSet<String> files = new HashSet<String>();
+		filesAsFile.forEach(f -> files.add(f.getAbsolutePath()));
 		long start = System.nanoTime();
 		updateTracks(trackList,files,readFiles);
 		long end = System.nanoTime();
-		System.out.println("Zeit fürs Parsen von "+ trackList.size() +" gpx-Dateien: "+(double) (end-start)/1000000);
+		System.out.println("Zeit fürs Parsen von "+ trackList.size() +" GPS-Dateien: "+(double) (end-start)/1000000);
 	}
 	
 	public ObservableList<Track> getTrackList(){

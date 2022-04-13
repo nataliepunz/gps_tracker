@@ -6,7 +6,7 @@ public interface Visualization {
 	String getName();
 	double getDistance();
 	Duration getDuration();
-	double getPace();
+	Duration getPace();
 	double getSpeed();
 	int getAverageBPM();
 	int getMaxBPM();
