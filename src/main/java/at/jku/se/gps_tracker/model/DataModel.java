@@ -4,10 +4,12 @@ import java.io.File;
 import java.util.HashSet;
 import java.util.List;
 import org.apache.commons.io.FileUtils;
+
+import at.jku.se.gps_tracker.data.TrackParser;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 
-public class DataModel implements ImportExport {
+public class DataModel {
 	private ObservableList<Track> trackList;
 	private String currentDirectory;
 	private ObservableList<String> directoryFolders;
@@ -42,7 +44,9 @@ public class DataModel implements ImportExport {
 		HashSet<String> files = new HashSet<>();
 		filesAsFile.forEach(f -> files.add(f.getAbsolutePath()));
 		long start = System.nanoTime();
-		updateTracks(trackList,files,readFiles);
+		TrackParser parser = new TrackParser();
+		trackList.addAll(parser.addTracks(files, readFiles));
+		parser.removeTracks(trackList,files,readFiles);
 		long end = System.nanoTime();
 		System.out.println("Zeit fürs Parsen von "+ trackList.size() +" GPS-Dateien: "+(double) (end-start)/1000000);
 	}

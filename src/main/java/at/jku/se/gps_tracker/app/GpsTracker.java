@@ -1,7 +1,6 @@
 package at.jku.se.gps_tracker.app;
 
 import at.jku.se.gps_tracker.model.DataModel;
-import at.jku.se.gps_tracker.model.ImportExport;
 import at.jku.se.gps_tracker.controller.TrackManagerController;
 import javafx.application.Application;
 import javafx.fxml.FXMLLoader;
@@ -10,7 +9,7 @@ import javafx.scene.Scene;
 import javafx.scene.image.Image;
 import javafx.stage.Stage;
 
-public class GpsTracker extends Application implements ImportExport {
+public class GpsTracker extends Application {
 	public static void main(String[] args) {
 		launch(args);
 	}
