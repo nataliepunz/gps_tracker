@@ -16,10 +16,7 @@ public class GpsTracker extends Application implements ImportExport {
 	}
 
 	@Override
-	public void start(Stage primaryStage) throws Exception {
-		// TODO Auto-generated method stub
-		// folder for complete testing = C:\\Users\\Ozan\\Desktop\\WINF-Studium\\4. Semester\\PR - Software Engineering\\Theorie\\test data
-		
+	public void start(Stage primaryStage) throws Exception {		
 		DataModel model = new DataModel();
 		FXMLLoader loader = new FXMLLoader(getClass().getResource("/fxml/TrackManager.fxml"));
 		TrackManagerController start = new TrackManagerController(model);
@@ -35,15 +32,3 @@ public class GpsTracker extends Application implements ImportExport {
 		primaryStage.setOnCloseRequest(c -> System.exit(1));
 	}
 }
-
-
-/*
-File dir = new File("C:\\Users\\Ozan\\Desktop\\gpx_test");
-String[] extensions = new String[] { "gpx", "tcx" };
-List<File> files = (List<File>) FileUtils.listFiles(dir, extensions, true);
-long start = System.nanoTime();
-List<Track> tracks = updateTracks(files);
-long end = System.nanoTime();
-System.out.println("Zeit fürs Parsen von "+ tracks.size() +" gpx-Dateien: "+(double) (end-start)/1000000);
-System.exit(1);
-*/

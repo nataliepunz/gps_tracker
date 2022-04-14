@@ -1,13 +1,9 @@
 package at.jku.se.gps_tracker.model;
 
 import java.io.File;
-import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
-
 import org.apache.commons.io.FileUtils;
-import org.apache.commons.io.FilenameUtils;
-
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 
@@ -25,7 +21,9 @@ public class DataModel implements ImportExport {
 	}
 	
 	public void setCurrrentDirectory(String currentDirectory) {
-		if(this.currentDirectory==currentDirectory) return;
+		if(this.currentDirectory!=null && this.currentDirectory.equals(currentDirectory)) {
+			return;
+		}
 		this.currentDirectory = currentDirectory;
 		this.directoryFolders = FXCollections.observableArrayList(new File(this.currentDirectory).list((dir, name) -> new File(dir, name).isDirectory()));
 		if(!directoryFolders.isEmpty()){
@@ -40,8 +38,8 @@ public class DataModel implements ImportExport {
 	}
 	
 	public void updateModel() {
-		List<File> filesAsFile = (List<File>) FileUtils.listFiles(new File(currentDirectory+"\\"+currentDirectoryFolder), extensions, true);
-		HashSet<String> files = new HashSet<String>();
+		List<File> filesAsFile = (List<File>) FileUtils.listFiles(new File(currentDirectory,currentDirectoryFolder), extensions, true);
+		HashSet<String> files = new HashSet<>();
 		filesAsFile.forEach(f -> files.add(f.getAbsolutePath()));
 		long start = System.nanoTime();
 		updateTracks(trackList,files,readFiles);

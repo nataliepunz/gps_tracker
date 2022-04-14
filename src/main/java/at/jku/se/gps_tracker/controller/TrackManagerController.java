@@ -2,14 +2,12 @@ package at.jku.se.gps_tracker.controller;
 
 import java.io.IOException;
 import java.net.URL;
-import java.time.LocalDate;
-import java.time.LocalTime;
 import java.util.List;
 import java.util.ResourceBundle;
 
+import at.jku.se.gps_tracker.model.AbstractTrack;
 import at.jku.se.gps_tracker.model.DataModel;
 import at.jku.se.gps_tracker.model.Track;
-import at.jku.se.gps_tracker.model.Visualization;
 import javafx.collections.FXCollections;
 import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
@@ -20,11 +18,10 @@ import javafx.fxml.Initializable;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.MenuBar;
-import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
 import javafx.stage.Stage;
 
-public class TrackManagerController implements Initializable {
+public class TrackManagerController implements Initializable, ErrorPopUpController {
 	
 	private DataModel model;
 	private ObservableList<Track> trackList;
@@ -48,7 +45,7 @@ public class TrackManagerController implements Initializable {
 			popup.setScene(popupScene);
 			popup.showAndWait();
 		} catch (IOException e1) {
-			e1.printStackTrace();
+			showErrorPopUp("ERROR! Please refer to following information: "+e1.getMessage());
 		}
     }
 	
@@ -59,9 +56,7 @@ public class TrackManagerController implements Initializable {
 	
 	@FXML
 	private void updateModel(ActionEvent event) {
-		System.out.println("test vor");
 		model.updateModel();
-		System.out.println("test nach");
 	}
 	
 	@FXML
@@ -106,17 +101,24 @@ public class TrackManagerController implements Initializable {
 	private MenuBar menubar;
 	
 	private void setUpMenuItems() {
-		
+		//TODO set up the MenuItems in the menubar!
 	}
 	
 	@FXML
-	private TableView mainTable;
-	//Implementierungstipps: https://stackoverflow.com/a/45013059
-
+	private TableView<? extends AbstractTrack> mainTable;
+	
+	//TODO Implementierungstipps: https://stackoverflow.com/a/45013059
+	private void showTrackTable(TableView<? extends AbstractTrack> mainTable, List<Track> trackList) {
+		TableView<Track> trackTable = new TableView<>();
+		//TODO replace the given Table with a new TableView of type track and fill it up with given trackList (contents like screenshot; need to implement SimpleStringProperty! in AbstractTrack and for Track itself)
+		mainTable = trackTable;
+	}
+	
 	@Override
 	public void initialize(URL arg0, ResourceBundle arg1) {
 		chooseDirectory();
 		setUpLists();
+		showTrackTable(mainTable, trackList);
 	}
 	
 	

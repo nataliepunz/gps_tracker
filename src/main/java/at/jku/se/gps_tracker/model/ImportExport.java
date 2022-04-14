@@ -1,7 +1,6 @@
 package at.jku.se.gps_tracker.model;
 
 import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.time.Duration;
@@ -13,6 +12,9 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import org.apache.commons.io.FilenameUtils;
+
+import at.jku.se.gps_tracker.controller.ErrorPopUpController;
+
 import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.stream.XMLInputFactory;
 import javax.xml.stream.XMLStreamException;
@@ -21,29 +23,23 @@ import javax.xml.transform.TransformerException;
 import javax.xml.transform.TransformerFactoryConfigurationError;
 
 
-public interface ImportExport {
+public interface ImportExport extends ErrorPopUpController {
 	
 	default void updateTracks(List<Track> trackList, HashSet<String> files, HashSet<String> readFiles){
-		HashSet<String> copyFiles = new HashSet<String>(files);
-		HashSet<String> copyReadFiles = new HashSet<String>(readFiles);
+		HashSet<String> copyFiles = new HashSet<>(files);
+		HashSet<String> copyReadFiles = new HashSet<>(readFiles);
 		files.removeAll(readFiles);
 		for(String file : files) {
-			if(FilenameUtils.getExtension(file).equals("gpx")) {
-				try {
+			try {
+				if(FilenameUtils.getExtension(file).equals("gpx")) {
 					trackList.add(readGPXTrack(file));
-				} catch (IOException | XMLStreamException | ParserConfigurationException | TransformerFactoryConfigurationError | TransformerException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
-				}
-			} else if (FilenameUtils.getExtension(file).equals("tcx")) {
-				try {
+				} else if (FilenameUtils.getExtension(file).equals("tcx")) {
 					trackList.add(readTCXTrack(file));
-				} catch (IOException | XMLStreamException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
 				}
+				readFiles.add(file);
+			} catch (Exception e) {
+				showErrorPopUp("The GPS-Track "+FilenameUtils.getName(file)+" could not be read! The following Problem was encountered: "+e.getMessage());
 			}
-			readFiles.add(file);
 		}
 		copyReadFiles.removeAll(copyFiles);
 		for(String s : copyReadFiles) {
@@ -84,94 +80,84 @@ public interface ImportExport {
 		boolean prevCoordinatesSet = false;
 		
 		XMLInputFactory inputFactory = XMLInputFactory.newInstance();
+		inputFactory.setProperty(XMLInputFactory.SUPPORT_DTD, false);
 		InputStream in = new FileInputStream(file);
 		XMLStreamReader streamReader = inputFactory.createXMLStreamReader(in);
 		
 		while (streamReader.hasNext()) {
-			if (streamReader.isStartElement()) {
-				switch (streamReader.getLocalName()) {
-					/*
-					case "gpx":{
-						if(streamReader.getAttributeValue(null,"activity")!=null) activity = streamReader.getAttributeValue(null,"activity");
-						break;
-					}
-					*/
-					case "trkpt": {
-						elevation = 0;
-						elevationChange = 0;
-						timeRecorded = null;
-						timeNeeded = null;
-						latitude = Double.parseDouble(streamReader.getAttributeValue(null, "lat"));
-						longtitude = Double.parseDouble(streamReader.getAttributeValue(null, "lon"));
-						if(!prevCoordinatesSet) {
-							prevLatitude = latitude;
-							prevLongtitude = longtitude;
-							prevCoordinatesSet=true;
-						}
-						while((streamReader.hasNext())) {
-							streamReader.next();
-							if (streamReader.isStartElement()) {
-								switch (streamReader.getLocalName()) {
-									case "ele":{
-										elevation = Double.parseDouble(streamReader.getElementText());
-										if(!prevElevationSet) {
-											prevElevation = elevation;
-											prevElevationSet=true;
-										}
-										if(elevation>prevElevation) {
-											elevationChange = elevation - prevElevation;
-											totalElevation += elevationChange;
-										}
-										break;
-									}
-									case "time":{
-										timeRecorded = Instant.parse(streamReader.getElementText());
-										intermediateTime = LocalTime.ofInstant(timeRecorded, ZoneId.systemDefault());
-										if(!trackDetailSet) {
-											trackDate = LocalDate.ofInstant(timeRecorded, ZoneId.systemDefault());
-											trackTime = intermediateTime;
-											trackDetailSet=true;
-										}
-										if(prevTime==null) prevTime = intermediateTime;
-										timeNeeded = Duration.between(prevTime, intermediateTime);
-										totalDuration = totalDuration.plus(timeNeeded);
-										prevTime = intermediateTime;
-										break;
-									}
+			if (streamReader.isStartElement() && streamReader.getLocalName().equals("trkpt")) {
+				elevation = 0;
+				elevationChange = 0;
+				timeNeeded = null;
+				latitude = Double.parseDouble(streamReader.getAttributeValue(null, "lat"));
+				longtitude = Double.parseDouble(streamReader.getAttributeValue(null, "lon"));
+				if(!prevCoordinatesSet) {
+					prevLatitude = latitude;
+					prevLongtitude = longtitude;
+					prevCoordinatesSet=true;
+				}
+				while((streamReader.hasNext())) {
+					streamReader.next();
+					if (streamReader.isStartElement()) {
+						switch (streamReader.getLocalName()) {
+							case "ele":{
+								elevation = Double.parseDouble(streamReader.getElementText());
+								if(!prevElevationSet) {
+									prevElevation = elevation;
+									prevElevationSet=true;
 								}
+								if(elevation>prevElevation) {
+									elevationChange = elevation - prevElevation;
+									totalElevation += elevationChange;
+								}
+								break;
 							}
-							
-							if(streamReader.isEndElement() && "trkpt".equals(streamReader.getLocalName())) {
-								double distance = distance(latitude, prevLatitude, longtitude, prevLongtitude, elevation, prevElevation);
-								trackDistance += distance;
-								if(timeNeeded==null || timeNeeded.getSeconds()==0 || distance==0) {
-									helpList.add(new TrackPoint(trackPointNr,distance, Duration.ofSeconds(0),0,0, elevationChange));
-								} else {
-									helpList.add(new TrackPoint(trackPointNr,distance, timeNeeded, timeNeeded.getSeconds()/distance, distance/timeNeeded.getSeconds(),elevationChange));
+							case "time":{
+								timeRecorded = Instant.parse(streamReader.getElementText());
+								intermediateTime = LocalTime.ofInstant(timeRecorded, ZoneId.systemDefault());
+								if(!trackDetailSet) {
+									trackDate = LocalDate.ofInstant(timeRecorded, ZoneId.systemDefault());
+									trackTime = intermediateTime;
+									trackDetailSet=true;
 								}
-								trackPointNr++;
-								prevLatitude = latitude;
-								prevLongtitude = longtitude;
-								prevElevation = elevation;
+								if(prevTime==null) prevTime = intermediateTime;
+								timeNeeded = Duration.between(prevTime, intermediateTime);
+								totalDuration = totalDuration.plus(timeNeeded);
+								prevTime = intermediateTime;
+								break;
+							}
+							default:{
 								break;
 							}
 						}
+					}
+					
+					if(streamReader.isEndElement() && "trkpt".equals(streamReader.getLocalName())) {
+						double distance = distance(latitude, prevLatitude, longtitude, prevLongtitude, elevation, prevElevation);
+						trackDistance += distance;
+						if(timeNeeded==null || timeNeeded.getSeconds()==0 || distance==0) {
+							helpList.add(new TrackPoint(String.valueOf(trackPointNr),distance, Duration.ofSeconds(0),Duration.ofSeconds(0),0, elevationChange));
+						} else {
+							helpList.add(new TrackPoint(String.valueOf(trackPointNr),distance, timeNeeded, Duration.ofSeconds((long) (timeNeeded.getSeconds()/distance)), distance/timeNeeded.getSeconds(),elevationChange));
+						}
+						trackPointNr++;
+						prevLatitude = latitude;
+						prevLongtitude = longtitude;
+						prevElevation = elevation;
 						break;
 					}
 				}
 			}
 			streamReader.next();
 		}
-				
+		
 		streamReader.close();
 		in.close();
-		
-		//if (activity==null) activity = chooseAndWriteActivity(file);
-		
+				
 		if(totalDuration.getSeconds()==0 || trackDistance==0) {
-			return new Track(/* activity, */ FilenameUtils.getName(file), trackDate, trackTime, trackDistance, totalDuration, 0, 0, totalElevation, helpList);
+			return new Track(FilenameUtils.getName(file), trackDate, trackTime, trackDistance, totalDuration, Duration.ofSeconds(0), 0, totalElevation, helpList);
 		} else {
-			return new Track(/* activity, */ FilenameUtils.getName(file), trackDate, trackTime, trackDistance, totalDuration, totalDuration.getSeconds()/trackDistance, trackDistance/totalDuration.getSeconds(), totalElevation, helpList);
+			return new Track(FilenameUtils.getName(file), trackDate, trackTime, trackDistance, totalDuration, Duration.ofSeconds((long) (totalDuration.getSeconds()/trackDistance)), trackDistance/totalDuration.getSeconds(), totalElevation, helpList);
 		}
 	}
 		
@@ -197,43 +183,10 @@ public interface ImportExport {
 
 	    return Math.sqrt(distance);
 	}
-	/*
-	public static String chooseAndWriteActivity(String file) throws XMLStreamException, ParserConfigurationException, SAXException, IOException, TransformerFactoryConfigurationError, TransformerException {
-		Stage chooser = new Stage();
-		chooser.setTitle("Wählen Sie eine Aktivität aus für diesen GPS-Track");
-		BorderPane layout = new BorderPane();
-		TextField choosenActivity = new TextField();
-		choosenActivity.setText("Running");
-		Text text = new Text("Geben Sie die Aktivität an! Falls Sie dass Fenster schließen wird die letzte Eingabe als Aktivität verwendet!");
-		Button button = new Button("Bestätigen");
-		button.setOnAction(e -> chooser.close());
-		VBox vbox = new VBox(text,choosenActivity,button);
-		vbox.setSpacing(5);
-		layout.setCenter(vbox);
-		Scene chooserScene = new Scene(layout,450,90);
-		chooser.setScene(chooserScene);
-		chooser.showAndWait();
-		
-		DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
-		DocumentBuilder builder = factory.newDocumentBuilder();
-		Document doc = builder.parse(new FileInputStream(new File(file)));
-		
-		Element element = (Element) doc.getElementsByTagName("gpx").item(0);
-		
-		element.setAttribute("activity", choosenActivity.getText());
-		
-		Transformer transformer = TransformerFactory.newInstance().newTransformer();
-        DOMSource source = new DOMSource(doc);
-        StreamResult result = new StreamResult(file);
-        transformer.transform(source, result);
-		
-		return choosenActivity.getText();
-	}
-	*/
 	
 	default Track readTCXTrack (String file) throws XMLStreamException, IOException {
 		
-		List<TrackPoint> helpList = new ArrayList<TrackPoint>();
+		List<TrackPoint> helpList = new ArrayList<>();
 		Instant startTime = null;
 		LocalDate trackDate = null;
 		LocalTime trackTime = null;
@@ -272,6 +225,7 @@ public interface ImportExport {
 		boolean prevPositionSet = false;
 		
 		XMLInputFactory inputFactory = XMLInputFactory.newInstance();
+		inputFactory.setProperty(XMLInputFactory.SUPPORT_DTD, false);
 		InputStream in = new FileInputStream(file);
 		XMLStreamReader streamReader = inputFactory.createXMLStreamReader(in);
 		
@@ -316,7 +270,6 @@ public interface ImportExport {
 													case "Trackpoint":{
 														elevation = 0;
 														elevationChange = 0;
-														timeRecorded = null;
 														timeNeeded = null;
 														latitude = 0;
 														longtitude = 0;
@@ -370,18 +323,20 @@ public interface ImportExport {
 																		averageBPMPoint = Integer.parseInt(streamReader.getElementText());
 																		break;
 																	}
+																	default:{
+																		break;
+																	}
 																}
 															}
 															
 															if(streamReader.isEndElement()&&"Trackpoint".equals(streamReader.getLocalName())){
-																//TODO create and add new trackpoint!
 																if(!distanceMetersSet && positionSet && prevPositionSet) {
 																	distanceMeters = distance(latitude, prevLatitude, longtitude, prevLongtitude, elevation, prevElevation);
 																}
 																if(timeNeeded==null || timeNeeded.getSeconds()==0 || distanceMeters==0) {
-																	helpList.add(new TrackPoint(trackPointNr, distanceMeters, timeNeeded, 0, 0, averageBPMPoint, averageBPMPoint, elevationChange));
+																	helpList.add(new TrackPoint(String.valueOf(trackPointNr), distanceMeters, timeNeeded, Duration.ofSeconds(0), 0, averageBPMPoint, averageBPMPoint, elevationChange));
 																} else {
-																	helpList.add(new TrackPoint(trackPointNr, distanceMeters, timeNeeded, timeNeeded.getSeconds()/distanceMeters, distanceMeters/timeNeeded.getSeconds(), averageBPMPoint, averageBPMPoint, elevationChange));
+																	helpList.add(new TrackPoint(String.valueOf(trackPointNr), distanceMeters, timeNeeded, Duration.ofSeconds((long) (timeNeeded.getSeconds()/distanceMeters)), distanceMeters/timeNeeded.getSeconds(), averageBPMPoint, averageBPMPoint, elevationChange));
 																}
 																trackPointNr++;
 																if(positionSet) {
@@ -394,6 +349,10 @@ public interface ImportExport {
 															}
 															streamReader.next();
 														}
+														break;
+													}
+													default:{
+														break;
 													}
 												}
 											}
@@ -403,12 +362,18 @@ public interface ImportExport {
 										}
 										break;
 									}
-								}	
+									default:{
+										break;
+									}
+								}
 							}
 							if(streamReader.isEndElement() && "Activity".equals(streamReader.getLocalName())) {
 								break;
 							}
 						}
+						break;
+					}
+					default:{
 						break;
 					}
 				}
@@ -422,9 +387,9 @@ public interface ImportExport {
 		if(averageBPMCount!=0) averageBPM = averageBPM/averageBPMCount;
 		
 		if(totalDuration.getSeconds()==0 || trackDistance==0) {
-			return new Track(FilenameUtils.getName(file), trackDate, trackTime, trackDistance, totalDuration,0,0, averageBPM, maximumBPM, totalElevation, helpList);
+			return new Track(FilenameUtils.getName(file), trackDate, trackTime, trackDistance, totalDuration,Duration.ofSeconds(0),0, averageBPM, maximumBPM, totalElevation, helpList);
 		} else {
-			return new Track(FilenameUtils.getName(file), trackDate, trackTime, trackDistance, totalDuration,totalDuration.getSeconds()/trackDistance,trackDistance/totalDuration.getSeconds(), averageBPM, maximumBPM, totalElevation, helpList);
+			return new Track(FilenameUtils.getName(file), trackDate, trackTime, trackDistance, totalDuration,Duration.ofSeconds((long) (totalDuration.getSeconds()/trackDistance)),trackDistance/totalDuration.getSeconds(), averageBPM, maximumBPM, totalElevation, helpList);
 		}
 	}
 	
