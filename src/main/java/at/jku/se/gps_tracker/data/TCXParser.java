@@ -43,15 +43,7 @@ public class TCXParser extends TrackParser {
 		
 		while (streamReader.hasNext()) {
 			if (streamReader.isStartElement() && streamReader.getLocalName().equals("Activity")) {
-					while(streamReader.hasNext()) {
-						streamReader.next();
-						if (streamReader.isStartElement() && streamReader.getLocalName().equals("Lap")) {
-							manageTCXLapElement(streamReader);
-						}
-						if(streamReader.isEndElement() && "Activity".equals(streamReader.getLocalName())) {
-							break;
-						}
-					}	
+					manageTCXActivityElement(streamReader);
 				}
 			streamReader.next();
 		}
@@ -61,6 +53,18 @@ public class TCXParser extends TrackParser {
 		if(averageBPMCount!=0) averageBPM = averageBPM/averageBPMCount;
 		
 		return createTCXTrack(file);
+	}
+	
+	private void manageTCXActivityElement(XMLStreamReader streamReader) throws NumberFormatException, XMLStreamException {
+		while(streamReader.hasNext()) {
+			streamReader.next();
+			if (streamReader.isStartElement() && streamReader.getLocalName().equals("Lap")) {
+				manageTCXLapElement(streamReader);
+			}
+			if(streamReader.isEndElement() && "Activity".equals(streamReader.getLocalName())) {
+				break;
+			}
+		}
 	}
 	
 	private void manageTCXLapElement(XMLStreamReader streamReader) throws NumberFormatException, XMLStreamException {
@@ -94,16 +98,6 @@ public class TCXParser extends TrackParser {
 						break;
 					}
 					case "Trackpoint":{
-						elevation = 0;
-						elevationChange = 0;
-						timeNeeded = null;
-						latitude = 0;
-						longtitude = 0;
-						averageBPMPoint = 0;
-						distanceMeters = 0;
-						distanceMetersSet=false;
-						positionSet = false;
-						elevationSet = false;
 						manageTCXTrackPointElement(streamReader);
 						break;
 					}
@@ -119,6 +113,16 @@ public class TCXParser extends TrackParser {
 	}
 	
 	private void manageTCXTrackPointElement(XMLStreamReader streamReader) throws NumberFormatException, XMLStreamException {
+		elevation = 0;
+		elevationChange = 0;
+		timeNeeded = null;
+		latitude = 0;
+		longtitude = 0;
+		averageBPMPoint = 0;
+		distanceMeters = 0;
+		distanceMetersSet=false;
+		positionSet = false;
+		elevationSet = false;
 		while(streamReader.hasNext()) {
 			if (streamReader.isStartElement()) {
 				switch (streamReader.getLocalName()) {

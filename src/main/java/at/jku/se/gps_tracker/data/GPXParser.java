@@ -44,16 +44,6 @@ public class GPXParser extends TrackParser{
 				
 		while (streamReader.hasNext()) {
 			if (streamReader.isStartElement() && streamReader.getLocalName().equals("trkpt")) {
-				elevation = 0;
-				elevationChange = 0;
-				timeNeeded = null;
-				latitude = Double.parseDouble(streamReader.getAttributeValue(null, "lat"));
-				longtitude = Double.parseDouble(streamReader.getAttributeValue(null, "lon"));
-				if(!prevCoordinatesSet) {
-					prevLatitude = latitude;
-					prevLongtitude = longtitude;
-					prevCoordinatesSet=true;
-				}
 				manageGPXTrackPointElement(streamReader);
 			}
 			streamReader.next();
@@ -61,14 +51,20 @@ public class GPXParser extends TrackParser{
 		
 		streamReader.close();
 				
-		if(totalDuration.getSeconds()==0 || trackDistance==0) {
-			return new Track(FilenameUtils.getName(file), trackDate, trackTime, trackDistance, totalDuration, Duration.ofSeconds(0), 0, totalElevation, helpList);
-		} else {
-			return new Track(FilenameUtils.getName(file), trackDate, trackTime, trackDistance, totalDuration, Duration.ofSeconds((long) (totalDuration.getSeconds()/trackDistance)), trackDistance/totalDuration.getSeconds(), totalElevation, helpList);
-		}
+		return createGPXTrack(file);
 	}
 	
 	private void manageGPXTrackPointElement(XMLStreamReader streamReader) throws NumberFormatException, XMLStreamException {
+		elevation = 0;
+		elevationChange = 0;
+		timeNeeded = null;
+		latitude = Double.parseDouble(streamReader.getAttributeValue(null, "lat"));
+		longtitude = Double.parseDouble(streamReader.getAttributeValue(null, "lon"));
+		if(!prevCoordinatesSet) {
+			prevLatitude = latitude;
+			prevLongtitude = longtitude;
+			prevCoordinatesSet=true;
+		}
 		while((streamReader.hasNext())) {
 			streamReader.next();
 			if (streamReader.isStartElement()) {
@@ -132,5 +128,13 @@ public class GPXParser extends TrackParser{
 		prevLatitude = latitude;
 		prevLongtitude = longtitude;
 		prevElevation = elevation;
+	}
+	
+	private Track createGPXTrack(String file) {
+		if(totalDuration.getSeconds()==0 || trackDistance==0) {
+			return new Track(FilenameUtils.getName(file), trackDate, trackTime, trackDistance, totalDuration, Duration.ofSeconds(0), 0, totalElevation, helpList);
+		} else {
+			return new Track(FilenameUtils.getName(file), trackDate, trackTime, trackDistance, totalDuration, Duration.ofSeconds((long) (totalDuration.getSeconds()/trackDistance)), trackDistance/totalDuration.getSeconds(), totalElevation, helpList);
+		}
 	}
 }

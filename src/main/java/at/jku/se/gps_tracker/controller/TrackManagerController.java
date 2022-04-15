@@ -30,24 +30,40 @@ public class TrackManagerController implements Initializable, ErrorPopUpControll
 	public TrackManagerController(DataModel model) {
 		this.model=model;
 	}
-		
-	private void chooseDirectory() {
-		try {
-			FXMLLoader fxmlLoader = new FXMLLoader();
-			fxmlLoader.setLocation(getClass().getResource("/fxml/StartView.fxml"));
-			Stage popup = new Stage();
-			StartViewController c = new StartViewController(model, popup);
-			fxmlLoader.setController(c);
-			Parent parent = (Parent) fxmlLoader.load();
-			Scene popupScene = new Scene(parent);
-			popup.setTitle("TrackStar - Choose Directory");
-			popup.setAlwaysOnTop(true);
-			popup.setScene(popupScene);
-			popup.showAndWait();
-		} catch (IOException e1) {
-			showErrorPopUp("ERROR! Please refer to following information: "+e1.getMessage());
-		}
-    }
+			
+	private void setUpLists() {
+		setTrackList();
+		setCategories();
+	}
+	
+	private void setTrackList() {
+		trackList = FXCollections.observableArrayList(model.getTrackList());
+		model.getTrackList().addListener((ListChangeListener<? super Track>) c -> {
+	        while (c.next()) {
+	            if (c.wasAdded()) {
+	            	trackList.addAll(c.getFrom(), c.getAddedSubList());
+	            } 
+	            if (c.wasRemoved()) {
+	            	trackList.removeAll(c.getRemoved());
+	            }
+	        }
+	    });
+	}
+	
+	private void setCategories() {
+		categories = FXCollections.observableArrayList(model.getDirectoryFolders());
+		model.getDirectoryFolders().addListener((ListChangeListener<? super String>) c -> {
+	        while (c.next()) {
+	            if (c.wasAdded()) {
+	            	categories.addAll(c.getFrom(), c.getAddedSubList());
+	            } 
+	            if (c.wasRemoved()) {
+	            	categories.removeAll(c.getRemoved());
+	            }
+	        }
+	        setUpMenuItems();
+	    });
+	}
 	
 	@FXML
 	private void setDirectory(ActionEvent event) {
@@ -70,33 +86,6 @@ public class TrackManagerController implements Initializable, ErrorPopUpControll
 		model.setCurrentDirectoryFolder(0);
 	}
 	
-	private void setUpLists() {
-		trackList = FXCollections.observableArrayList(model.getTrackList());
-		model.getTrackList().addListener((ListChangeListener<? super Track>) c -> {
-	        while (c.next()) {
-	            if (c.wasAdded()) {
-	            	trackList.addAll(c.getFrom(), c.getAddedSubList());
-	            } 
-	            if (c.wasRemoved()) {
-	            	trackList.removeAll(c.getRemoved());
-	            }
-	        }
-	    });
-		
-		categories = FXCollections.observableArrayList(model.getDirectoryFolders());
-		model.getDirectoryFolders().addListener((ListChangeListener<? super String>) c -> {
-	        while (c.next()) {
-	            if (c.wasAdded()) {
-	            	categories.addAll(c.getFrom(), c.getAddedSubList());
-	            } 
-	            if (c.wasRemoved()) {
-	            	categories.removeAll(c.getRemoved());
-	            }
-	        }
-	        setUpMenuItems();
-	    });
-	}
-	
 	@FXML
 	private MenuBar menubar;
 	
@@ -113,6 +102,24 @@ public class TrackManagerController implements Initializable, ErrorPopUpControll
 		//TODO replace the given Table with a new TableView of type track and fill it up with given trackList (contents like screenshot; need to implement SimpleStringProperty! in AbstractTrack and for Track itself)
 		mainTable = trackTable;
 	}
+	
+	private void chooseDirectory() {
+		try {
+			FXMLLoader fxmlLoader = new FXMLLoader();
+			fxmlLoader.setLocation(getClass().getResource("/fxml/StartView.fxml"));
+			Stage popup = new Stage();
+			StartViewController c = new StartViewController(model, popup);
+			fxmlLoader.setController(c);
+			Parent parent = (Parent) fxmlLoader.load();
+			Scene popupScene = new Scene(parent);
+			popup.setTitle("TrackStar - Choose Directory");
+			popup.setAlwaysOnTop(true);
+			popup.setScene(popupScene);
+			popup.showAndWait();
+		} catch (IOException e1) {
+			showErrorPopUp("ERROR! Please refer to following information: "+e1.getMessage());
+		}
+    }
 	
 	@Override
 	public void initialize(URL arg0, ResourceBundle arg1) {
