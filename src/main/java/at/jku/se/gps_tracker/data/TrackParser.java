@@ -76,10 +76,8 @@ public class TrackParser implements ErrorPopUpController {
 		XMLStreamReader streamReader;
 		GPXParser gpx = new GPXParser();
 		TCXParser tcx = new TCXParser();
-		long totalTime = 0;
 		for(String file : copyFiles) {
 			try {
-				long startRead = System.nanoTime();
 				in = new FileInputStream(file);
 				streamReader = inputFactory.createXMLStreamReader(in);
 				if(FilenameUtils.getExtension(file).equals("gpx")) {
@@ -87,15 +85,12 @@ public class TrackParser implements ErrorPopUpController {
 				} else if (FilenameUtils.getExtension(file).equals("tcx")) {
 					trackList.add(tcx.readTCXTrack(file, streamReader));
 				}
-				long endRead = System.nanoTime();
-				totalTime=endRead-startRead;
 				readFiles.add(file);
 				in.close();
 			} catch (Exception e) {
 				showErrorPopUp("The GPS-Track "+FilenameUtils.getName(file)+" could not be read! The following Problem was encountered: "+e.getMessage());
 			}
 		}
-		System.out.println(totalTime);
 		return trackList;
 	}
 	

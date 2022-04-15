@@ -19,7 +19,19 @@ import at.jku.se.gps_tracker.model.TrackPoint;
 public class GPXParser extends TrackParser{
 	
 	public Track readGPXTrack(String file, XMLStreamReader streamReader) throws XMLStreamException, TransformerFactoryConfigurationError {
+		resetFields();
+		while (streamReader.hasNext()) {
+			if (streamReader.isStartElement() && streamReader.getLocalName().equals("trkpt")) {
+				manageGPXTrackPointElement(streamReader);
+			}
+			streamReader.next();
+		}
 		
+		streamReader.close();
+		return createGPXTrack(file);
+	}
+	
+	private void resetFields() {
 		// per Track
 		helpList = new ArrayList<>();
 		trackDate = null;
@@ -40,18 +52,7 @@ public class GPXParser extends TrackParser{
 		prevElevationSet = false;
 		prevLatitude = 0;
 		prevLongtitude = 0;
-		prevCoordinatesSet = false;
-				
-		while (streamReader.hasNext()) {
-			if (streamReader.isStartElement() && streamReader.getLocalName().equals("trkpt")) {
-				manageGPXTrackPointElement(streamReader);
-			}
-			streamReader.next();
-		}
-		
-		streamReader.close();
-				
-		return createGPXTrack(file);
+		prevCoordinatesSet = false;			
 	}
 	
 	private void manageGPXTrackPointElement(XMLStreamReader streamReader) throws NumberFormatException, XMLStreamException {

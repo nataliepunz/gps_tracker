@@ -49,7 +49,6 @@ public class DataModel {
 		long end = System.nanoTime();
 		parser.removeTracks(trackList,files,readFiles);
 		System.out.println("Zeit fürs Parsen von "+ trackList.size() +" GPS-Dateien: "+(double) (end-start)/1000000);
-		System.out.println("Breaklinehelp");
 	}
 	
 	public ObservableList<Track> getTrackList(){

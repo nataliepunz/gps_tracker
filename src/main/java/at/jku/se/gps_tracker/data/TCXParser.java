@@ -18,7 +18,21 @@ import at.jku.se.gps_tracker.model.TrackPoint;
 public class TCXParser extends TrackParser {
 	
 	public Track readTCXTrack (String file, XMLStreamReader streamReader) throws XMLStreamException {
+		resetFields();
+		while (streamReader.hasNext()) {
+			if (streamReader.isStartElement() && streamReader.getLocalName().equals("Activity")) {
+					manageTCXActivityElement(streamReader);
+				}
+			streamReader.next();
+		}
 		
+		streamReader.close();
+		
+		if(averageBPMCount!=0) averageBPM = averageBPM/averageBPMCount;
+		return createTCXTrack(file);
+	}
+	
+	private void resetFields() {
 		helpList = new ArrayList<>();
 		startTime = null;
 		trackDate = null;
@@ -40,19 +54,6 @@ public class TCXParser extends TrackParser {
 		prevLongtitude = 0;
 		prevDistance = 0;
 		prevCoordinatesSet = false;
-		
-		while (streamReader.hasNext()) {
-			if (streamReader.isStartElement() && streamReader.getLocalName().equals("Activity")) {
-					manageTCXActivityElement(streamReader);
-				}
-			streamReader.next();
-		}
-		
-		streamReader.close();
-		
-		if(averageBPMCount!=0) averageBPM = averageBPM/averageBPMCount;
-		
-		return createTCXTrack(file);
 	}
 	
 	private void manageTCXActivityElement(XMLStreamReader streamReader) throws NumberFormatException, XMLStreamException {
