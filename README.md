@@ -1,4 +1,8 @@
 # gps_tracker
 GPS-Tracker for PR Software Engineering
 
-Derzeitig mit Konzepterstellung und UML-Klassendiagramm beschäftigt. (siehe Branch v0.1) Prototyp wird bald begonnen.
+Prototyp in Bearbeitung.
+
+Konzept + Klassendiagramm + grundlegenden Aufbau der Applikation (inkl. Parser) = Ozan Akkoyun
+
+Umsetzung des UI-Prototypens = Nuray Seker & Natalie Punz
