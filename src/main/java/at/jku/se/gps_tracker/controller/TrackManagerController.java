@@ -31,7 +31,7 @@ public class TrackManagerController implements Initializable, ErrorPopUpControll
 		this.model=model;
 	}
 			
-	private void setUpLists() {
+	private void setUp() {
 		setTrackList();
 		setCategories();
 	}
@@ -124,10 +124,8 @@ public class TrackManagerController implements Initializable, ErrorPopUpControll
 	@Override
 	public void initialize(URL arg0, ResourceBundle arg1) {
 		chooseDirectory();
-		setUpLists();
+		setUp();
 		showTrackTable(mainTable, trackList);
-	}
-	
-	
+	}	
 	
 }
