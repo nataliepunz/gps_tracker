@@ -61,7 +61,7 @@ public class TrackManagerController implements Initializable, ErrorPopUpControll
 	            	categories.removeAll(c.getRemoved());
 	            }
 	        }
-	        setUpMenuItems();
+	        setUpTrackMenuItems();
 	    });
 	}
 	
@@ -89,7 +89,7 @@ public class TrackManagerController implements Initializable, ErrorPopUpControll
 	@FXML
 	private MenuBar menubar;
 	
-	private void setUpMenuItems() {
+	private void setUpTrackMenuItems() {
 		//TODO set up the MenuItems in the menubar!
 	}
 	

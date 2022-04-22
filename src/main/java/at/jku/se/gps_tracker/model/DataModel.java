@@ -26,7 +26,6 @@ public class DataModel {
 		if(this.currentDirectory!=null && this.currentDirectory.equals(currentDirectory)) {
 			return;
 		}
-		trackList.clear();
 		this.currentDirectory = currentDirectory;
 		this.directoryFolders = FXCollections.observableArrayList(new File(this.currentDirectory).list((dir, name) -> new File(dir, name).isDirectory()));
 		if(!directoryFolders.isEmpty()){
@@ -37,6 +36,7 @@ public class DataModel {
 	
 	public void setCurrentDirectoryFolder(int index) {
 		this.currentDirectoryFolder = directoryFolders.get(index);
+		trackList.clear();
 		updateModel();
 	}
 	
