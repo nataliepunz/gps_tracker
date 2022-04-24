@@ -367,6 +367,7 @@ public class TrackManagerController implements Initializable, ErrorPopUpControll
 		chart.getData().clear();
 		chart.layout();
 
+
 		XYChart.Series xy = new XYChart.Series();
 		xy.setName("Category");
 		for (AbstractTrack at: trackList)
