@@ -62,9 +62,6 @@ public class TrackManagerController implements Initializable, ErrorPopUpControll
 		setCategories();
 	}
 
-	private void showSideTable(ObservableList<TrackPoint> table, TableView tv ) throws IOException {
-		showTrackTable(tv, table);
-	}
 
 	private void setTrackList() {
 		trackList = FXCollections.observableArrayList(model.getTrackList());
@@ -131,9 +128,6 @@ public class TrackManagerController implements Initializable, ErrorPopUpControll
 
 	@FXML
 	private Menu mTracks;
-
-
-
 
 	/* Action Handler für die Segment MenuItems
 	 * TODO Methoden sinnvoll implementieren */
@@ -283,6 +277,7 @@ public class TrackManagerController implements Initializable, ErrorPopUpControll
 				}});}}
 
 
+
 	//Implementierungstipps: https://stackoverflow.com/a/45013059
 	private void showTrackTable(TableView table, List<?> trackList) throws IOException {
 		//clear table
@@ -323,23 +318,33 @@ public class TrackManagerController implements Initializable, ErrorPopUpControll
 		TableColumn<AbstractTrack, Number> elevationCol = new TableColumn<>("Elevation");
 		elevationCol.setCellValueFactory(cellValue -> new SimpleDoubleProperty((cellValue.getValue().getElevation())));
 
-		table.setRowFactory( tv -> {
-			TableRow<Track> row = new TableRow<>();
-			row.setOnMouseClicked(event -> {
-				Track rowData = row.getItem();
-				trackPoints = FXCollections.observableArrayList((rowData.getTrackPoints()));
-				try {
-					showSideTable(trackPoints, sideTable);
-				} catch (IOException e) {
-					e.printStackTrace();
-				}
-			});
-			return row ;});
+
 
 		//Adding data to the table
 
-		table.getColumns().addAll(nameCol, dateCol,  startCol, distanceCol, durationCol, paceCol, speedCol, avgBpmCol, maxBpmCol, elevationCol);
-		table.setItems((ObservableList<AbstractTrack>) trackList);
+
+			table.getColumns().addAll(nameCol, dateCol, startCol, distanceCol, durationCol, paceCol, speedCol, avgBpmCol, maxBpmCol, elevationCol);
+			table.setItems((ObservableList<AbstractTrack>) trackList);
+			if (startCol.getCellData(0) == null)
+			{
+				table.getColumns().clear();
+				table.getColumns().addAll(nameCol, distanceCol, durationCol, paceCol, speedCol, avgBpmCol, maxBpmCol, elevationCol);
+			}
+			else
+			{
+				table.setRowFactory( tv -> {
+					TableRow<Track> row = new TableRow<>();
+					row.setOnMouseClicked(event -> {
+						Track rowData = row.getItem();
+						trackPoints = FXCollections.observableArrayList((rowData.getTrackPoints()));
+						try {
+							showTrackTable(sideTable, trackPoints);
+						} catch (IOException e) {
+							e.printStackTrace();
+						}
+					});
+					return row ;});
+			}
 
 		//further adjustments
 		table.getSelectionModel().setSelectionMode(SelectionMode.SINGLE);
@@ -369,7 +374,7 @@ public class TrackManagerController implements Initializable, ErrorPopUpControll
 
 
 		XYChart.Series xy = new XYChart.Series();
-		xy.setName("Category");
+		xy.setName(name);
 		for (AbstractTrack at: trackList)
 		{
 			xy.getData().add(new XYChart.Data(at.getName(), method.invoke(at)));
@@ -413,11 +418,6 @@ public class TrackManagerController implements Initializable, ErrorPopUpControll
 		} catch (IOException e) {
 			e.printStackTrace();
 		}}}
-
-//the simplest way to print current value (text of the selected radio button)
-
-
-//register on change eve
 
 
 
