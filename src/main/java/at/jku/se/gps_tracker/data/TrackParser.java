@@ -15,6 +15,8 @@ import java.util.Set;
 import javax.xml.stream.XMLInputFactory;
 import javax.xml.stream.XMLStreamReader;
 
+import at.jku.se.gps_tracker.model.AbstractTrack;
+import javafx.collections.ObservableList;
 import org.apache.commons.io.FilenameUtils;
 
 import at.jku.se.gps_tracker.controller.ErrorPopUpController;
@@ -98,7 +100,7 @@ public class TrackParser implements ErrorPopUpController {
 		return trackList;
 	}
 	
-	public List<Track> removeTracks(final List<Track> trackList, Set<String> files, Set<String> readFiles){
+	public List<Track> removeTracks(final ObservableList<AbstractTrack> trackList, Set<String> files, Set<String> readFiles){
 		List<Track> helpList = new ArrayList<>();
 		HashSet<String> copyReadFiles = new HashSet<>(readFiles);
 		copyReadFiles.removeAll(files);
@@ -109,8 +111,8 @@ public class TrackParser implements ErrorPopUpController {
 		return helpList;
 	}
 	
-	private Track getToBeRemovedTrack(List<Track> trackList, String track) {
-		return trackList.stream()
+	private Track getToBeRemovedTrack(ObservableList<AbstractTrack> trackList, String track) {
+		return (Track) trackList.stream()
 					.filter(t -> t.getName().equals(FilenameUtils.getName(track)))
 					.findAny()
 					.orElse(null);

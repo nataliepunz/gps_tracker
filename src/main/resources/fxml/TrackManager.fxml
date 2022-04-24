@@ -6,57 +6,104 @@
 <?import javafx.scene.control.Menu?>
 <?import javafx.scene.control.MenuBar?>
 <?import javafx.scene.control.MenuItem?>
+<?import javafx.scene.control.RadioMenuItem?>
+<?import javafx.scene.control.SeparatorMenuItem?>
 <?import javafx.scene.control.TableView?>
+<?import javafx.scene.control.ToggleGroup?>
 <?import javafx.scene.layout.BorderPane?>
 <?import javafx.scene.layout.ColumnConstraints?>
 <?import javafx.scene.layout.GridPane?>
 <?import javafx.scene.layout.RowConstraints?>
 
-<BorderPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="400.0" prefWidth="600.0" xmlns="http://javafx.com/javafx/18" xmlns:fx="http://javafx.com/fxml/1">
-   <top>
-      <MenuBar fx:id="menubar" BorderPane.alignment="CENTER">
-        <menus>
-          <Menu mnemonicParsing="false" text="File">
-            <items>
-                  <MenuItem mnemonicParsing="false" onAction="#updateModel" text="Update" />
-                  <MenuItem mnemonicParsing="false" onAction="#setDirectory" text="Change Directory" />
-              <MenuItem mnemonicParsing="false" onAction="#closeApplication" text="Close" />
-            </items>
-          </Menu>
-          <Menu mnemonicParsing="false" text="Tracks" />
-          <Menu mnemonicParsing="false" text="Segment" />
-            <Menu mnemonicParsing="false" text="Graph" />
-            <Menu mnemonicParsing="false" text="View" />
-            <Menu mnemonicParsing="false" text="Help">
-               <items>
-                  <MenuItem mnemonicParsing="false" text="Open User Guide" />
-               </items>
-            </Menu>
-        </menus>
-      </MenuBar>
-   </top>
-   <center>
-      <GridPane maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" BorderPane.alignment="CENTER">
-        <columnConstraints>
-          <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" prefWidth="100.0" />
-          <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" prefWidth="100.0" />
-        </columnConstraints>
-        <rowConstraints>
-          <RowConstraints maxHeight="216.60001220703126" minHeight="10.0" prefHeight="189.6" vgrow="SOMETIMES" />
-          <RowConstraints maxHeight="195.79998168945312" minHeight="10.0" prefHeight="185.6" vgrow="SOMETIMES" />
-        </rowConstraints>
-         <children>
-            <TableView fx:id="mainTable" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" prefHeight="200.0" prefWidth="200.0" GridPane.hgrow="SOMETIMES" GridPane.vgrow="SOMETIMES" />
-            <BarChart animated="false" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" GridPane.hgrow="SOMETIMES" GridPane.rowIndex="1" GridPane.vgrow="SOMETIMES">
-              <xAxis>
-                <CategoryAxis side="BOTTOM" />
-              </xAxis>
-              <yAxis>
-                <NumberAxis side="LEFT" />
-              </yAxis>
-            </BarChart>
-            <TableView maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" prefHeight="200.0" prefWidth="200.0" GridPane.columnIndex="1" GridPane.hgrow="SOMETIMES" GridPane.rowSpan="2147483647" GridPane.vgrow="SOMETIMES" />
-         </children>
-      </GridPane>
-   </center>
+<BorderPane fx:id="borderpane" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="1000.0" prefWidth="800.0" xmlns="http://javafx.com/javafx/18" xmlns:fx="http://javafx.com/fxml/1">
+    <top>
+        <MenuBar fx:id="menubar" BorderPane.alignment="CENTER">
+            <menus>
+                <Menu fx:id="mFile" mnemonicParsing="false" text="File">
+                    <RadioMenuItem fx:id="miUpdate" mnemonicParsing="false" onAction="#updateModel" text="Update">
+                        <toggleGroup>
+                            <ToggleGroup fx:id="tgFile" />
+                        </toggleGroup></RadioMenuItem>
+                    <RadioMenuItem fx:id="miChageDir" mnemonicParsing="false" onAction="#setDirectory" text="Change Directory" toggleGroup="$tgFile" />
+                    <RadioMenuItem fx:id="miClose" mnemonicParsing="false" onAction="#closeApplication" text="Close" toggleGroup="$tgFile" />
+                </Menu>
+                <Menu fx:id="mTracks" mnemonicParsing="false" text="Tracks">
+                </Menu>
+                <Menu fx:id="mSegment" mnemonicParsing="false" text="Segment">
+                    <RadioMenuItem fx:id="mi1m" mnemonicParsing="false" onAction="#segment1m" text="1 m">
+                        <toggleGroup>
+                            <ToggleGroup fx:id="tgSegment" />
+                        </toggleGroup></RadioMenuItem>
+                    <RadioMenuItem fx:id="mi10m" mnemonicParsing="false" onAction="#segment10m" text="10 m" toggleGroup="$tgSegment" />
+                    <SeparatorMenuItem mnemonicParsing="false" />
+                    <RadioMenuItem fx:id="mi100m" mnemonicParsing="false" onAction="#segment100m" text="100 m" toggleGroup="$tgSegment" />
+                    <RadioMenuItem fx:id="mi400m" mnemonicParsing="false" onAction="#segment400m" text="400 m" toggleGroup="$tgSegment" />
+                    <RadioMenuItem fx:id="mi500m" mnemonicParsing="false" onAction="#segment500m" text="500 m" toggleGroup="$tgSegment" />
+                    <SeparatorMenuItem mnemonicParsing="false" />
+                    <RadioMenuItem fx:id="mi1k" mnemonicParsing="false" onAction="#segment1000m" text="1.000 m" toggleGroup="$tgSegment" />
+                    <RadioMenuItem fx:id="mi5k" mnemonicParsing="false" onAction="#segment5000m" text="5.000 m" toggleGroup="$tgSegment" />
+                    <RadioMenuItem fx:id="mi10k" mnemonicParsing="false" onAction="#segment10000m" text="10.000 m" toggleGroup="$tgSegment" />
+                    <SeparatorMenuItem mnemonicParsing="false" />
+                    <RadioMenuItem fx:id="miQuarterMarathon" mnemonicParsing="false" onAction="#segmentQuarterMarathon" text="1/4 Marathon" toggleGroup="$tgSegment" />
+                    <RadioMenuItem fx:id="miHalfMarathon" mnemonicParsing="false" onAction="#segmentHalfMarathon" text="1/2 Marathon" toggleGroup="$tgSegment" />
+                    <RadioMenuItem fx:id="miTrackPoints" mnemonicParsing="false" onAction="#segmentTrackPoints" text="Track Points" toggleGroup="$tgSegment" />
+                </Menu>
+                <Menu fx:id="mGraph" mnemonicParsing="false" text="Graph">
+                    <RadioMenuItem fx:id="miDistance" mnemonicParsing="false" onAction="#visualizeDistance" text="Distance">
+                        <toggleGroup>
+                            <ToggleGroup fx:id="tgGraph" />
+                        </toggleGroup></RadioMenuItem>
+                    <RadioMenuItem fx:id="miDuration" mnemonicParsing="false" onAction="#visualizeDuration" text="Duration" toggleGroup="$tgGraph" />
+                    <RadioMenuItem fx:id="miElevation" mnemonicParsing="false" onAction="#visualizeElevation" text="Elevation" toggleGroup="$tgGraph" />
+                    <RadioMenuItem fx:id="miSpeed1" mnemonicParsing="false" onAction="#visualizeSpeed" text="Speed" toggleGroup="$tgGraph" />
+                    <RadioMenuItem fx:id="miHeartbeat" mnemonicParsing="false" onAction="#visualizeHeartbeat" text="Heartbeat" toggleGroup="$tgGraph" />
+
+
+                </Menu>
+                <Menu fx:id="mView" mnemonicParsing="false" text="View">
+
+                    <RadioMenuItem fx:id="miView" mnemonicParsing="false" onAction="#viewDay" text="Day">
+                        <toggleGroup>
+                            <ToggleGroup fx:id="tgView" />
+                        </toggleGroup></RadioMenuItem>
+                    <RadioMenuItem fx:id="miWeek" mnemonicParsing="false" onAction="#viewWeek" text="Week" toggleGroup="$tgView" />
+                    <RadioMenuItem fx:id="miMonth" mnemonicParsing="false" onAction="#viewMonth" text="Month" toggleGroup="$tgView" />
+
+
+                </Menu>
+                <Menu fx:id="mHelp" mnemonicParsing="false" text="Help">
+
+                    <MenuItem fx:id="miUserGuide" mnemonicParsing="false" onAction="#openUserGuide" text="Open User Guide" />
+
+                </Menu>
+            </menus>
+        </MenuBar>
+    </top>
+    <center>
+        <GridPane maxHeight="1004.0" maxWidth="1.7976931348623157E308" minHeight="902.0" prefHeight="906.0" prefWidth="800.0" BorderPane.alignment="CENTER">
+            <columnConstraints>
+                <ColumnConstraints hgrow="SOMETIMES" maxWidth="401.1318054199219" minWidth="10.0" prefWidth="400.0" />
+                <ColumnConstraints hgrow="SOMETIMES" maxWidth="402.26361083984375" minWidth="10.0" prefWidth="400.0" />
+            </columnConstraints>
+            <rowConstraints>
+                <RowConstraints maxHeight="350.0" minHeight="10.0" prefHeight="350.0" vgrow="SOMETIMES" />
+                <RowConstraints maxHeight="10.0" minHeight="10.0" prefHeight="10.0" vgrow="SOMETIMES" />
+                <RowConstraints maxHeight="10.0" minHeight="10.0" prefHeight="10.0" vgrow="SOMETIMES" />
+                <RowConstraints maxHeight="1.0" minHeight="1.0" prefHeight="1.0" vgrow="SOMETIMES" />
+                <RowConstraints maxHeight="400.0" minHeight="10.0" prefHeight="400.0" vgrow="SOMETIMES" />
+            </rowConstraints>
+            <children>
+                <TableView fx:id="mainTable" maxHeight="550.0" maxWidth="1.7976931348623157E308" minHeight="300.0" prefHeight="300.0" prefWidth="400.0" GridPane.hgrow="SOMETIMES" GridPane.vgrow="SOMETIMES" />
+                <BarChart fx:id="chart" animated="false" maxHeight="595.0" maxWidth="500.0" minHeight="-Infinity" prefHeight="400.0" prefWidth="400.0" GridPane.hgrow="SOMETIMES" GridPane.rowIndex="4" GridPane.valignment="TOP" GridPane.vgrow="SOMETIMES">
+                    <xAxis>
+                        <CategoryAxis side="BOTTOM" />
+                    </xAxis>
+                    <yAxis>
+                        <NumberAxis side="LEFT" />
+                    </yAxis>
+                </BarChart>
+                <TableView fx:id="sideTable" editable="true" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" minHeight="-Infinity" prefHeight="612.0" prefWidth="400.0" GridPane.columnIndex="1" GridPane.hgrow="SOMETIMES" GridPane.rowSpan="2147483647" GridPane.vgrow="SOMETIMES" />
+            </children>
+        </GridPane>
+    </center>
 </BorderPane>
