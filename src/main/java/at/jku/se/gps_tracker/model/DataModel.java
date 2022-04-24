@@ -1,6 +1,7 @@
 package at.jku.se.gps_tracker.model;
 
 import java.io.File;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import org.apache.commons.io.FileUtils;
@@ -48,7 +49,7 @@ public class DataModel {
 		TrackParser parser = new TrackParser();
 		trackList.addAll(parser.addTracks(files, readFiles));
 		long end = System.nanoTime();
-		parser.removeTracks(trackList,files,readFiles);
+		trackList.removeAll(parser.removeTracks(Collections.unmodifiableList(trackList),files, readFiles));
 		System.out.println("Zeit fürs Parsen von "+ trackList.size() +" GPS-Dateien: "+(double) (end-start)/1000000);
 	}
 	

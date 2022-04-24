@@ -1,5 +1,6 @@
 package at.jku.se.gps_tracker.data;
 
+import java.io.BufferedInputStream;
 import java.io.FileInputStream;
 import java.io.InputStream;
 import java.time.Duration;
@@ -29,6 +30,7 @@ public class TrackParser implements ErrorPopUpController {
 	double trackDistance;
 	double totalElevation;
 	Duration totalDuration;
+	
 	//TCX
 	Instant startTime;
 	int averageBPM;
@@ -46,6 +48,7 @@ public class TrackParser implements ErrorPopUpController {
 	Instant timeRecorded;
 	Duration timeNeeded;
 	LocalTime intermediateTime;
+	
 	//TCX
 	boolean elevationSet;
 	boolean positionSet;
@@ -62,6 +65,7 @@ public class TrackParser implements ErrorPopUpController {
 	double prevLatitude;
 	double prevLongtitude;
 	boolean prevCoordinatesSet;
+	
 	//TCX
 	double prevDistance = 0;
 	
@@ -78,7 +82,7 @@ public class TrackParser implements ErrorPopUpController {
 		TCXParser tcx = new TCXParser();
 		for(String file : copyFiles) {
 			try {
-				in = new FileInputStream(file);
+				in = new BufferedInputStream(new FileInputStream(file));
 				streamReader = inputFactory.createXMLStreamReader(in);
 				if(FilenameUtils.getExtension(file).equals("gpx")) {
 					trackList.add(gpx.readGPXTrack(file, streamReader));
@@ -94,13 +98,15 @@ public class TrackParser implements ErrorPopUpController {
 		return trackList;
 	}
 	
-	public void removeTracks(List<Track> trackList, Set<String> files, Set<String> readFiles){
+	public List<Track> removeTracks(final List<Track> trackList, Set<String> files, Set<String> readFiles){
+		List<Track> helpList = new ArrayList<>();
 		HashSet<String> copyReadFiles = new HashSet<>(readFiles);
 		copyReadFiles.removeAll(files);
 		for(String s : copyReadFiles) {
-			trackList.remove(getToBeRemovedTrack(trackList,s));
+			helpList.add(getToBeRemovedTrack(trackList,s));
 		}
 		readFiles.removeAll(copyReadFiles);
+		return helpList;
 	}
 	
 	private Track getToBeRemovedTrack(List<Track> trackList, String track) {
