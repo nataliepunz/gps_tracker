@@ -207,8 +207,8 @@ public class TrackManagerController implements Initializable, ErrorPopUpControll
 
 	}
 
-	/* Action Handler für die Graph MenuItems
-	 * TODO Methoden sinnvoll implementieren */
+	/* Action Handler für die Graph MenuItems */
+
 	@FXML
 	private void visualizeDistance(ActionEvent event) throws InvocationTargetException, NoSuchMethodException, IllegalAccessException {
 

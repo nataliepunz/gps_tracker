@@ -2,7 +2,10 @@ package at.jku.se.gps_tracker.model;
 
 import javafx.beans.property.*;
 
+import java.text.DecimalFormat;
 import java.time.Duration;
+
+import static java.lang.Math.round;
 
 public abstract class AbstractTrack {
 	private String name;
@@ -38,7 +41,7 @@ public abstract class AbstractTrack {
 	}
 
 	public Double getDistance() {
-		return distance;
+		return doubleFormatter(distance);
 	}
 
 	public Duration getDuration() {
@@ -50,7 +53,7 @@ public abstract class AbstractTrack {
 	}
 
 	public Double getSpeed() {
-		return speed;
+		return doubleFormatter(speed);
 	}
 
 	public int getAverageBPM() {
@@ -70,7 +73,7 @@ public abstract class AbstractTrack {
 	}
 
 	public Double getElevation() {
-		return elevation;
+		return doubleFormatter(elevation);
 	}
 
 	//Quelle: https://stackoverflow.com/a/266846/5750106
@@ -106,7 +109,7 @@ public abstract class AbstractTrack {
 	}
 
 	public Double distanceProperty() {
-		return distance;
+		return doubleFormatter(distance);
 	}
 
 	public void setDistance(double distance) {
@@ -121,9 +124,6 @@ public abstract class AbstractTrack {
 		this.pace = pace;
 	}
 
-	public Double speedProperty() {
-		return speed;
-	}
 
 	public void setSpeed(double speed) {
 		this.speed = speed;
@@ -143,19 +143,22 @@ public abstract class AbstractTrack {
 		this.elevation = elevation;
 	}
 
-	public double elevationProperty() {
-		return elevation;
-	}
+
 
 	public void setElevation(double elevation) {
 		this.elevation = elevation;
 	}
 
 	public SimpleDoubleProperty getDistanceProperty() {
-		return new SimpleDoubleProperty(distance);
+		return new SimpleDoubleProperty(Math.round(distance));
 	}
 	public SimpleDoubleProperty getSpeedProperty() {
 		return new SimpleDoubleProperty(speed);
+	}
+
+	//zum Runden auf zwei Dezimalstellen
+	public Double doubleFormatter(Double d) {
+		return Math.floor(d * 100) / 100;
 	}
 
 }
