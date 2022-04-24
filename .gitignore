@@ -43,7 +43,10 @@ buildNumber.properties
 *.war
 *.nar
 *.ear
-*.zip
-*.tar.gz
-*.rar
 hs_err_pid*
+
+bin/
+build/
+/bin1/
+java/build/**
+data/tm-workspace.xml
