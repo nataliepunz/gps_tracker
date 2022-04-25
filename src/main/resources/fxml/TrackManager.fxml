@@ -99,7 +99,7 @@
                         <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
                     </rowConstraints>
                     <children>
-                        <TableView fx:id="mainTable" minHeight="300.0" GridPane.hgrow="SOMETIMES" GridPane.rowIndex="1" GridPane.vgrow="SOMETIMES" />
+                        <TableView fx:id="mainTable" minHeight="300.0" stylesheets="@../css/mainTable.css" GridPane.hgrow="SOMETIMES" GridPane.rowIndex="1" GridPane.vgrow="SOMETIMES" />
                         <BarChart fx:id="chart" animated="false" GridPane.hgrow="SOMETIMES" GridPane.rowIndex="2" GridPane.valignment="TOP" GridPane.vgrow="SOMETIMES">
                             <xAxis>
                                 <CategoryAxis side="BOTTOM" />
@@ -108,7 +108,7 @@
                                 <NumberAxis side="LEFT" />
                             </yAxis>
                         </BarChart>
-                        <TableView fx:id="sideTable" editable="true" maxHeight="1.7976931348623157E308" minHeight="-Infinity" prefHeight="426.0" prefWidth="500.0" GridPane.columnIndex="1" GridPane.hgrow="SOMETIMES" GridPane.rowIndex="1" GridPane.rowSpan="2147483647" GridPane.vgrow="SOMETIMES" />
+                        <TableView fx:id="sideTable" editable="true" maxHeight="1.7976931348623157E308" minHeight="-Infinity" prefHeight="426.0" prefWidth="500.0" stylesheets="@../css/mainTable.css" GridPane.columnIndex="1" GridPane.hgrow="SOMETIMES" GridPane.rowIndex="1" GridPane.rowSpan="2147483647" GridPane.vgrow="SOMETIMES" />
                         <TextField fx:id="keywordTextField" promptText="Suche..." />
                     </children>
                 </GridPane>
