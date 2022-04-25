@@ -9,6 +9,8 @@ import javafx.beans.value.ObservableValue;
 import javafx.collections.FXCollections;
 import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
+import javafx.collections.transformation.FilteredList;
+import javafx.collections.transformation.SortedList;
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
 import javafx.fxml.FXML;
@@ -52,6 +54,9 @@ public class TrackManagerController implements Initializable, ErrorPopUpControll
 
 	@FXML
 	private TableView sideTable;
+
+	@FXML
+	private TextField keywordTextField;
 
 	public TrackManagerController(DataModel model) {
 		this.model=model;
@@ -349,6 +354,24 @@ public class TrackManagerController implements Initializable, ErrorPopUpControll
 		//further adjustments
 		table.getSelectionModel().setSelectionMode(SelectionMode.SINGLE);
 		table.refresh();
+
+		FilteredList<AbstractTrack> filteredData = new FilteredList<>((ObservableList<AbstractTrack>) trackList, b -> true);
+		keywordTextField.textProperty().addListener((observable, oldValue, newValue) -> {
+			filteredData.setPredicate(AbstractTrack -> {
+				if(newValue.isEmpty() || newValue.isBlank() || newValue == null){
+					return true;
+				}
+				String searchKeyword = newValue.toLowerCase();
+				if(AbstractTrack.getName().toLowerCase().indexOf(searchKeyword) > -1) {
+					return true;
+				} else
+					return false;
+			});
+		});
+
+		SortedList<AbstractTrack> sortedData = new SortedList<>(filteredData);
+		sortedData.comparatorProperty().bind(table.comparatorProperty());
+		table.setItems(sortedData);
 
 	}
 
