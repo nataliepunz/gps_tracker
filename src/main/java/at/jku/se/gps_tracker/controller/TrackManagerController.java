@@ -46,7 +46,6 @@ public class TrackManagerController implements Initializable, ErrorPopUpControll
 	//TODO : Optische Korrekturen
 	private DataModel model;
 	private ObservableList<AbstractTrack> trackList;
-	private ObservableList<TrackPoint> trackPoints;
 	private ObservableList<String> categories;
 
 	@FXML
@@ -341,9 +340,8 @@ public class TrackManagerController implements Initializable, ErrorPopUpControll
 					TableRow<Track> row = new TableRow<>();
 					row.setOnMouseClicked(event -> {
 						Track rowData = row.getItem();
-						trackPoints = FXCollections.observableArrayList((rowData.getTrackPoints()));
 						try {
-							showTrackTable(sideTable, trackPoints);
+							showTrackTable(sideTable, FXCollections.observableArrayList((rowData.getTrackPoints())));
 						} catch (IOException e) {
 							e.printStackTrace();
 						}
