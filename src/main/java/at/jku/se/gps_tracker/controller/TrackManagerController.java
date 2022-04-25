@@ -416,6 +416,7 @@ public class TrackManagerController implements Initializable, ErrorPopUpControll
 		try {
 			showTrackTable(mainTable, trackList);
 		} catch (IOException e) {
+
 			e.printStackTrace();
 		}}}
 
