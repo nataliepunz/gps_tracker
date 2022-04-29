@@ -26,7 +26,7 @@ public class GpsTracker extends Application {
 		 
 		primaryStage.setTitle("TrackStar");
 		primaryStage.getIcons().add(new Image(getClass().getResourceAsStream("/icon/icon.png")));
-		primaryStage.setScene(new Scene(root,1200,900));
+		primaryStage.setScene(new Scene(root,800,600));
 		primaryStage.show();
 		primaryStage.setOnCloseRequest(c -> System.exit(1));
 	}

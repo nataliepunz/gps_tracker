@@ -1,5 +1,6 @@
 package at.jku.se.gps_tracker.data;
 
+import java.io.File;
 import java.time.Duration;
 import java.time.Instant;
 import java.time.LocalDate;
@@ -211,9 +212,9 @@ public class TCXParser extends TrackParser {
 	
 	private Track createTCXTrack(String file) {
 		if(totalDuration.getSeconds()==0 || trackDistance==0) {
-			return new Track(FilenameUtils.getName(file), trackDate, trackTime, trackDistance, totalDuration,Duration.ofSeconds(0),0, averageBPM, maximumBPM, totalElevation, helpList);
+			return new Track(new File(file).getParentFile().getName(),FilenameUtils.getName(file), trackDate, trackTime, trackDistance, totalDuration,Duration.ofSeconds(0),0, averageBPM, maximumBPM, totalElevation, helpList);
 		} else {
-			return new Track(FilenameUtils.getName(file), trackDate, trackTime, trackDistance, totalDuration,Duration.ofSeconds((long) (totalDuration.getSeconds()/trackDistance)),trackDistance/totalDuration.getSeconds(), averageBPM, maximumBPM, totalElevation, helpList);
+			return new Track(new File(file).getParentFile().getName(),FilenameUtils.getName(file), trackDate, trackTime, trackDistance, totalDuration,Duration.ofSeconds((long) (totalDuration.getSeconds()/trackDistance)),trackDistance/totalDuration.getSeconds(), averageBPM, maximumBPM, totalElevation, helpList);
 		}
 	}
 }

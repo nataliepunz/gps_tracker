@@ -71,6 +71,17 @@ public class TrackParser implements ErrorPopUpController {
 	//TCX
 	double prevDistance = 0;
 	
+	
+	DataBaseOperations conn;
+	
+	public TrackParser() {
+		
+	}
+	
+	public TrackParser(DataBaseOperations conn) {
+		this.conn = conn;
+	}
+	
 	public List<Track> addTracks(Set<String> files, Set<String> readFiles){
 		HashSet<String> copyFiles = new HashSet<>(files);
 		copyFiles.removeAll(readFiles);
@@ -82,14 +93,20 @@ public class TrackParser implements ErrorPopUpController {
 		XMLStreamReader streamReader;
 		GPXParser gpx = new GPXParser();
 		TCXParser tcx = new TCXParser();
+		Track track;
 		for(String file : copyFiles) {
 			try {
+				track = null;
 				in = new BufferedInputStream(new FileInputStream(file));
 				streamReader = inputFactory.createXMLStreamReader(in);
 				if(FilenameUtils.getExtension(file).equals("gpx")) {
-					trackList.add(gpx.readGPXTrack(file, streamReader));
+					track = gpx.readGPXTrack(file, streamReader);
+					trackList.add(track);
+					conn.addTrackToDataBase(file, track);
 				} else if (FilenameUtils.getExtension(file).equals("tcx")) {
-					trackList.add(tcx.readTCXTrack(file, streamReader));
+					track = tcx.readTCXTrack(file, streamReader);
+					trackList.add(track);
+					conn.addTrackToDataBase(file, track);
 				}
 				readFiles.add(file);
 				in.close();

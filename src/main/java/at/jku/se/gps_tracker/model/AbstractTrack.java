@@ -1,11 +1,7 @@
 package at.jku.se.gps_tracker.model;
 
 import javafx.beans.property.*;
-
-import java.text.DecimalFormat;
 import java.time.Duration;
-
-import static java.lang.Math.round;
 
 public abstract class AbstractTrack {
 	private String name;
