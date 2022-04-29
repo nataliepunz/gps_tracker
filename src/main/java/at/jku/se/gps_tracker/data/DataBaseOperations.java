@@ -11,10 +11,14 @@ import java.time.Duration;
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 
 import org.apache.commons.io.FilenameUtils;
 
+import at.jku.se.gps_tracker.model.DataModel;
 import at.jku.se.gps_tracker.model.Track;
 import at.jku.se.gps_tracker.model.TrackPoint;
 
@@ -22,7 +26,7 @@ public class DataBaseOperations {
 
 	private Connection conn;
 	
-	public DataBaseOperations() {
+	public DataBaseOperations(DataModel data) {
 		conn = null;
 	}
 	
@@ -128,10 +132,11 @@ public class DataBaseOperations {
 		}
 	}
 	
-	public List<Track> getTracks(){
+	public List<Track> getTracks(String currentDirectory){
 		List<Track> trackHelpList = new ArrayList<>();
-		try(Statement stmt = conn.createStatement()){
-			ResultSet rs = stmt.executeQuery("SELECT * FROM tracks");
+		try(PreparedStatement stmt = conn.prepareStatement("SELECT * FROM tracks WHERE folder=?")){
+			stmt.setString(1, currentDirectory);
+			ResultSet rs = stmt.executeQuery();
 			while(rs.next()) {
 				trackHelpList.add(new Track(this, rs.getString("folder"), rs.getString("name"), LocalDate.parse(rs.getString("date")), LocalTime.parse(rs.getString("time")), rs.getDouble("distance"), Duration.ofSeconds((long) rs.getDouble("duration")), Duration.ofSeconds((long) rs.getDouble("pace")), rs.getDouble("speed"), rs.getInt("averageBPM"), rs.getInt("maximumBPM"), rs.getDouble("elevation")));
 			}
@@ -154,5 +159,72 @@ public class DataBaseOperations {
 			e.printStackTrace();
 		}
 		return trackPointHelpList;
+	}
+	
+	public void removeTracks(List<File> files, String currentDirectoryFolder){
+		HashSet<String> driveFiles = new HashSet<>();
+		files.forEach(f -> {
+			driveFiles.add(FilenameUtils.getName(f.getAbsolutePath()));
+		});
+		
+		HashSet<String> dataBaseFiles = new HashSet<>();
+		try(PreparedStatement stmt = conn.prepareStatement("SELECT name FROM tracks WHERE folder=?")){
+			stmt.setString(1, currentDirectoryFolder);
+			ResultSet rs = stmt.executeQuery();
+			while(rs.next()) {
+				dataBaseFiles.add(rs.getString("name"));
+			}
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
+		
+		dataBaseFiles.removeAll(driveFiles);
+		
+		try(PreparedStatement stmt = conn.prepareStatement("DELETE FROM tracks WHERE name=? AND folder=?")){
+			for(String s : dataBaseFiles) {
+				stmt.setString(1, s);
+				stmt.setString(2, currentDirectoryFolder);
+				stmt.execute();
+			}
+			conn.commit();
+		} catch (SQLException e) {
+			e.printStackTrace();
+			try {
+				conn.rollback();
+			} catch (SQLException e1) {
+				e1.printStackTrace();
+			}
+		}
+	}
+
+	public void addTracks(List<File> files, String currentDirectoryFolder) {
+		HashMap<String, File> mapping = new HashMap<>();
+		HashSet<String> driveFiles = new HashSet<>();
+		files.forEach(f -> {
+			driveFiles.add(FilenameUtils.getName(f.getAbsolutePath()));
+			mapping.put(FilenameUtils.getName(f.getAbsolutePath()), f);
+		});
+		
+		HashSet<String> dataBaseFiles = new HashSet<>();
+		try(PreparedStatement stmt = conn.prepareStatement("SELECT name FROM tracks WHERE folder=?")){
+			stmt.setString(1, currentDirectoryFolder);
+			ResultSet rs = stmt.executeQuery();
+			while(rs.next()) {
+				dataBaseFiles.add(rs.getString("name"));
+			}
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
+		
+		driveFiles.removeAll(dataBaseFiles);
+		
+		HashMap<String, Track> toAddTracks = new HashMap<>();
+		TrackParser parser = new TrackParser();
+		for(String s : driveFiles) {
+			toAddTracks.put(mapping.get(s).getAbsolutePath(), parser.getTrack(mapping.get(s).getAbsolutePath()));
+		}
+		for(Map.Entry<String, Track> s : toAddTracks.entrySet()) {
+			addTrackToDataBase(s.getKey(), s.getValue());
+		}
 	}
 }

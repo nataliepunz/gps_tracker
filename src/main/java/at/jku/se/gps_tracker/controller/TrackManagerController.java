@@ -3,9 +3,7 @@ package at.jku.se.gps_tracker.controller;
 import at.jku.se.gps_tracker.model.AbstractTrack;
 import at.jku.se.gps_tracker.model.DataModel;
 import at.jku.se.gps_tracker.model.Track;
-import at.jku.se.gps_tracker.model.TrackPoint;
 import javafx.beans.property.*;
-import javafx.beans.value.ObservableValue;
 import javafx.collections.FXCollections;
 import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
@@ -16,7 +14,6 @@ import javafx.event.EventHandler;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.fxml.Initializable;
-import javafx.geometry.Insets;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.chart.BarChart;
@@ -25,20 +22,15 @@ import javafx.scene.chart.NumberAxis;
 import javafx.scene.chart.XYChart;
 import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
-import javafx.scene.layout.GridPane;
-import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 
-import javax.swing.event.ChangeListener;
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.net.URL;
-import java.time.Duration;
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.util.ArrayList;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.ResourceBundle;
 
@@ -49,10 +41,10 @@ public class TrackManagerController implements Initializable, ErrorPopUpControll
 	private ObservableList<String> categories;
 
 	@FXML
-	private TableView mainTable;
+	private TableView<AbstractTrack> mainTable;
 
 	@FXML
-	private TableView sideTable;
+	private TableView<AbstractTrack> sideTable;
 
 	@FXML
 	private TextField keywordTextField;
@@ -66,7 +58,6 @@ public class TrackManagerController implements Initializable, ErrorPopUpControll
 		setCategories();
 	}
 
-
 	private void setTrackList() {
 		trackList = FXCollections.observableArrayList(model.getTrackList());
 		model.getTrackList().addListener((ListChangeListener<? super AbstractTrack>) c -> {
@@ -77,11 +68,10 @@ public class TrackManagerController implements Initializable, ErrorPopUpControll
 				if (c.wasRemoved()) {
 					trackList.removeAll(c.getRemoved());
 				}
+				setUpMenuItems();
 			}
 		});
 	}
-
-
 
 	private void setCategories() {
 		categories = FXCollections.observableArrayList(model.getDirectoryFolders());
@@ -93,11 +83,6 @@ public class TrackManagerController implements Initializable, ErrorPopUpControll
 				if (c.wasRemoved()) {
 					categories.removeAll(c.getRemoved());
 				}
-			}
-			try {
-				setUpMenuItems();
-			} catch (IOException e) {
-				e.printStackTrace();
 			}
 		});
 	}
@@ -119,10 +104,8 @@ public class TrackManagerController implements Initializable, ErrorPopUpControll
 
 	//je nach Index entsprechend holen! (erster Eintrag ausgewählt --> hier erste (bzw 0 auswählen!)
 	@FXML
-	private void changeCategory(ActionEvent event, int index) throws IOException { //index als parameter hinzugefügt - nuray
-
+	private void changeCategory(ActionEvent event, int index) { //index als parameter hinzugefügt - nuray
 		model.setCurrentDirectoryFolder(index);
-		setUpLists();
 		showTrackTable(mainTable, trackList);
 	}
 
@@ -253,8 +236,7 @@ public class TrackManagerController implements Initializable, ErrorPopUpControll
 	private void openUserGuide(ActionEvent event){
 	}
 
-	private void setUpMenuItems() throws IOException {
-
+	private void setUpMenuItems() {
 		//nuray
 		//die inhalte der liste categories unter tracks anzeigen
 		mTracks.getItems().clear();
@@ -272,18 +254,13 @@ public class TrackManagerController implements Initializable, ErrorPopUpControll
 			ri.setOnAction(new EventHandler<ActionEvent>() {
 				@Override
 				public void handle(ActionEvent event) {
-					try {
-						changeCategory(event, temp.indexOf(ri));
-					} catch (IOException e) {
-						e.printStackTrace();
-					}
-
+					changeCategory(event, temp.indexOf(ri));
 				}});}}
 
 
 
 	//Implementierungstipps: https://stackoverflow.com/a/45013059
-	private void showTrackTable(TableView table, List<?> trackList) throws IOException {
+	private void showTrackTable(TableView table, List<?> trackList) {
 		//clear table
 		table.getItems().clear();
 		table.getColumns().clear();
@@ -340,11 +317,7 @@ public class TrackManagerController implements Initializable, ErrorPopUpControll
 					TableRow<Track> row = new TableRow<>();
 					row.setOnMouseClicked(event -> {
 						Track rowData = row.getItem();
-						try {
-							showTrackTable(sideTable, FXCollections.observableArrayList((rowData.getTrackPoints())));
-						} catch (IOException e) {
-							e.printStackTrace();
-						}
+						showTrackTable(sideTable, FXCollections.observableArrayList((rowData.getTrackPoints())));
 					});
 					return row ;});
 			}
@@ -403,8 +376,7 @@ public class TrackManagerController implements Initializable, ErrorPopUpControll
 		chart.getData().addAll(xy);
 
 	}
-	private void chooseDirectory() throws IOException {
-
+	private void chooseDirectory() {
 		try {
 			FXMLLoader fxmlLoader = new FXMLLoader();
 			fxmlLoader.setLocation(getClass().getResource("/fxml/StartView.fxml"));
@@ -420,26 +392,20 @@ public class TrackManagerController implements Initializable, ErrorPopUpControll
 		} catch (IOException e1) {
 			showErrorPopUp("ERROR! Please refer to following information: "+e1.getMessage());
 		}
-		setUpLists();
-		setUpMenuItems(); // damit die Menu Items nach ChangeCategory aktualisieren
-
 	}
 
-	@FXML ToggleGroup tgGraph;
+	@FXML
+	private ToggleGroup tgGraph;
+	
 	@Override
 	public void initialize(URL arg0, ResourceBundle arg1) {
-		try {
-			chooseDirectory();
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
+		chooseDirectory();
+		setUpLists();
+		setUpMenuItems();
+		showTrackTable(mainTable, trackList);
+	}
+}
 
-		try {
-			showTrackTable(mainTable, trackList);
-		} catch (IOException e) {
-
-			e.printStackTrace();
-		}}}
 
 
 

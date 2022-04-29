@@ -8,6 +8,7 @@ import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
 
 import java.io.File;
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 
@@ -16,30 +17,35 @@ public class DataModel {
 	private final String DATABASE_NAME = "track.db";
 	
 	private ObservableList<AbstractTrack> trackList;
-	private ObservableList<TrackPoint> trackPoints;
 	private String currentDirectory;
 	private ObservableList<String> directoryFolders;
 	private String currentDirectoryFolder;
 	private String[] extensions;
-	private HashSet<String> readFiles;
+	private HashSet<File> readFiles;
 	private DataBaseOperations conn;
 
 	public DataModel() {
 		trackList = FXCollections.observableArrayList();
 		extensions = new String[] { "gpx", "tcx" };
-		conn = new DataBaseOperations();
+		conn = new DataBaseOperations(this);
 	}
 
 	public void setCurrrentDirectory(String currentDirectory) {
-		if(this.currentDirectory!=null) {
+		if(currentDirectory==null) {
 			return;
 		}
 		this.currentDirectory = currentDirectory;
 		this.directoryFolders = FXCollections.observableArrayList(new File(this.currentDirectory).list((dir, name) -> new File(dir, name).isDirectory()));
-		conn.establishConnection(FilenameUtils.concat(currentDirectory, DATABASE_NAME));
+		establishDBConnection();
 		if(!directoryFolders.isEmpty()){
 			readFiles = new HashSet<>();
 			setCurrentDirectoryFolder(0);
+		}
+	}
+	
+	private void establishDBConnection() {
+		if(conn!=null){
+			conn.establishConnection(FilenameUtils.concat(currentDirectory, DATABASE_NAME));
 		}
 	}
 
@@ -50,28 +56,19 @@ public class DataModel {
 
 	public void updateModel() {
 		long start = System.nanoTime();
-		/*
-		List<File> filesAsFile = (List<File>) FileUtils.listFiles(new File(currentDirectory,currentDirectoryFolder), extensions, true);
-		HashSet<String> files = new HashSet<>();
-		filesAsFile.forEach(f -> files.add(f.getAbsolutePath()));
-		TrackParser parser = new TrackParser(conn);
+		List<File> files = (List<File>) FileUtils.listFiles(new File(currentDirectory,currentDirectoryFolder), extensions, true);
+		conn.removeTracks(files, currentDirectoryFolder);
+		conn.addTracks(files, currentDirectoryFolder);
 		trackList.clear();
-		trackList.addAll(parser.addTracks(files, readFiles));
-		parser.removeTracks(trackList,files,readFiles);
-		*/
-		trackList.addAll(conn.getTracks());
+		trackList.addAll(conn.getTracks(currentDirectoryFolder));
 		System.out.println("Zeit fürs Einlesen von "+ trackList.size() +" GPS-Dateien: "+(double) (System.nanoTime()-start)/1000000);
 	}
 
 	public ObservableList<AbstractTrack> getTrackList(){
 		return this.trackList;
 	}
-
-	public ObservableList<TrackPoint> getTrackPoints(){
-		return this.trackPoints;
-	}
-
+	
 	public ObservableList<String> getDirectoryFolders() {
 		return this.directoryFolders;
-	}
+	}	
 }

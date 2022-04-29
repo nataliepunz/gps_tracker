@@ -8,15 +8,12 @@ import java.time.Instant;
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
 import javax.xml.stream.XMLInputFactory;
 import javax.xml.stream.XMLStreamReader;
 
-import at.jku.se.gps_tracker.model.AbstractTrack;
-import javafx.collections.ObservableList;
 import org.apache.commons.io.FilenameUtils;
 
 import at.jku.se.gps_tracker.controller.ErrorPopUpController;
@@ -82,57 +79,25 @@ public class TrackParser implements ErrorPopUpController {
 		this.conn = conn;
 	}
 	
-	public List<Track> addTracks(Set<String> files, Set<String> readFiles){
-		HashSet<String> copyFiles = new HashSet<>(files);
-		copyFiles.removeAll(readFiles);
-		List<Track> trackList = new ArrayList<>();
-		if(copyFiles.isEmpty()) return trackList;
+	public Track getTrack(String file){
 		XMLInputFactory inputFactory = XMLInputFactory.newInstance();
 		inputFactory.setProperty(XMLInputFactory.SUPPORT_DTD, false);
 		InputStream in;
 		XMLStreamReader streamReader;
-		GPXParser gpx = new GPXParser();
-		TCXParser tcx = new TCXParser();
-		Track track;
-		for(String file : copyFiles) {
-			try {
-				track = null;
-				in = new BufferedInputStream(new FileInputStream(file));
-				streamReader = inputFactory.createXMLStreamReader(in);
-				if(FilenameUtils.getExtension(file).equals("gpx")) {
-					track = gpx.readGPXTrack(file, streamReader);
-					trackList.add(track);
-					conn.addTrackToDataBase(file, track);
-				} else if (FilenameUtils.getExtension(file).equals("tcx")) {
-					track = tcx.readTCXTrack(file, streamReader);
-					trackList.add(track);
-					conn.addTrackToDataBase(file, track);
-				}
-				readFiles.add(file);
-				in.close();
-			} catch (Exception e) {
-				showErrorPopUp("The GPS-Track "+FilenameUtils.getName(file)+" could not be read! The following Problem was encountered: "+e.getMessage());
+		Track track = null;
+		try {
+			in = new BufferedInputStream(new FileInputStream(file));
+			streamReader = inputFactory.createXMLStreamReader(in);
+			if(FilenameUtils.getExtension(file).equals("gpx")) {
+				track = new GPXParser().readGPXTrack(file, streamReader);
+			} else {
+				track = new TCXParser().readTCXTrack(file, streamReader);
 			}
+			in.close();
+		} catch (Exception e) {
+			showErrorPopUp("The GPS-Track "+FilenameUtils.getName(file)+" could not be read! The following Problem was encountered: "+e.getMessage());
 		}
-		return trackList;
-	}
-	
-	public List<Track> removeTracks(final ObservableList<AbstractTrack> trackList, Set<String> files, Set<String> readFiles){
-		List<Track> helpList = new ArrayList<>();
-		HashSet<String> copyReadFiles = new HashSet<>(readFiles);
-		copyReadFiles.removeAll(files);
-		for(String s : copyReadFiles) {
-			helpList.add(getToBeRemovedTrack(trackList,s));
-		}
-		readFiles.removeAll(copyReadFiles);
-		return helpList;
-	}
-	
-	private Track getToBeRemovedTrack(ObservableList<AbstractTrack> trackList, String track) {
-		return (Track) trackList.stream()
-					.filter(t -> t.getName().equals(FilenameUtils.getName(track)))
-					.findAny()
-					.orElse(null);
+		return track;
 	}
 		
 	//from here: https://stackoverflow.com/a/16794680
