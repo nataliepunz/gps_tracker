@@ -7,6 +7,7 @@ import java.time.LocalDate;
 import java.time.LocalTime;
 import java.time.ZoneId;
 import java.util.ArrayList;
+import java.util.List;
 
 import javax.xml.stream.XMLStreamException;
 import javax.xml.stream.XMLStreamReader;
@@ -17,8 +18,31 @@ import at.jku.se.gps_tracker.model.Track;
 import at.jku.se.gps_tracker.model.TrackPoint;
 
 public class TCXParser extends TrackParser {
+	Instant startTime;
+	int averageBPM;
+	int averageBPMCount;
+	int maximumBPM;
+	boolean elevationSet;
+	boolean positionSet;
+	double distanceMeters;
+	boolean distanceMetersSet;
+	int averageBPMPoint;
+	int helpMaxBPM;
+	double helpDistance;
+	double prevDistance;
 	
-	public Track readTCXTrack (String file, XMLStreamReader streamReader) throws XMLStreamException {
+	List<TrackPoint> readTCXTrackPoints(String file, XMLStreamReader streamReader) throws XMLStreamException {
+		readTrack(streamReader);
+		return helpList;
+	}
+		
+	Track readTCXTrack (String file, XMLStreamReader streamReader) throws XMLStreamException {
+		readTrack(streamReader);		
+		if(averageBPMCount!=0) averageBPM = averageBPM/averageBPMCount;
+		return createTCXTrack(file);
+	}
+	
+	private void readTrack(XMLStreamReader streamReader) throws XMLStreamException {
 		resetFields();
 		while (streamReader.hasNext()) {
 			if (streamReader.isStartElement() && streamReader.getLocalName().equals("Activity")) {
@@ -26,11 +50,7 @@ public class TCXParser extends TrackParser {
 				}
 			streamReader.next();
 		}
-		
 		streamReader.close();
-		
-		if(averageBPMCount!=0) averageBPM = averageBPM/averageBPMCount;
-		return createTCXTrack(file);
 	}
 	
 	private void resetFields() {
@@ -217,4 +237,6 @@ public class TCXParser extends TrackParser {
 			return new Track(new File(file).getParentFile().getName(),FilenameUtils.getName(file), trackDate, trackTime, trackDistance, totalDuration,Duration.ofSeconds((long) (totalDuration.getSeconds()/trackDistance)),trackDistance/totalDuration.getSeconds(), averageBPM, maximumBPM, totalElevation, helpList);
 		}
 	}
+
+	
 }

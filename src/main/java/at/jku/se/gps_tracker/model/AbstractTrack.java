@@ -5,13 +5,17 @@ import java.time.Duration;
 
 public abstract class AbstractTrack {
 	private String name;
-	private Double distance;
+	private double distance;
 	private Duration duration;
 	private Duration pace;
-	private Double speed;
+	private double speed;
 	private int averageBPM;
 	private int maximumBPM;
-	private Double elevation;
+	private double elevation;
+	
+	protected AbstractTrack() {
+
+	}
 
 	protected AbstractTrack(String name, double distance, Duration duration, Duration pace, double speed, double elevation) {
 		this.name = name;
@@ -26,10 +30,6 @@ public abstract class AbstractTrack {
 		this(name, distance, duration, pace, speed, elevation);
 		this.averageBPM = averageBPM;
 		this.maximumBPM = maximumBPM;
-	}
-
-	protected AbstractTrack() {
-
 	}
 
 	public String getName() {
@@ -73,7 +73,7 @@ public abstract class AbstractTrack {
 	}
 
 	//Quelle: https://stackoverflow.com/a/266846/5750106
-	public static String formatDuration(Duration duration) {
+	private static String formatDuration(Duration duration) {
 		long seconds = duration.getSeconds();
 		long absSeconds = Math.abs(seconds);
 		String positive = String.format(
@@ -83,31 +83,11 @@ public abstract class AbstractTrack {
 				absSeconds % 60);
 		return seconds < 0 ? "-" + positive : positive;
 	}
-
-	public SimpleStringProperty getDurationProperty() {
-		return new SimpleStringProperty(formatDuration(duration));
-	}
-
-	public Double getDurationMinutes() {
-		return Double.valueOf(duration.toMinutes());
-	}
-
-	public SimpleStringProperty getPaceProperty() {
-		return new SimpleStringProperty(formatDuration(pace));
-	}
-
-	public String nameProperty() {
-		return name;
-	}
-
+	
 	public void setName(String name) {
 		this.name = name;
 	}
-
-	public Double distanceProperty() {
-		return doubleFormatter(distance);
-	}
-
+	
 	public void setDistance(double distance) {
 		this.distance = distance;
 	}
@@ -120,12 +100,9 @@ public abstract class AbstractTrack {
 		this.pace = pace;
 	}
 
-
 	public void setSpeed(double speed) {
 		this.speed = speed;
 	}
-
-
 
 	public void setDistance(Double distance) {
 		this.distance = distance;
@@ -134,17 +111,27 @@ public abstract class AbstractTrack {
 	public void setSpeed(Double speed) {
 		this.speed = speed;
 	}
-
-	public void setElevation(Double elevation) {
-		this.elevation = elevation;
-	}
-
-
-
+	
 	public void setElevation(double elevation) {
 		this.elevation = elevation;
 	}
+	
+	public SimpleStringProperty getDurationProperty() {
+		return new SimpleStringProperty(formatDuration(duration));
+	}
 
+	public SimpleStringProperty getPaceProperty() {
+		return new SimpleStringProperty(formatDuration(pace));
+	}
+
+	public String nameProperty() {
+		return name;
+	}
+
+	public Double distanceProperty() {
+		return doubleFormatter(distance);
+	}
+	
 	public SimpleDoubleProperty getDistanceProperty() {
 		return new SimpleDoubleProperty(Math.round(distance));
 	}
@@ -153,8 +140,7 @@ public abstract class AbstractTrack {
 	}
 
 	//zum Runden auf zwei Dezimalstellen
-	public Double doubleFormatter(Double d) {
+	private Double doubleFormatter(Double d) {
 		return Math.floor(d * 100) / 100;
 	}
-
 }

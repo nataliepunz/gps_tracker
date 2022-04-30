@@ -53,7 +53,7 @@ public class Track extends AbstractTrack {
 
 	public List<TrackPoint> getTrackPoints() {
 		if(trackPoints==null && conn!=null) {
-			return conn.getTrackPoints(this);
+			this.trackPoints = conn.getTrackPoints(this);
 		}
 		return this.trackPoints;
 	}

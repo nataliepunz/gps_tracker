@@ -18,15 +18,17 @@ import java.util.Map;
 
 import org.apache.commons.io.FilenameUtils;
 
+import at.jku.se.gps_tracker.controller.ErrorPopUpController;
 import at.jku.se.gps_tracker.model.Track;
 import at.jku.se.gps_tracker.model.TrackPoint;
 
-public class TrackParsingOperations {
+public class TrackParsingOperations implements ErrorPopUpController {
 
 	private Connection conn;
+	private String directory;
 	
-	public TrackParsingOperations() {
-		conn = null;
+	public TrackParsingOperations(String directory) {
+		this.directory=directory;
 	}
 	
 	public void establishConnection(String dataBaseLocation) {
@@ -39,37 +41,28 @@ public class TrackParsingOperations {
 				setUpTables();
 			}
 		} catch (SQLException e) {  
-			System.out.println(e.getMessage());  
+			showErrorPopUp("ERROR! COULD NOT CONNECT TO DATABASE! "+e.getMessage());
 		}
 	}
 	
-	private void setUpTables() {
-		String sqlTrackTableStatement = "CREATE TABLE tracks (name TEXT NOT NULL, folder TEXT NOT NULL, date TEXT NOT NULL, time TEXT NOT NULL, distance REAL NOT NULL, duration REAL NOT NULL, pace REAL NOT NULL, speed REAL NOT NULL, averageBPM INTEGER NOT NULL, maximumBPM INTEGER NOT NULL, elevation REAL NOT NULL, PRIMARY KEY(name,folder));";
-		
-		String sqlTrackPointTableStatement = "CREATE TABLE trackpoints (name TEXT NOT NULL, folder TEXT NOT NULL, nr INTEGER NOT NULL, distance	REAL NOT NULL, duration	REAL NOT NULL, pace	REAL NOT NULL, speed REAL NOT NULL, averageBPM INTEGER NOT NULL, maximumBPM INTEGER NOT NULL, elevation REAL NOT NULL, FOREIGN KEY(name,folder) REFERENCES tracks(name,folder) ON DELETE CASCADE, PRIMARY KEY(name,folder,nr));";	
-		
+	private void setUpTables() {		
 		try(Statement stmt = conn.createStatement()){
-			stmt.execute(sqlTrackTableStatement);
-            stmt.execute(sqlTrackPointTableStatement);  
+			stmt.execute("CREATE TABLE tracks (name TEXT NOT NULL, folder TEXT NOT NULL, date TEXT NOT NULL, time TEXT NOT NULL, distance REAL NOT NULL, duration REAL NOT NULL, pace REAL NOT NULL, speed REAL NOT NULL, averageBPM INTEGER NOT NULL, maximumBPM INTEGER NOT NULL, elevation REAL NOT NULL, PRIMARY KEY(name,folder));");
             conn.commit();
         } catch (SQLException e) {  
-            System.out.println(e.getMessage());
+        	showErrorPopUp("ERROR! COULD NOT CREATE TABLES! "+e.getMessage());
             try {
 				conn.rollback();
 			} catch (SQLException e1) {
-				e1.printStackTrace();
+				showErrorPopUp("ERROR! COULD NOT ROLLBACK! "+e.getMessage());
 			}
         }  
 	}
 	
 	public void addTrackToDataBase(String file, Track track) {
-		String sqlAddTrack = "INSERT INTO tracks VALUES(?,?,?,?,?,?,?,?,?,?,?)";
-		String sqlAddTrackPoints = "INSERT INTO trackpoints VALUES(?,?,?,?,?,?,?,?,?,?)";
-		String parentDirectory = new File(file).getParentFile().getName();
-		try(PreparedStatement stmt = conn.prepareStatement(sqlAddTrack); PreparedStatement stmt2 = conn.prepareStatement(sqlAddTrackPoints)){
-			
+		try(PreparedStatement stmt = conn.prepareStatement("INSERT INTO tracks VALUES(?,?,?,?,?,?,?,?,?,?,?)")){
 			stmt.setString(1, track.getName());
-			stmt.setString(2, parentDirectory);
+			stmt.setString(2, new File(file).getParentFile().getName());
 			stmt.setString(3, track.getDate().toString());
 			stmt.setString(4, track.getStartTime().toString());
 			stmt.setDouble(5, track.getDistance());
@@ -81,26 +74,13 @@ public class TrackParsingOperations {
 			stmt.setDouble(11, track.getElevation());
 			stmt.execute();
 			
-			for(TrackPoint t : track.getTrackPoints()) {
-				stmt2.setString(1, track.getName());
-				stmt2.setString(2, parentDirectory);
-				stmt2.setString(3, t.getName());
-				stmt2.setDouble(4, t.getDistance());
-				stmt2.setDouble(5, t.getDuration().toSeconds());
-				stmt2.setDouble(6, t.getPace().toSeconds());
-				stmt2.setDouble(7, t.getSpeed());
-				stmt2.setInt(8, t.getAverageBPM());
-				stmt2.setInt(9, t.getMaximumBPM());
-				stmt2.setDouble(10, t.getElevation());
-				stmt2.execute();
-			}
 			conn.commit();
 		} catch (SQLException e) {
-			e.printStackTrace();
+			showErrorPopUp("ERROR! COULD NOT ADD TRACK! "+e.getMessage());
 			try {
 				conn.rollback();
 			} catch (SQLException e1) {
-				e1.printStackTrace();
+				showErrorPopUp("ERROR! COULD NOT ROLLBACK! "+e.getMessage());
 			}
 		}
 	}
@@ -114,24 +94,13 @@ public class TrackParsingOperations {
 				trackHelpList.add(new Track(this, rs.getString("folder"), rs.getString("name"), LocalDate.parse(rs.getString("date")), LocalTime.parse(rs.getString("time")), rs.getDouble("distance"), Duration.ofSeconds((long) rs.getDouble("duration")), Duration.ofSeconds((long) rs.getDouble("pace")), rs.getDouble("speed"), rs.getInt("averageBPM"), rs.getInt("maximumBPM"), rs.getDouble("elevation")));
 			}
 		} catch (SQLException e) {
-			e.printStackTrace();
+			showErrorPopUp("ERROR! COULD NOT GET TRACKS! "+e.getMessage());
 		}
 		return trackHelpList;
 	}
 	
 	public List<TrackPoint> getTrackPoints(Track track){
-		List<TrackPoint> trackPointHelpList = new ArrayList<>();
-		try(PreparedStatement stmt2 = conn.prepareStatement("SELECT * FROM trackpoints WHERE name=? AND folder=?")){
-			stmt2.setString(1, track.getName());
-			stmt2.setString(2, track.getParentDirectory());
-			ResultSet rs2 = stmt2.executeQuery();
-			while(rs2.next()) {
-				trackPointHelpList.add(new TrackPoint(rs2.getString("nr"),rs2.getDouble("distance"), Duration.ofSeconds((long) rs2.getDouble("duration")), Duration.ofSeconds((long) rs2.getDouble("pace")), rs2.getDouble("speed"), rs2.getInt("averageBPM"), rs2.getInt("maximumBPM"), rs2.getDouble("elevation")));              
-			}
-		} catch (SQLException e) {
-			e.printStackTrace();
-		}
-		return trackPointHelpList;
+		return new TrackParser().getTrackPoints(FilenameUtils.concat(FilenameUtils.concat(directory, track.getParentDirectory()),track.getName()));
 	}
 	
 	public void removeTracks(List<File> files, String currentDirectoryFolder){
@@ -146,7 +115,7 @@ public class TrackParsingOperations {
 				dataBaseFiles.add(rs.getString("name"));
 			}
 		} catch (SQLException e) {
-			e.printStackTrace();
+			showErrorPopUp("ERROR! COULD NOT GET TRACKS TO CHECK! "+e.getMessage());
 		}
 		
 		dataBaseFiles.removeAll(driveFiles);
@@ -157,15 +126,14 @@ public class TrackParsingOperations {
 				stmt.setString(2, currentDirectoryFolder);
 				stmt.execute();
 			}
-			conn.commit();
 		} catch (SQLException e) {
-			e.printStackTrace();
+			showErrorPopUp("ERROR! COULD NOT REMOVE TRACK! "+e.getMessage());
 			try {
 				conn.rollback();
 			} catch (SQLException e1) {
-				e1.printStackTrace();
+				showErrorPopUp("ERROR! COULD NOT ROLLBACK! "+e.getMessage());
 			}
-		}
+		}		
 	}
 
 	public void addTracks(List<File> files, String currentDirectoryFolder) {
@@ -184,18 +152,20 @@ public class TrackParsingOperations {
 				dataBaseFiles.add(rs.getString("name"));
 			}
 		} catch (SQLException e) {
-			e.printStackTrace();
+			showErrorPopUp("ERROR! COULD NOT GET TRACKS TO CHECK! "+e.getMessage());
 		}
 		
 		driveFiles.removeAll(dataBaseFiles);
 		
-		HashMap<String, Track> toAddTracks = new HashMap<>();
 		TrackParser parser = new TrackParser();
+		parser.createParsers();
 		for(String s : driveFiles) {
-			toAddTracks.put(mapping.get(s).getAbsolutePath(), parser.getTrack(mapping.get(s).getAbsolutePath()));
+			addTrackToDataBase(mapping.get(s).getAbsolutePath(), parser.getTrack(mapping.get(s).getAbsolutePath()));
 		}
-		for(Map.Entry<String, Track> s : toAddTracks.entrySet()) {
-			addTrackToDataBase(s.getKey(), s.getValue());
-		}
+		
+	}
+	
+	public void setDirectory(String directory) {
+		this.directory=directory;
 	}
 }

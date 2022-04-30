@@ -7,10 +7,10 @@ import java.time.LocalDate;
 import java.time.LocalTime;
 import java.time.ZoneId;
 import java.util.ArrayList;
+import java.util.List;
 
 import javax.xml.stream.XMLStreamException;
 import javax.xml.stream.XMLStreamReader;
-import javax.xml.transform.TransformerFactoryConfigurationError;
 
 import org.apache.commons.io.FilenameUtils;
 
@@ -18,8 +18,18 @@ import at.jku.se.gps_tracker.model.Track;
 import at.jku.se.gps_tracker.model.TrackPoint;
 
 public class GPXParser extends TrackParser{
+		
+	public List<TrackPoint> readGPXTrackPoints(String file, XMLStreamReader streamReader) throws XMLStreamException {
+		readTrack(streamReader);
+		return helpList;
+	}
 	
-	public Track readGPXTrack(String file, XMLStreamReader streamReader) throws XMLStreamException, TransformerFactoryConfigurationError {
+	Track readGPXTrack(String file, XMLStreamReader streamReader) throws XMLStreamException {
+		readTrack(streamReader);
+		return createGPXTrack(file);
+	}
+	
+	private void readTrack(XMLStreamReader streamReader) throws XMLStreamException {
 		resetFields();
 		while (streamReader.hasNext()) {
 			if (streamReader.isStartElement() && streamReader.getLocalName().equals("trkpt")) {
@@ -27,9 +37,7 @@ public class GPXParser extends TrackParser{
 			}
 			streamReader.next();
 		}
-		
 		streamReader.close();
-		return createGPXTrack(file);
 	}
 	
 	private void resetFields() {
@@ -122,7 +130,7 @@ public class GPXParser extends TrackParser{
 		double distance = distance(latitude, prevLatitude, longtitude, prevLongtitude, elevation, prevElevation);
 		trackDistance += distance;
 		if(timeNeeded==null || timeNeeded.getSeconds()==0 || distance==0) {
-			helpList.add(new TrackPoint(String.valueOf(trackPointNr),distance, Duration.ofSeconds(0),Duration.ofSeconds(0),0, elevationChange));
+			helpList.add(new TrackPoint(String.valueOf(trackPointNr),distance, Duration.ofSeconds(0),Duration.ofSeconds(0), 0, elevationChange));
 		} else {
 			helpList.add(new TrackPoint(String.valueOf(trackPointNr),distance, timeNeeded, Duration.ofSeconds((long) (timeNeeded.getSeconds()/distance)), distance/timeNeeded.getSeconds(),elevationChange));
 		}
@@ -139,4 +147,6 @@ public class GPXParser extends TrackParser{
 			return new Track(new File(file).getParentFile().getName(),FilenameUtils.getName(file), trackDate, trackTime, trackDistance, totalDuration, Duration.ofSeconds((long) (totalDuration.getSeconds()/trackDistance)), trackDistance/totalDuration.getSeconds(), totalElevation, helpList);
 		}
 	}
+
+	
 }

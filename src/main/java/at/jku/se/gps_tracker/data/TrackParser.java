@@ -2,6 +2,7 @@ package at.jku.se.gps_tracker.data;
 
 import java.io.BufferedInputStream;
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.InputStream;
 import java.time.Duration;
 import java.time.Instant;
@@ -9,9 +10,9 @@ import java.time.LocalDate;
 import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Set;
 
 import javax.xml.stream.XMLInputFactory;
+import javax.xml.stream.XMLStreamException;
 import javax.xml.stream.XMLStreamReader;
 
 import org.apache.commons.io.FilenameUtils;
@@ -26,17 +27,10 @@ public class TrackParser implements ErrorPopUpController {
 	List<TrackPoint> helpList;
 	LocalDate trackDate;
 	LocalTime trackTime;
+	boolean trackDetailSet;
 	double trackDistance;
 	double totalElevation;
 	Duration totalDuration;
-	
-	//TCX
-	Instant startTime;
-	int averageBPM;
-	int averageBPMCount;
-	int maximumBPM;
-	
-	boolean trackDetailSet;
 	
 	// for TrackPoints themselves
 	int trackPointNr;
@@ -48,15 +42,6 @@ public class TrackParser implements ErrorPopUpController {
 	Duration timeNeeded;
 	LocalTime intermediateTime;
 	
-	//TCX
-	boolean elevationSet;
-	boolean positionSet;
-	double distanceMeters;
-	boolean distanceMetersSet;
-	int averageBPMPoint;
-	int helpMaxBPM;
-	double helpDistance;
-	
 	//data about previous trackPoint
 	LocalTime prevTime;
 	double prevElevation;
@@ -65,39 +50,62 @@ public class TrackParser implements ErrorPopUpController {
 	double prevLongtitude;
 	boolean prevCoordinatesSet;
 	
-	//TCX
-	double prevDistance = 0;
+	private XMLInputFactory inputFactory;
+	private XMLStreamReader streamReader;
+	private InputStream in;
 	
-	
-	TrackParsingOperations conn;
+	private GPXParser gpx;
+	private TCXParser tcx;
 	
 	public TrackParser() {
-		
-	}
-	
-	public TrackParser(TrackParsingOperations conn) {
-		this.conn = conn;
-	}
-	
-	public Track getTrack(String file){
-		XMLInputFactory inputFactory = XMLInputFactory.newInstance();
+		inputFactory = XMLInputFactory.newInstance();
 		inputFactory.setProperty(XMLInputFactory.SUPPORT_DTD, false);
-		InputStream in;
-		XMLStreamReader streamReader;
+	}
+	
+	public void createParsers() {
+		gpx = new GPXParser();
+		tcx = new TCXParser();
+	}
+		
+	public Track getTrack(String file){
 		Track track = null;
 		try {
-			in = new BufferedInputStream(new FileInputStream(file));
-			streamReader = inputFactory.createXMLStreamReader(in);
+			long start = System.nanoTime();
+			setUpTrackParser(file);
+			System.out.println("set Up Track: "+(double) ((System.nanoTime()-start)/1000000));
+			start = System.nanoTime();
 			if(FilenameUtils.getExtension(file).equals("gpx")) {
-				track = new GPXParser().readGPXTrack(file, streamReader);
+				track = gpx.readGPXTrack(file, streamReader);
 			} else {
-				track = new TCXParser().readTCXTrack(file, streamReader);
+				track = tcx.readTCXTrack(file, streamReader);
 			}
+			System.out.println("readTrack: "+(double) ((System.nanoTime()-start)/1000000));
 			in.close();
 		} catch (Exception e) {
 			showErrorPopUp("The GPS-Track "+FilenameUtils.getName(file)+" could not be read! The following Problem was encountered: "+e.getMessage());
 		}
 		return track;
+	}
+	
+	public List<TrackPoint> getTrackPoints(String file){
+		List<TrackPoint> points = new ArrayList<>();
+		try {
+			setUpTrackParser(file);
+			if(FilenameUtils.getExtension(file).equals("gpx")) {
+				points = new GPXParser().readGPXTrackPoints(file, streamReader);
+			} else {
+				points = new TCXParser().readTCXTrackPoints(file, streamReader);
+			}
+			in.close();
+		} catch (Exception e) {
+			showErrorPopUp("The GPS-Track "+FilenameUtils.getName(file)+" could not be read! The following Problem was encountered: "+e.getMessage());
+		}
+		return points;
+	}
+	
+	private void setUpTrackParser(String file) throws XMLStreamException, FileNotFoundException  {
+		in = new BufferedInputStream(new FileInputStream(file));
+		streamReader = inputFactory.createXMLStreamReader(in);
 	}
 		
 	//from here: https://stackoverflow.com/a/16794680
