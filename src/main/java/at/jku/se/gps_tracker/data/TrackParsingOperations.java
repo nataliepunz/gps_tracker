@@ -18,15 +18,14 @@ import java.util.Map;
 
 import org.apache.commons.io.FilenameUtils;
 
-import at.jku.se.gps_tracker.model.DataModel;
 import at.jku.se.gps_tracker.model.Track;
 import at.jku.se.gps_tracker.model.TrackPoint;
 
-public class DataBaseOperations {
+public class TrackParsingOperations {
 
 	private Connection conn;
 	
-	public DataBaseOperations(DataModel data) {
+	public TrackParsingOperations() {
 		conn = null;
 	}
 	
@@ -45,35 +44,9 @@ public class DataBaseOperations {
 	}
 	
 	private void setUpTables() {
-		String sqlTrackTableStatement = "CREATE TABLE tracks (\n"
-				+ "name	TEXT NOT NULL, \n"
-				+ "folder TEXT NOT NULL, \n"
-				+ "date TEXT NOT NULL, \n"
-				+ "time TEXT NOT NULL, \n"
-				+ "distance	REAL NOT NULL, \n"
-				+ "duration	REAL NOT NULL, \n"
-				+ "pace	REAL NOT NULL, \n"
-				+ "speed REAL NOT NULL, \n"
-				+ "averageBPM INTEGER NOT NULL, \n"
-				+ "maximumBPM INTEGER NOT NULL, \n"
-				+ "elevation REAL NOT NULL, \n"
-				+ "PRIMARY KEY(name,folder) \n"
-				+ ");";
+		String sqlTrackTableStatement = "CREATE TABLE tracks (name TEXT NOT NULL, folder TEXT NOT NULL, date TEXT NOT NULL, time TEXT NOT NULL, distance REAL NOT NULL, duration REAL NOT NULL, pace REAL NOT NULL, speed REAL NOT NULL, averageBPM INTEGER NOT NULL, maximumBPM INTEGER NOT NULL, elevation REAL NOT NULL, PRIMARY KEY(name,folder));";
 		
-		String sqlTrackPointTableStatement = "CREATE TABLE trackpoints (\n"
-				+ "name	TEXT NOT NULL, \n"
-				+ "folder TEXT NOT NULL, \n"
-				+ "nr INTEGER NOT NULL, \n"
-				+ "distance	REAL NOT NULL, \n"
-				+ "duration	REAL NOT NULL, \n"
-				+ "pace	REAL NOT NULL, \n"
-				+ "speed REAL NOT NULL, \n"
-				+ "averageBPM INTEGER NOT NULL, \n"
-				+ "maximumBPM INTEGER NOT NULL, \n"
-				+ "elevation REAL NOT NULL, \n"
-				+ "FOREIGN KEY(name,folder) REFERENCES tracks(name,folder) ON DELETE CASCADE, \n"
-				+ "PRIMARY KEY(name,folder,nr) \n"
-				+ ");";
+		String sqlTrackPointTableStatement = "CREATE TABLE trackpoints (name TEXT NOT NULL, folder TEXT NOT NULL, nr INTEGER NOT NULL, distance	REAL NOT NULL, duration	REAL NOT NULL, pace	REAL NOT NULL, speed REAL NOT NULL, averageBPM INTEGER NOT NULL, maximumBPM INTEGER NOT NULL, elevation REAL NOT NULL, FOREIGN KEY(name,folder) REFERENCES tracks(name,folder) ON DELETE CASCADE, PRIMARY KEY(name,folder,nr));";	
 		
 		try(Statement stmt = conn.createStatement()){
 			stmt.execute(sqlTrackTableStatement);
@@ -163,9 +136,7 @@ public class DataBaseOperations {
 	
 	public void removeTracks(List<File> files, String currentDirectoryFolder){
 		HashSet<String> driveFiles = new HashSet<>();
-		files.forEach(f -> {
-			driveFiles.add(FilenameUtils.getName(f.getAbsolutePath()));
-		});
+		files.forEach(f -> driveFiles.add(FilenameUtils.getName(f.getAbsolutePath())));
 		
 		HashSet<String> dataBaseFiles = new HashSet<>();
 		try(PreparedStatement stmt = conn.prepareStatement("SELECT name FROM tracks WHERE folder=?")){

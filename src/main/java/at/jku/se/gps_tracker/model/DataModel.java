@@ -1,6 +1,6 @@
 package at.jku.se.gps_tracker.model;
 
-import at.jku.se.gps_tracker.data.DataBaseOperations;
+import at.jku.se.gps_tracker.data.TrackParsingOperations;
 import at.jku.se.gps_tracker.data.TrackParser;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
@@ -22,12 +22,12 @@ public class DataModel {
 	private String currentDirectoryFolder;
 	private String[] extensions;
 	private HashSet<File> readFiles;
-	private DataBaseOperations conn;
+	private TrackParsingOperations conn;
 
 	public DataModel() {
 		trackList = FXCollections.observableArrayList();
 		extensions = new String[] { "gpx", "tcx" };
-		conn = new DataBaseOperations(this);
+		conn = new TrackParsingOperations();
 	}
 
 	public void setCurrrentDirectory(String currentDirectory) {

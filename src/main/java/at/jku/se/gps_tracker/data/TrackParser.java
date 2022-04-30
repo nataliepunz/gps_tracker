@@ -69,13 +69,13 @@ public class TrackParser implements ErrorPopUpController {
 	double prevDistance = 0;
 	
 	
-	DataBaseOperations conn;
+	TrackParsingOperations conn;
 	
 	public TrackParser() {
 		
 	}
 	
-	public TrackParser(DataBaseOperations conn) {
+	public TrackParser(TrackParsingOperations conn) {
 		this.conn = conn;
 	}
 	

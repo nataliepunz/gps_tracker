@@ -352,9 +352,7 @@ public class TrackManagerController implements Initializable, ErrorPopUpControll
 	@FXML BarChart chart;
 	private void createBarChart(String name, String methodName) throws NoSuchMethodException, InvocationTargetException, IllegalAccessException {
 
-
-		AbstractTrack abstr = new Track();
-		Method method = abstr.getClass().getMethod(methodName);
+		Method method = new Track().getClass().getMethod(methodName);
 
 		final CategoryAxis xAxis = new CategoryAxis();
 		final NumberAxis yAxis = new NumberAxis();

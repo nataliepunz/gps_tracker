@@ -28,7 +28,7 @@ public abstract class AbstractTrack {
 		this.maximumBPM = maximumBPM;
 	}
 
-	public AbstractTrack() {
+	protected AbstractTrack() {
 
 	}
 
