@@ -12,8 +12,8 @@ import java.util.List;
 
 public class DataModel implements ErrorPopUpController {
 	
-	private final String DATABASE_NAME = "track.db";
-	private final String[] EXTENSIONS = new String[] { "gpx", "tcx" };
+	private static final String DATABASE_NAME = "track.db";
+	private static final String[] EXTENSIONS = new String[] { "gpx", "tcx" };
 	
 	private ObservableList<AbstractTrack> trackList;
 	private String currentDirectory;
@@ -42,8 +42,8 @@ public class DataModel implements ErrorPopUpController {
 	private void establishDBConnection() {
 		if(conn!=null){
 			conn.establishConnection(FilenameUtils.concat(currentDirectory, DATABASE_NAME));
+			conn.setDirectory(currentDirectory);
 		}
-		conn.setDirectory(currentDirectory);
 	}
 
 	public void setCurrentDirectoryFolder(int index) {

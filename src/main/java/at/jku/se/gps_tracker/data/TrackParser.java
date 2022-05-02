@@ -88,9 +88,9 @@ public class TrackParser implements ErrorPopUpController {
 		try {
 			setUpTrackParser(file);
 			if(FilenameUtils.getExtension(file).equals("gpx")) {
-				points = new GPXParser().readGPXTrackPoints(file, streamReader);
+				points = new GPXParser().readGPXTrackPoints(streamReader);
 			} else {
-				points = new TCXParser().readTCXTrackPoints(file, streamReader);
+				points = new TCXParser().readTCXTrackPoints(streamReader);
 			}
 			in.close();
 		} catch (Exception e) {

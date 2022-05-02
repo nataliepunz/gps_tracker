@@ -102,7 +102,7 @@ public class TrackParsingOperations implements ErrorPopUpController {
 		if(new File(FilenameUtils.concat(FilenameUtils.concat(directory, track.getParentDirectory()),track.getName())).exists()) {
 			return new TrackParser().getTrackPoints(FilenameUtils.concat(FilenameUtils.concat(directory, track.getParentDirectory()),track.getName()));
 		} else {
-			return new ArrayList<TrackPoint>();
+			return new ArrayList<>();
 		}
 	}
 	

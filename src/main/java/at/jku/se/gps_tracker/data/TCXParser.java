@@ -31,7 +31,7 @@ public class TCXParser extends TrackParser {
 	double helpDistance;
 	double prevDistance;
 	
-	List<TrackPoint> readTCXTrackPoints(String file, XMLStreamReader streamReader) throws XMLStreamException {
+	List<TrackPoint> readTCXTrackPoints(XMLStreamReader streamReader) throws XMLStreamException {
 		readTrack(streamReader);
 		return helpList;
 	}
