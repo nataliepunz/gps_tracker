@@ -99,10 +99,19 @@ public class TrackParsingOperations implements ErrorPopUpController {
 	}
 	
 	public List<TrackPoint> getTrackPoints(Track track){
-		return new TrackParser().getTrackPoints(FilenameUtils.concat(FilenameUtils.concat(directory, track.getParentDirectory()),track.getName()));
+		if(new File(FilenameUtils.concat(FilenameUtils.concat(directory, track.getParentDirectory()),track.getName())).exists()) {
+			return new TrackParser().getTrackPoints(FilenameUtils.concat(FilenameUtils.concat(directory, track.getParentDirectory()),track.getName()));
+		} else {
+			return new ArrayList<TrackPoint>();
+		}
 	}
 	
-	public void removeTracks(List<File> files, String currentDirectoryFolder){
+	public void updateDataBase(List<File> files, String currentDirectoryFolder) {
+		removeTracks(files, currentDirectoryFolder);
+		addTracks(files, currentDirectoryFolder);
+	}
+	
+	private void removeTracks(List<File> files, String currentDirectoryFolder){
 		HashSet<String> driveFiles = new HashSet<>();
 		files.forEach(f -> driveFiles.add(FilenameUtils.getName(f.getAbsolutePath())));
 		
@@ -118,6 +127,9 @@ public class TrackParsingOperations implements ErrorPopUpController {
 		}
 		
 		dataBaseFiles.removeAll(driveFiles);
+		if(driveFiles.isEmpty()) {
+			return;
+		}
 		
 		try(PreparedStatement stmt = conn.prepareStatement("DELETE FROM tracks WHERE name=? AND folder=?")){
 			for(String s : dataBaseFiles) {
@@ -135,7 +147,7 @@ public class TrackParsingOperations implements ErrorPopUpController {
 		}		
 	}
 
-	public void addTracks(List<File> files, String currentDirectoryFolder) {
+	private void addTracks(List<File> files, String currentDirectoryFolder) {
 		HashMap<String, File> mapping = new HashMap<>();
 		HashSet<String> driveFiles = new HashSet<>();
 		files.forEach(f -> {
@@ -155,15 +167,17 @@ public class TrackParsingOperations implements ErrorPopUpController {
 		}
 		
 		driveFiles.removeAll(dataBaseFiles);
+		if(driveFiles.isEmpty()) {
+			return;
+		}
 		
 		TrackParser parser = new TrackParser();
 		parser.createParsers();
 		for(String s : driveFiles) {
 			addTrackToDataBase(mapping.get(s).getAbsolutePath(), parser.getTrack(mapping.get(s).getAbsolutePath()));
 		}
-		
 	}
-	
+		
 	public void setDirectory(String directory) {
 		this.directory=directory;
 	}

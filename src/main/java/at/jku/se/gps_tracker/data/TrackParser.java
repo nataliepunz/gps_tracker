@@ -70,16 +70,12 @@ public class TrackParser implements ErrorPopUpController {
 	public Track getTrack(String file){
 		Track track = null;
 		try {
-			long start = System.nanoTime();
 			setUpTrackParser(file);
-			System.out.println("set Up Track: "+(double) ((System.nanoTime()-start)/1000000));
-			start = System.nanoTime();
 			if(FilenameUtils.getExtension(file).equals("gpx")) {
 				track = gpx.readGPXTrack(file, streamReader);
 			} else {
 				track = tcx.readTCXTrack(file, streamReader);
 			}
-			System.out.println("readTrack: "+(double) ((System.nanoTime()-start)/1000000));
 			in.close();
 		} catch (Exception e) {
 			showErrorPopUp("The GPS-Track "+FilenameUtils.getName(file)+" could not be read! The following Problem was encountered: "+e.getMessage());

@@ -19,7 +19,7 @@ import at.jku.se.gps_tracker.model.TrackPoint;
 
 public class GPXParser extends TrackParser{
 		
-	public List<TrackPoint> readGPXTrackPoints(String file, XMLStreamReader streamReader) throws XMLStreamException {
+	List<TrackPoint> readGPXTrackPoints(String file, XMLStreamReader streamReader) throws XMLStreamException {
 		readTrack(streamReader);
 		return helpList;
 	}
