@@ -23,15 +23,13 @@
             <top>
                 <MenuBar fx:id="menubar" BorderPane.alignment="CENTER">
                     <menus>
-                        <Menu fx:id="mFile" mnemonicParsing="false" text="File">
-                            <RadioMenuItem fx:id="miUpdate" mnemonicParsing="false" onAction="#updateModel" text="Update">
-                                <toggleGroup>
-                                    <ToggleGroup fx:id="tgFile" />
-                                </toggleGroup>
-                            </RadioMenuItem>
-                            <RadioMenuItem fx:id="miChageDir" mnemonicParsing="false" onAction="#setDirectory" text="Change Directory" toggleGroup="$tgFile" />
-                            <RadioMenuItem fx:id="miClose" mnemonicParsing="false" onAction="#closeApplication" text="Close" toggleGroup="$tgFile" />
-                        </Menu>
+                        <Menu mnemonicParsing="false" text="File">
+           					 <items>
+           				 	      <MenuItem mnemonicParsing="false" onAction="#updateModel" text="Update" />
+            				      <MenuItem mnemonicParsing="false" onAction="#setDirectory" text="Change Directory" />
+            					  <MenuItem mnemonicParsing="false" onAction="#closeApplication" text="Close" />
+      					     </items>
+          				</Menu>
                         <Menu fx:id="mTracks" mnemonicParsing="false" text="Tracks">
                         </Menu>
                         <Menu fx:id="mSegment" mnemonicParsing="false" text="Segment">

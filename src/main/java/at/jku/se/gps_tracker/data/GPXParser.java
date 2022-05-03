@@ -19,7 +19,7 @@ import at.jku.se.gps_tracker.model.TrackPoint;
 
 public class GPXParser extends TrackParser{
 		
-	public List<TrackPoint> readGPXTrackPoints(String file, XMLStreamReader streamReader) throws XMLStreamException {
+	List<TrackPoint> readGPXTrackPoints(XMLStreamReader streamReader) throws XMLStreamException {
 		readTrack(streamReader);
 		return helpList;
 	}
@@ -129,11 +129,7 @@ public class GPXParser extends TrackParser{
 	private void createGPXTrackPoint() {
 		double distance = distance(latitude, prevLatitude, longtitude, prevLongtitude, elevation, prevElevation);
 		trackDistance += distance;
-		if(timeNeeded==null || timeNeeded.getSeconds()==0 || distance==0) {
-			helpList.add(new TrackPoint(String.valueOf(trackPointNr),distance, Duration.ofSeconds(0),Duration.ofSeconds(0), 0, elevationChange));
-		} else {
-			helpList.add(new TrackPoint(String.valueOf(trackPointNr),distance, timeNeeded, Duration.ofSeconds((long) (timeNeeded.getSeconds()/distance)), distance/timeNeeded.getSeconds(),elevationChange));
-		}
+		helpList.add(new TrackPoint(String.valueOf(trackPointNr),distance, timeNeeded, elevationChange));
 		trackPointNr++;
 		prevLatitude = latitude;
 		prevLongtitude = longtitude;
@@ -141,11 +137,7 @@ public class GPXParser extends TrackParser{
 	}
 	
 	private Track createGPXTrack(String file) {
-		if(totalDuration.getSeconds()==0 || trackDistance==0) {
-			return new Track(new File(file).getParentFile().getName(),FilenameUtils.getName(file), trackDate, trackTime, trackDistance, totalDuration, Duration.ofSeconds(0), 0, totalElevation, helpList);
-		} else {
-			return new Track(new File(file).getParentFile().getName(),FilenameUtils.getName(file), trackDate, trackTime, trackDistance, totalDuration, Duration.ofSeconds((long) (totalDuration.getSeconds()/trackDistance)), trackDistance/totalDuration.getSeconds(), totalElevation, helpList);
-		}
+		return new Track(new File(file).getParentFile().getName(),FilenameUtils.getName(file), trackDate, trackTime, trackDistance, totalDuration, totalElevation, helpList);
 	}
 
 	

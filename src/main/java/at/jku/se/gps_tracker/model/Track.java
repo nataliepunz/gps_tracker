@@ -15,24 +15,24 @@ public class Track extends AbstractTrack {
 	private String parentDirectory;
 	private TrackParsingOperations conn;
 
-	public Track(String parentDirectory, String name, LocalDate date, LocalTime startTime, double distance, Duration duration, Duration pace, double speed, double elevation, List<TrackPoint> trackPoints) {
-		super(name,distance,duration,pace,speed,elevation);
+	public Track(String parentDirectory, String name, LocalDate date, LocalTime startTime, double distance, Duration duration, double elevation, List<TrackPoint> trackPoints) {
+		super(name,distance,duration,elevation);
 		this.date = date;
 		this.startTime = startTime;
 		this.trackPoints = trackPoints;
 		this.parentDirectory=parentDirectory;
 	}
 	
-	public Track(String parentDirectory, String name, LocalDate date, LocalTime startTime, double distance, Duration duration, Duration pace, double speed, int averageBPM, int maximumBPM, double elevation, List<TrackPoint> trackPoints) {
-		super(name,distance,duration,pace,speed,averageBPM,maximumBPM,elevation);
+	public Track(String parentDirectory, String name, LocalDate date, LocalTime startTime, double distance, Duration duration, int averageBPM, int maximumBPM, double elevation, List<TrackPoint> trackPoints) {
+		super(name,distance,duration,averageBPM,maximumBPM,elevation);
 		this.date = date;
 		this.startTime = startTime;
 		this.trackPoints = trackPoints;
 		this.parentDirectory=parentDirectory;
 	}
 	
-	public Track(TrackParsingOperations conn, String parentDirectory, String name, LocalDate date, LocalTime startTime, double distance, Duration duration, Duration pace, double speed, int averageBPM, int maximumBPM, double elevation) {
-		super(name,distance,duration,pace,speed,averageBPM,maximumBPM,elevation);
+	public Track(TrackParsingOperations conn, String parentDirectory, String name, LocalDate date, LocalTime startTime, double distance, Duration duration, int averageBPM, int maximumBPM, double elevation) {
+		super(name,distance,duration,averageBPM,maximumBPM,elevation);
 		this.conn=conn;
 		this.date = date;
 		this.startTime = startTime;
@@ -60,7 +60,7 @@ public class Track extends AbstractTrack {
 
 	@Override
 	public String toString() {
-		return this.getName().toString();
+		return this.getName();
 	}
 
 	public String getParentDirectory() {

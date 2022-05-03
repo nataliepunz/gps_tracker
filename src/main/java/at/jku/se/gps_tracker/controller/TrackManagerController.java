@@ -4,13 +4,14 @@ import at.jku.se.gps_tracker.model.AbstractTrack;
 import at.jku.se.gps_tracker.model.DataModel;
 import at.jku.se.gps_tracker.model.Track;
 import javafx.beans.property.*;
+import javafx.beans.value.ChangeListener;
+import javafx.beans.value.ObservableValue;
 import javafx.collections.FXCollections;
 import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
 import javafx.collections.transformation.FilteredList;
 import javafx.collections.transformation.SortedList;
 import javafx.event.ActionEvent;
-import javafx.event.EventHandler;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.fxml.Initializable;
@@ -30,7 +31,6 @@ import java.lang.reflect.Method;
 import java.net.URL;
 import java.time.LocalDate;
 import java.time.LocalTime;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.ResourceBundle;
 
@@ -39,23 +39,28 @@ public class TrackManagerController implements Initializable, ErrorPopUpControll
 	private DataModel model;
 	private ObservableList<AbstractTrack> trackList;
 	private ObservableList<String> categories;
+	final private ToggleGroup menuTrackToggleGroup;
 
 	@FXML
-	private TableView<AbstractTrack> mainTable;
-
+	private ToggleGroup tgGraph;
+	
 	@FXML
-	private TableView<AbstractTrack> sideTable;
-
-	@FXML
-	private TextField keywordTextField;
+	private MenuBar menubar;
 
 	public TrackManagerController(DataModel model) {
 		this.model=model;
+		menuTrackToggleGroup = new ToggleGroup();
 	}
+	
+	/** set up the lists and add listeners
+	 * 
+	 * 
+	 */
 
 	private void setUpLists() {
 		setTrackList();
 		setCategories();
+		setUpMenuItems();
 	}
 
 	private void setTrackList() {
@@ -68,7 +73,6 @@ public class TrackManagerController implements Initializable, ErrorPopUpControll
 				if (c.wasRemoved()) {
 					trackList.removeAll(c.getRemoved());
 				}
-				setUpMenuItems();
 			}
 		});
 	}
@@ -84,11 +88,29 @@ public class TrackManagerController implements Initializable, ErrorPopUpControll
 					categories.removeAll(c.getRemoved());
 				}
 			}
+			setUpMenuItems();
 		});
 	}
-
+	
+	private void setUpMenuTrack() {
+		menuTrackToggleGroup.selectedToggleProperty().addListener(new ChangeListener<Toggle>(){
+		    public void changed(ObservableValue<? extends Toggle> ov, Toggle old_toggle, Toggle new_toggle) {
+		         if (menuTrackToggleGroup.getSelectedToggle() != null) {
+		        	 RadioMenuItem selectedItem = (RadioMenuItem) menuTrackToggleGroup.getSelectedToggle();
+		        	 changeCategory(selectedItem.getText());
+		        	 System.out.println(menuTrackToggleGroup.getSelectedToggle().getUserData().toString());
+		         }
+		     } 
+		});
+	}
+	
+	/**
+	 * set up Menu File
+	 * 
+	 */
+	
 	@FXML
-	private void setDirectory(ActionEvent event) throws IOException {
+	private void setDirectory(ActionEvent event) {
 		chooseDirectory();
 	}
 
@@ -99,22 +121,65 @@ public class TrackManagerController implements Initializable, ErrorPopUpControll
 
 	@FXML
 	private void closeApplication(ActionEvent event) {
+		model.closeConnection();
 		System.exit(1);
+	}
+	
+	private void chooseDirectory() {
+		try {
+			FXMLLoader fxmlLoader = new FXMLLoader();
+			fxmlLoader.setLocation(getClass().getResource("/fxml/StartView.fxml"));
+			Stage popup = new Stage();
+			StartViewController c = new StartViewController(model, popup);
+			fxmlLoader.setController(c);
+			Parent parent = (Parent) fxmlLoader.load();
+			Scene popupScene = new Scene(parent);
+			popup.setTitle("TrackStar - Choose Directory");
+			popup.setAlwaysOnTop(true);
+			popup.setScene(popupScene);
+			popup.showAndWait();
+		} catch (IOException e1) {
+			showErrorPopUp("ERROR! Please refer to following information: "+e1.getMessage());
+		}
+	}
+	
+	/**
+	 * 
+	 * Menu Item Track set up
+	 */
+	
+	@FXML
+	private Menu mTracks;
+
+	private void setUpMenuItems() {
+		mTracks.getItems().clear();
+		RadioMenuItem help;
+		RadioMenuItem first=null;
+		for (String cat: categories) {
+			help = new RadioMenuItem(cat);
+			if(first==null) first=help;
+			help.setToggleGroup(menuTrackToggleGroup);
+			mTracks.getItems().add(help);
+		}
+		if(first!=null) menuTrackToggleGroup.selectToggle(first);
 	}
 
 	//je nach Index entsprechend holen! (erster Eintrag ausgewählt --> hier erste (bzw 0 auswählen!)
-	@FXML
-	private void changeCategory(ActionEvent event, int index) { //index als parameter hinzugefügt - nuray
-		model.setCurrentDirectoryFolder(index);
+	private void changeCategory(String category) { //index als parameter hinzugefügt - nuray
+		model.setCurrentDirectoryFolder(category);
 		showTrackTable(mainTable, trackList);
 	}
-
+	
+	@FXML
+	private TableView<AbstractTrack> mainTable;
 
 	@FXML
-	private MenuBar menubar;
+	private TableView<AbstractTrack> sideTable;
 
 	@FXML
-	private Menu mTracks;
+	private TextField keywordTextField;
+
+	
 
 	/* Action Handler für die Segment MenuItems
 	 * TODO Methoden sinnvoll implementieren */
@@ -188,76 +253,12 @@ public class TrackManagerController implements Initializable, ErrorPopUpControll
 
 	}
 
-	/* Action Handler für die Graph MenuItems */
-
-	@FXML
-	private void visualizeDistance(ActionEvent event) throws InvocationTargetException, NoSuchMethodException, IllegalAccessException {
-
-		RadioMenuItem rmi = (RadioMenuItem) event.getSource();
-		String font = rmi.getText();
-		createBarChart(font, "getDistance");
-	}
-
-	@FXML
-	private void visualizeHeartbeat(ActionEvent event) throws InvocationTargetException, NoSuchMethodException, IllegalAccessException {
-
-		RadioMenuItem rmi = (RadioMenuItem) event.getSource();
-		String font = rmi.getText();
-		createBarChart(font, "getAverageBPM");
-	}
-
-	@FXML
-	private void visualizeDuration(ActionEvent event) throws InvocationTargetException, NoSuchMethodException, IllegalAccessException {
-
-		RadioMenuItem rmi = (RadioMenuItem) event.getSource();
-		String font = rmi.getText();
-		createBarChart(font, "getDurationMinutes");
-
-
-	}
-
-	@FXML
-	private void visualizeElevation(ActionEvent event) throws InvocationTargetException, NoSuchMethodException, IllegalAccessException {
-
-		RadioMenuItem rmi = (RadioMenuItem) event.getSource();
-		String font = rmi.getText();
-		createBarChart(font, "getElevation");
-	}
-
-	@FXML
-	private void visualizeSpeed(ActionEvent event) throws InvocationTargetException, NoSuchMethodException, IllegalAccessException {
-		RadioMenuItem rmi = (RadioMenuItem) event.getSource();
-		String font = rmi.getText();
-		createBarChart(font, "getSpeed");
-
-	}
+	
+	
 	//TODO: UserGuide Methode Implementieren
 	@FXML
 	private void openUserGuide(ActionEvent event){
 	}
-
-	private void setUpMenuItems() {
-		//nuray
-		//die inhalte der liste categories unter tracks anzeigen
-		mTracks.getItems().clear();
-		List<RadioMenuItem> temp = new ArrayList<>();
-		ToggleGroup tg = new ToggleGroup();
-
-		for (String cat: categories) {
-			temp.add(new RadioMenuItem(cat));
-		}
-
-		for (RadioMenuItem ri: temp)
-		{
-			mTracks.getItems().add(ri);
-			ri.setToggleGroup(tg);
-			ri.setOnAction(new EventHandler<ActionEvent>() {
-				@Override
-				public void handle(ActionEvent event) {
-					changeCategory(event, temp.indexOf(ri));
-				}});}}
-
-
 
 	//Implementierungstipps: https://stackoverflow.com/a/45013059
 	private void showTrackTable(TableView table, List<?> trackList) {
@@ -348,6 +349,49 @@ public class TrackManagerController implements Initializable, ErrorPopUpControll
 
 	//TODO Methode für SideTable
 
+	/* Action Handler für die Graph MenuItems */
+
+	@FXML
+	private void visualizeDistance(ActionEvent event) throws InvocationTargetException, NoSuchMethodException, IllegalAccessException {
+
+		RadioMenuItem rmi = (RadioMenuItem) event.getSource();
+		String font = rmi.getText();
+		createBarChart(font, "getDistance");
+	}
+
+	@FXML
+	private void visualizeHeartbeat(ActionEvent event) throws InvocationTargetException, NoSuchMethodException, IllegalAccessException {
+
+		RadioMenuItem rmi = (RadioMenuItem) event.getSource();
+		String font = rmi.getText();
+		createBarChart(font, "getAverageBPM");
+	}
+
+	@FXML
+	private void visualizeDuration(ActionEvent event) throws InvocationTargetException, NoSuchMethodException, IllegalAccessException {
+
+		RadioMenuItem rmi = (RadioMenuItem) event.getSource();
+		String font = rmi.getText();
+		createBarChart(font, "getDurationMinutes");
+
+
+	}
+
+	@FXML
+	private void visualizeElevation(ActionEvent event) throws InvocationTargetException, NoSuchMethodException, IllegalAccessException {
+
+		RadioMenuItem rmi = (RadioMenuItem) event.getSource();
+		String font = rmi.getText();
+		createBarChart(font, "getElevation");
+	}
+
+	@FXML
+	private void visualizeSpeed(ActionEvent event) throws InvocationTargetException, NoSuchMethodException, IllegalAccessException {
+		RadioMenuItem rmi = (RadioMenuItem) event.getSource();
+		String font = rmi.getText();
+		createBarChart(font, "getSpeed");
+
+	}
 
 	@FXML BarChart chart;
 	private void createBarChart(String name, String methodName) throws NoSuchMethodException, InvocationTargetException, IllegalAccessException {
@@ -374,37 +418,15 @@ public class TrackManagerController implements Initializable, ErrorPopUpControll
 		chart.getData().addAll(xy);
 
 	}
-	private void chooseDirectory() {
-		try {
-			FXMLLoader fxmlLoader = new FXMLLoader();
-			fxmlLoader.setLocation(getClass().getResource("/fxml/StartView.fxml"));
-			Stage popup = new Stage();
-			StartViewController c = new StartViewController(model, popup);
-			fxmlLoader.setController(c);
-			Parent parent = (Parent) fxmlLoader.load();
-			Scene popupScene = new Scene(parent);
-			popup.setTitle("TrackStar - Choose Directory");
-			popup.setAlwaysOnTop(true);
-			popup.setScene(popupScene);
-			popup.showAndWait();
-		} catch (IOException e1) {
-			showErrorPopUp("ERROR! Please refer to following information: "+e1.getMessage());
-		}
-	}
 
-	@FXML
-	private ToggleGroup tgGraph;
 	
 	@Override
 	public void initialize(URL arg0, ResourceBundle arg1) {
 		chooseDirectory();
 		setUpLists();
-		setUpMenuItems();
+		setUpMenuTrack();
 		showTrackTable(mainTable, trackList);
+		
 	}
 }
-
-
-
-
 

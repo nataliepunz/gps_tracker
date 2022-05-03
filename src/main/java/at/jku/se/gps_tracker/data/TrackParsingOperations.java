@@ -15,6 +15,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 
+import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
 
 import at.jku.se.gps_tracker.controller.ErrorPopUpController;
@@ -23,6 +24,7 @@ import at.jku.se.gps_tracker.model.TrackPoint;
 
 public class TrackParsingOperations implements ErrorPopUpController {
 
+	private static final String ERROR_ROLLBACK_MESSAGE = "ERROR! COULD NOT CONNECT TO DATABASE! ";
 	private Connection conn;
 	private String directory;
 	
@@ -40,37 +42,36 @@ public class TrackParsingOperations implements ErrorPopUpController {
 				setUpTables();
 			}
 		} catch (SQLException e) {  
-			showErrorPopUp("ERROR! COULD NOT CONNECT TO DATABASE! "+e.getMessage());
+			showErrorPopUp(ERROR_ROLLBACK_MESSAGE+e.getMessage());
 		}
 	}
 	
 	private void setUpTables() {		
 		try(Statement stmt = conn.createStatement()){
-			stmt.execute("CREATE TABLE tracks (name TEXT NOT NULL, folder TEXT NOT NULL, date TEXT NOT NULL, time TEXT NOT NULL, distance REAL NOT NULL, duration REAL NOT NULL, pace REAL NOT NULL, speed REAL NOT NULL, averageBPM INTEGER NOT NULL, maximumBPM INTEGER NOT NULL, elevation REAL NOT NULL, PRIMARY KEY(name,folder));");
+			stmt.execute("CREATE TABLE tracks (name TEXT NOT NULL, folder TEXT NOT NULL, date TEXT NOT NULL, time TEXT NOT NULL, distance REAL NOT NULL, duration REAL NOT NULL, averageBPM INTEGER NOT NULL, maximumBPM INTEGER NOT NULL, elevation REAL NOT NULL, PRIMARY KEY(name,folder));");
             conn.commit();
         } catch (SQLException e) {  
         	showErrorPopUp("ERROR! COULD NOT CREATE TABLES! "+e.getMessage());
             try {
 				conn.rollback();
 			} catch (SQLException e1) {
-				showErrorPopUp("ERROR! COULD NOT ROLLBACK! "+e.getMessage());
+				showErrorPopUp(ERROR_ROLLBACK_MESSAGE+e1.getMessage());
 			}
         }  
 	}
 	
 	public void addTrackToDataBase(String file, Track track) {
-		try(PreparedStatement stmt = conn.prepareStatement("INSERT INTO tracks VALUES(?,?,?,?,?,?,?,?,?,?,?)")){
+		if(file==null || track==null) return;
+		try(PreparedStatement stmt = conn.prepareStatement("INSERT INTO tracks VALUES(?,?,?,?,?,?,?,?,?)")){
 			stmt.setString(1, track.getName());
 			stmt.setString(2, new File(file).getParentFile().getName());
 			stmt.setString(3, track.getDate().toString());
 			stmt.setString(4, track.getStartTime().toString());
 			stmt.setDouble(5, track.getDistance());
 			stmt.setDouble(6, track.getDuration().toSeconds());
-			stmt.setDouble(7, track.getPace().toSeconds());
-			stmt.setDouble(8, track.getSpeed());
-			stmt.setInt(9, track.getAverageBPM());
-			stmt.setInt(10, track.getMaximumBPM());
-			stmt.setDouble(11, track.getElevation());
+			stmt.setInt(7, track.getAverageBPM());
+			stmt.setInt(8, track.getMaximumBPM());
+			stmt.setDouble(9, track.getElevation());
 			stmt.execute();
 			
 			conn.commit();
@@ -79,7 +80,7 @@ public class TrackParsingOperations implements ErrorPopUpController {
 			try {
 				conn.rollback();
 			} catch (SQLException e1) {
-				showErrorPopUp("ERROR! COULD NOT ROLLBACK! "+e.getMessage());
+				showErrorPopUp(ERROR_ROLLBACK_MESSAGE+e1.getMessage());
 			}
 		}
 	}
@@ -90,7 +91,7 @@ public class TrackParsingOperations implements ErrorPopUpController {
 			stmt.setString(1, currentDirectory);
 			ResultSet rs = stmt.executeQuery();
 			while(rs.next()) {
-				trackHelpList.add(new Track(this, rs.getString("folder"), rs.getString("name"), LocalDate.parse(rs.getString("date")), LocalTime.parse(rs.getString("time")), rs.getDouble("distance"), Duration.ofSeconds((long) rs.getDouble("duration")), Duration.ofSeconds((long) rs.getDouble("pace")), rs.getDouble("speed"), rs.getInt("averageBPM"), rs.getInt("maximumBPM"), rs.getDouble("elevation")));
+				trackHelpList.add(new Track(this, rs.getString("folder"), rs.getString("name"), LocalDate.parse(rs.getString("date")), LocalTime.parse(rs.getString("time")), rs.getDouble("distance"), Duration.ofSeconds((long) rs.getDouble("duration")), rs.getInt("averageBPM"), rs.getInt("maximumBPM"), rs.getDouble("elevation")));
 			}
 		} catch (SQLException e) {
 			showErrorPopUp("ERROR! COULD NOT GET TRACKS! "+e.getMessage());
@@ -99,10 +100,21 @@ public class TrackParsingOperations implements ErrorPopUpController {
 	}
 	
 	public List<TrackPoint> getTrackPoints(Track track){
-		return new TrackParser().getTrackPoints(FilenameUtils.concat(FilenameUtils.concat(directory, track.getParentDirectory()),track.getName()));
+		if(new File(FilenameUtils.concat(FilenameUtils.concat(directory, track.getParentDirectory()),track.getName())).exists()) {
+			return new TrackParser().getTrackPoints(FilenameUtils.concat(FilenameUtils.concat(directory, track.getParentDirectory()),track.getName()));
+		} else {
+			showErrorPopUp("ERROR! REMEMBER TO UPDATE THE PROGRAM AFTER EVERY CHANGE!");
+			return new ArrayList<>();
+		}
 	}
 	
-	public void removeTracks(List<File> files, String currentDirectoryFolder){
+	public void updateDataBase(String currentDirectory, String currentDirectoryFolder, String... extensions) {
+		List<File> files = (List<File>) FileUtils.listFiles(new File(currentDirectory,currentDirectoryFolder), extensions, true);
+		removeTracks(files, currentDirectoryFolder);
+		addTracks(files, currentDirectoryFolder);
+	}
+	
+	private void removeTracks(List<File> files, String currentDirectoryFolder){
 		HashSet<String> driveFiles = new HashSet<>();
 		files.forEach(f -> driveFiles.add(FilenameUtils.getName(f.getAbsolutePath())));
 		
@@ -118,6 +130,9 @@ public class TrackParsingOperations implements ErrorPopUpController {
 		}
 		
 		dataBaseFiles.removeAll(driveFiles);
+		if(driveFiles.isEmpty()) {
+			return;
+		}
 		
 		try(PreparedStatement stmt = conn.prepareStatement("DELETE FROM tracks WHERE name=? AND folder=?")){
 			for(String s : dataBaseFiles) {
@@ -125,17 +140,18 @@ public class TrackParsingOperations implements ErrorPopUpController {
 				stmt.setString(2, currentDirectoryFolder);
 				stmt.execute();
 			}
+			conn.commit();
 		} catch (SQLException e) {
 			showErrorPopUp("ERROR! COULD NOT REMOVE TRACK! "+e.getMessage());
 			try {
 				conn.rollback();
 			} catch (SQLException e1) {
-				showErrorPopUp("ERROR! COULD NOT ROLLBACK! "+e.getMessage());
+				showErrorPopUp(ERROR_ROLLBACK_MESSAGE+e1.getMessage());
 			}
 		}		
 	}
 
-	public void addTracks(List<File> files, String currentDirectoryFolder) {
+	private void addTracks(List<File> files, String currentDirectoryFolder) {
 		HashMap<String, File> mapping = new HashMap<>();
 		HashSet<String> driveFiles = new HashSet<>();
 		files.forEach(f -> {
@@ -156,15 +172,26 @@ public class TrackParsingOperations implements ErrorPopUpController {
 		
 		driveFiles.removeAll(dataBaseFiles);
 		
+		if(driveFiles.isEmpty()) {
+			return;
+		}
+		
 		TrackParser parser = new TrackParser();
 		parser.createParsers();
 		for(String s : driveFiles) {
 			addTrackToDataBase(mapping.get(s).getAbsolutePath(), parser.getTrack(mapping.get(s).getAbsolutePath()));
 		}
-		
 	}
-	
+		
 	public void setDirectory(String directory) {
 		this.directory=directory;
+	}
+	
+	public void closeConnection() {
+		try {
+			this.conn.close();
+		} catch (SQLException e) {
+			showErrorPopUp("COULD NOT CLOSE DATABASE! "+e.getMessage());
+		}
 	}
 }
