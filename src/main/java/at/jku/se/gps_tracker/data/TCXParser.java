@@ -18,18 +18,16 @@ import at.jku.se.gps_tracker.model.Track;
 import at.jku.se.gps_tracker.model.TrackPoint;
 
 public class TCXParser extends TrackParser {
-	Instant startTime;
-	int averageBPM;
-	int averageBPMCount;
-	int maximumBPM;
-	boolean elevationSet;
-	boolean positionSet;
-	double distanceMeters;
-	boolean distanceMetersSet;
-	int averageBPMPoint;
-	int helpMaxBPM;
-	double helpDistance;
-	double prevDistance;
+	private Instant startTime;
+	private int averageBPM;
+	private int averageBPMCount;
+	private int maximumBPM;
+	private boolean elevationSet;
+	private boolean positionSet;
+	private double distanceMeters;
+	private boolean distanceMetersSet;
+	private int averageBPMPoint;
+	private double prevDistance;
 	
 	List<TrackPoint> readTCXTrackPoints(XMLStreamReader streamReader) throws XMLStreamException {
 		readTrack(streamReader);
@@ -115,7 +113,7 @@ public class TCXParser extends TrackParser {
 					}
 					case "MaximumHeartRateBpm":{
 						streamReader.nextTag();
-						helpMaxBPM = Integer.parseInt(streamReader.getElementText());
+						int helpMaxBPM = Integer.parseInt(streamReader.getElementText());
 						if(helpMaxBPM>maximumBPM) maximumBPM=helpMaxBPM; 
 						break;
 					}
@@ -166,7 +164,7 @@ public class TCXParser extends TrackParser {
 						break;
 					}
 					case "DistanceMeters":{
-						helpDistance = Double.parseDouble(streamReader.getElementText());
+						double helpDistance = Double.parseDouble(streamReader.getElementText());
 						distanceMeters = helpDistance-prevDistance;
 						distanceMetersSet = true;
 						prevDistance = helpDistance;
@@ -216,11 +214,7 @@ public class TCXParser extends TrackParser {
 		if(!distanceMetersSet && positionSet && prevCoordinatesSet) {
 			distanceMeters = distance(latitude, prevLatitude, longtitude, prevLongtitude, elevation, prevElevation);
 		}
-		if(timeNeeded==null || timeNeeded.getSeconds()==0 || distanceMeters==0) {
-			helpList.add(new TrackPoint(String.valueOf(trackPointNr), distanceMeters, timeNeeded, Duration.ofSeconds(0), 0, averageBPMPoint, averageBPMPoint, elevationChange));
-		} else {
-			helpList.add(new TrackPoint(String.valueOf(trackPointNr), distanceMeters, timeNeeded, Duration.ofSeconds((long) (timeNeeded.getSeconds()/distanceMeters)), distanceMeters/timeNeeded.getSeconds(), averageBPMPoint, averageBPMPoint, elevationChange));
-		}
+		helpList.add(new TrackPoint(String.valueOf(trackPointNr), distanceMeters, timeNeeded, averageBPMPoint, averageBPMPoint, elevationChange));
 		trackPointNr++;
 		if(positionSet) {
 			prevLatitude = latitude;
@@ -231,11 +225,7 @@ public class TCXParser extends TrackParser {
 	}
 	
 	private Track createTCXTrack(String file) {
-		if(totalDuration.getSeconds()==0 || trackDistance==0) {
-			return new Track(new File(file).getParentFile().getName(),FilenameUtils.getName(file), trackDate, trackTime, trackDistance, totalDuration,Duration.ofSeconds(0),0, averageBPM, maximumBPM, totalElevation, helpList);
-		} else {
-			return new Track(new File(file).getParentFile().getName(),FilenameUtils.getName(file), trackDate, trackTime, trackDistance, totalDuration,Duration.ofSeconds((long) (totalDuration.getSeconds()/trackDistance)),trackDistance/totalDuration.getSeconds(), averageBPM, maximumBPM, totalElevation, helpList);
-		}
+		return new Track(new File(file).getParentFile().getName(),FilenameUtils.getName(file), trackDate, trackTime, trackDistance, totalDuration, averageBPM, maximumBPM, totalElevation, helpList);
 	}
 
 	

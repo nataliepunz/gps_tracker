@@ -4,11 +4,9 @@ import at.jku.se.gps_tracker.controller.ErrorPopUpController;
 import at.jku.se.gps_tracker.data.TrackParsingOperations;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
-import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
 
 import java.io.File;
-import java.util.List;
 
 public class DataModel implements ErrorPopUpController {
 	
@@ -23,7 +21,8 @@ public class DataModel implements ErrorPopUpController {
 	private TrackParsingOperations conn;
 
 	public DataModel() {
-		trackList = FXCollections.observableArrayList();
+		this.trackList = FXCollections.observableArrayList();
+		this.directoryFolders = FXCollections.observableArrayList();
 		conn = new TrackParsingOperations(currentDirectory);
 	}
 
@@ -32,10 +31,11 @@ public class DataModel implements ErrorPopUpController {
 			return;
 		}
 		this.currentDirectory = currentDirectory;
-		this.directoryFolders = FXCollections.observableArrayList(new File(this.currentDirectory).list((dir, name) -> new File(dir, name).isDirectory()));            
+		this.directoryFolders.clear();
+		this.directoryFolders.addAll(new File(this.currentDirectory).list((dir, name) -> new File(dir, name).isDirectory()));            
 		establishDBConnection();
 		if(!directoryFolders.isEmpty()){
-			setCurrentDirectoryFolder(0);
+			setCurrentDirectoryFolder(directoryFolders.get(0));
 		}
 	}
 		
@@ -46,13 +46,13 @@ public class DataModel implements ErrorPopUpController {
 		}
 	}
 
-	public void setCurrentDirectoryFolder(int index) {
-		if(currentDirectoryFolder!=null && !new File(FilenameUtils.concat(currentDirectory,directoryFolders.get(index))).exists()) {
+	public void setCurrentDirectoryFolder(String directory) {
+		if(currentDirectoryFolder!=null && !new File(FilenameUtils.concat(currentDirectory,directory)).exists()) {
 			showErrorPopUp("Directory does not exist anymore! Remember to update afer every change in the directory!");
 			this.directoryFolders = FXCollections.observableArrayList(new File(this.currentDirectory).list((dir, name) -> new File(dir, name).isDirectory()));
 			return;
 		}
-		this.currentDirectoryFolder = directoryFolders.get(index);
+		this.currentDirectoryFolder = directory;
 		updateModel();
 	}
 
@@ -63,8 +63,7 @@ public class DataModel implements ErrorPopUpController {
 			return;
 		}
 		long start = System.nanoTime();
-		List<File> files = (List<File>) FileUtils.listFiles(new File(currentDirectory,currentDirectoryFolder), EXTENSIONS, true);
-		conn.updateDataBase(files, currentDirectoryFolder);
+		conn.updateDataBase(currentDirectory, currentDirectoryFolder, EXTENSIONS);
 		trackList.clear();
 		trackList.addAll(conn.getTracks(currentDirectoryFolder));
 		System.out.println("Zeit fürs Einlesen von "+ trackList.size() +" GPS-Dateien: "+(double) (System.nanoTime()-start)/1000000);
@@ -77,4 +76,8 @@ public class DataModel implements ErrorPopUpController {
 	public ObservableList<String> getDirectoryFolders() {
 		return this.directoryFolders;
 	}	
+	
+	public void closeConnection() {
+		conn.closeConnection();
+	}
 }
