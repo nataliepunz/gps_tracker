@@ -68,7 +68,7 @@ public class TrackParsingOperations implements ErrorPopUpController {
 			stmt.setString(3, track.getDate().toString());
 			stmt.setString(4, track.getStartTime().toString());
 			stmt.setDouble(5, track.getDistance());
-			stmt.setDouble(6, track.getDuration().toSeconds());
+			stmt.setDouble(6, track.getDurationNormal().toSeconds());
 			stmt.setInt(7, track.getAverageBPM());
 			stmt.setInt(8, track.getMaximumBPM());
 			stmt.setDouble(9, track.getElevation());

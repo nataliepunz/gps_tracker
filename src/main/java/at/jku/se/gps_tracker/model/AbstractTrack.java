@@ -36,12 +36,12 @@ public abstract class AbstractTrack {
 		return doubleFormatter(distance);
 	}
 
-	public Duration getDuration() {
-		return duration;
+	public Double getDuration() {
+		return Double.valueOf(duration.toMinutes());
 	}
 	
-	public Double getDurationMinutes() {
-		return Double.valueOf(duration.toMinutes());
+	public Duration getDurationNormal() {
+		return duration;
 	}
 
 	public Duration getPace() {
@@ -53,6 +53,10 @@ public abstract class AbstractTrack {
 	}
 
 	public int getAverageBPM() {
+		return averageBPM;
+	}
+
+	public int getHeartbeat() {
 		return averageBPM;
 	}
 

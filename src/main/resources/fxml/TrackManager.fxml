@@ -53,15 +53,15 @@
                             <RadioMenuItem fx:id="miTrackPoints" mnemonicParsing="false" onAction="#segmentTrackPoints" text="Track Points" toggleGroup="$tgSegment" />
                         </Menu>
                         <Menu fx:id="mGraph" mnemonicParsing="false" text="Graph">
-                            <RadioMenuItem fx:id="miDistance" mnemonicParsing="false" onAction="#visualizeDistance" text="Distance">
+                            <RadioMenuItem fx:id="miDistance" mnemonicParsing="false"  text="Distance">
                                 <toggleGroup>
                                     <ToggleGroup fx:id="tgGraph" />
                                 </toggleGroup>
                             </RadioMenuItem>
-                            <RadioMenuItem fx:id="miDuration" mnemonicParsing="false" onAction="#visualizeDuration" text="Duration" toggleGroup="$tgGraph" />
-                            <RadioMenuItem fx:id="miElevation" mnemonicParsing="false" onAction="#visualizeElevation" text="Elevation" toggleGroup="$tgGraph" />
-                            <RadioMenuItem fx:id="miSpeed1" mnemonicParsing="false" onAction="#visualizeSpeed" text="Speed" toggleGroup="$tgGraph" />
-                            <RadioMenuItem fx:id="miHeartbeat" mnemonicParsing="false" onAction="#visualizeHeartbeat" text="Heartbeat" toggleGroup="$tgGraph" />
+                            <RadioMenuItem fx:id="miDuration" mnemonicParsing="false"  text="Duration" toggleGroup="$tgGraph" />
+                            <RadioMenuItem fx:id="miElevation" mnemonicParsing="false" text="Elevation" toggleGroup="$tgGraph" />
+                            <RadioMenuItem fx:id="miSpeed" mnemonicParsing="false" text="Speed" toggleGroup="$tgGraph" />
+                            <RadioMenuItem fx:id="miHeartbeat" mnemonicParsing="false" text="Heartbeat" toggleGroup="$tgGraph" />
 
 
                         </Menu>

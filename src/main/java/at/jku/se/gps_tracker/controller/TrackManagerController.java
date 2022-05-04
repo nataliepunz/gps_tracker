@@ -38,8 +38,9 @@ public class TrackManagerController implements Initializable, ErrorPopUpControll
 	//TODO : Optische Korrekturen
 	private DataModel model;
 	private ObservableList<AbstractTrack> trackList;
+	private ObservableList<AbstractTrack> trackPoints;
 	private ObservableList<String> categories;
-	final private ToggleGroup menuTrackToggleGroup;
+	final private ToggleGroup tgMenuTrack;
 
 	@FXML
 	private ToggleGroup tgGraph;
@@ -49,7 +50,7 @@ public class TrackManagerController implements Initializable, ErrorPopUpControll
 
 	public TrackManagerController(DataModel model) {
 		this.model=model;
-		menuTrackToggleGroup = new ToggleGroup();
+		tgMenuTrack = new ToggleGroup();
 	}
 	
 	/** set up the lists and add listeners
@@ -76,7 +77,6 @@ public class TrackManagerController implements Initializable, ErrorPopUpControll
 			}
 		});
 	}
-
 	private void setCategories() {
 		categories = FXCollections.observableArrayList(model.getDirectoryFolders());
 		model.getDirectoryFolders().addListener((ListChangeListener<? super String>) c -> {
@@ -93,12 +93,19 @@ public class TrackManagerController implements Initializable, ErrorPopUpControll
 	}
 	
 	private void setUpMenuTrack() {
-		menuTrackToggleGroup.selectedToggleProperty().addListener(new ChangeListener<Toggle>(){
+		tgMenuTrack.selectedToggleProperty().addListener(new ChangeListener<Toggle>(){
 		    public void changed(ObservableValue<? extends Toggle> ov, Toggle old_toggle, Toggle new_toggle) {
-		         if (menuTrackToggleGroup.getSelectedToggle() != null) {
-		        	 RadioMenuItem selectedItem = (RadioMenuItem) menuTrackToggleGroup.getSelectedToggle();
-		        	 changeCategory(selectedItem.getText());
-		        	 System.out.println(menuTrackToggleGroup.getSelectedToggle().getUserData().toString());
+		         if (tgMenuTrack.getSelectedToggle() != null) {
+		        	 RadioMenuItem selectedItem = (RadioMenuItem) tgMenuTrack.getSelectedToggle();
+					 try {
+						 changeCategory(selectedItem.getText());
+					 } catch (InvocationTargetException e) {
+						 e.printStackTrace();
+					 } catch (NoSuchMethodException e) {
+						 e.printStackTrace();
+					 } catch (IllegalAccessException e) {
+						 e.printStackTrace();
+					 }
 		         }
 		     } 
 		});
@@ -112,6 +119,9 @@ public class TrackManagerController implements Initializable, ErrorPopUpControll
 	@FXML
 	private void setDirectory(ActionEvent event) {
 		chooseDirectory();
+		setUpLists();
+		setUpMenuTrack();
+		showTrackTable(mainTable, trackList);
 	}
 
 	@FXML
@@ -152,24 +162,28 @@ public class TrackManagerController implements Initializable, ErrorPopUpControll
 	private Menu mTracks;
 
 	private void setUpMenuItems() {
+
 		mTracks.getItems().clear();
 		RadioMenuItem help;
 		RadioMenuItem first=null;
+
 		for (String cat: categories) {
 			help = new RadioMenuItem(cat);
 			if(first==null) first=help;
-			help.setToggleGroup(menuTrackToggleGroup);
+			help.setToggleGroup(tgMenuTrack);
 			mTracks.getItems().add(help);
 		}
-		if(first!=null) menuTrackToggleGroup.selectToggle(first);
+		if(first!=null) tgMenuTrack.selectToggle(first);
 	}
 
 	//je nach Index entsprechend holen! (erster Eintrag ausgewählt --> hier erste (bzw 0 auswählen!)
-	private void changeCategory(String category) { //index als parameter hinzugefügt - nuray
+	private void changeCategory(String category) throws InvocationTargetException, NoSuchMethodException, IllegalAccessException { //index als parameter hinzugefügt - nuray
 		model.setCurrentDirectoryFolder(category);
-		showTrackTable(mainTable, trackList);
+		changeChart(); //aktualisiert chart
+		//showTrackTable(mainTable, trackList);
 	}
-	
+
+
 	@FXML
 	private TableView<AbstractTrack> mainTable;
 
@@ -261,7 +275,7 @@ public class TrackManagerController implements Initializable, ErrorPopUpControll
 	}
 
 	//Implementierungstipps: https://stackoverflow.com/a/45013059
-	private void showTrackTable(TableView table, List<?> trackList) {
+	private void showTrackTable(TableView table, List<?> tl) {
 		//clear table
 		table.getItems().clear();
 		table.getColumns().clear();
@@ -302,32 +316,25 @@ public class TrackManagerController implements Initializable, ErrorPopUpControll
 
 
 
-		//Adding data to the table
-
-
 			table.getColumns().addAll(nameCol, dateCol, startCol, distanceCol, durationCol, paceCol, speedCol, avgBpmCol, maxBpmCol, elevationCol);
-			table.setItems((ObservableList<AbstractTrack>) trackList);
-			if (startCol.getCellData(0) == null)
-			{
-				table.getColumns().clear();
-				table.getColumns().addAll(nameCol, distanceCol, durationCol, paceCol, speedCol, avgBpmCol, maxBpmCol, elevationCol);
-			}
-			else
-			{
-				table.setRowFactory( tv -> {
-					TableRow<Track> row = new TableRow<>();
-					row.setOnMouseClicked(event -> {
-						Track rowData = row.getItem();
-						showTrackTable(sideTable, FXCollections.observableArrayList((rowData.getTrackPoints())));
-					});
-					return row ;});
-			}
+			table.setItems((ObservableList<AbstractTrack>) tl);
 
 		//further adjustments
 		table.getSelectionModel().setSelectionMode(SelectionMode.SINGLE);
 		table.refresh();
 
-		FilteredList<AbstractTrack> filteredData = new FilteredList<>((ObservableList<AbstractTrack>) trackList, b -> true);
+		mainTable = table;
+
+		// add event for rows
+		table.setRowFactory( tv -> {
+			TableRow<Track> row = new TableRow<>();
+			row.setOnMouseClicked(event -> {
+				Track rowData = row.getItem();
+				showSideTable(sideTable, FXCollections.observableArrayList((rowData.getTrackPoints())));
+			});
+			return row ;});
+
+		FilteredList<AbstractTrack> filteredData = new FilteredList<>((ObservableList<AbstractTrack>) tl, b -> true);
 		keywordTextField.textProperty().addListener((observable, oldValue, newValue) -> {
 			filteredData.setPredicate(AbstractTrack -> {
 				if(newValue.isEmpty() || newValue.isBlank() || newValue == null){
@@ -345,78 +352,81 @@ public class TrackManagerController implements Initializable, ErrorPopUpControll
 		sortedData.comparatorProperty().bind(table.comparatorProperty());
 		table.setItems(sortedData);
 
+		trackList = (ObservableList<AbstractTrack>) tl;
+
+
 	}
 
-	//TODO Methode für SideTable
+	@FXML
+	private void showSideTable(TableView table, List<?> tp ){
 
+		table.getItems().clear();
+		table.getColumns().clear();
+
+		trackPoints = (ObservableList<AbstractTrack>) tp;
+		//Create columns
+		TableColumn<AbstractTrack, String> nameCol = new TableColumn<>("Name");
+
+		nameCol.setCellValueFactory(cellValue -> new SimpleStringProperty(cellValue.getValue().getName()));
+
+		TableColumn<AbstractTrack, Number> distanceCol = new TableColumn<>("Distance");
+		distanceCol.setCellValueFactory(cellValue -> new SimpleDoubleProperty(cellValue.getValue().getDistance()));
+
+		TableColumn<AbstractTrack, String> durationCol= new TableColumn<>("Duration");
+		durationCol.setCellValueFactory(cellValue -> cellValue.getValue().getDurationProperty());
+
+		TableColumn<AbstractTrack, String> paceCol = new TableColumn<>("Pace");
+		paceCol.setCellValueFactory(cellValue -> (cellValue.getValue().getPaceProperty()));
+
+		TableColumn<AbstractTrack, Number> speedCol = new TableColumn<>("Speed");
+		speedCol.setCellValueFactory(cellValue -> new SimpleDoubleProperty((cellValue.getValue().getSpeed())));
+
+		TableColumn<AbstractTrack, Number> avgBpmCol = new TableColumn<>("Average bpm");
+		avgBpmCol.setCellValueFactory(cellValue -> new SimpleIntegerProperty((cellValue.getValue().getAverageBPM())));
+
+		TableColumn<AbstractTrack, Number> maxBpmCol = new TableColumn<>("Max bpm");
+		maxBpmCol.setCellValueFactory(cellValue -> new SimpleIntegerProperty((cellValue.getValue().getMaximumBPM())));
+
+		TableColumn<AbstractTrack, Number> elevationCol = new TableColumn<>("Elevation");
+		elevationCol.setCellValueFactory(cellValue -> new SimpleDoubleProperty((cellValue.getValue().getElevation())));
+
+		table.getColumns().addAll(nameCol, distanceCol, durationCol, paceCol, speedCol, avgBpmCol, maxBpmCol, elevationCol);
+		table.setItems((ObservableList<AbstractTrack>) trackPoints);
+
+		//further adjustments
+		table.getSelectionModel().setSelectionMode(SelectionMode.SINGLE);
+		table.refresh();
+
+		sideTable = table;
+	}
 	/* Action Handler für die Graph MenuItems */
 
-	@FXML
-	private void visualizeDistance(ActionEvent event) throws InvocationTargetException, NoSuchMethodException, IllegalAccessException {
-
-		RadioMenuItem rmi = (RadioMenuItem) event.getSource();
-		String font = rmi.getText();
-		createBarChart(font, "getDistance");
-	}
-
-	@FXML
-	private void visualizeHeartbeat(ActionEvent event) throws InvocationTargetException, NoSuchMethodException, IllegalAccessException {
-
-		RadioMenuItem rmi = (RadioMenuItem) event.getSource();
-		String font = rmi.getText();
-		createBarChart(font, "getAverageBPM");
-	}
-
-	@FXML
-	private void visualizeDuration(ActionEvent event) throws InvocationTargetException, NoSuchMethodException, IllegalAccessException {
-
-		RadioMenuItem rmi = (RadioMenuItem) event.getSource();
-		String font = rmi.getText();
-		createBarChart(font, "getDurationMinutes");
-
-
-	}
-
-	@FXML
-	private void visualizeElevation(ActionEvent event) throws InvocationTargetException, NoSuchMethodException, IllegalAccessException {
-
-		RadioMenuItem rmi = (RadioMenuItem) event.getSource();
-		String font = rmi.getText();
-		createBarChart(font, "getElevation");
-	}
-
-	@FXML
-	private void visualizeSpeed(ActionEvent event) throws InvocationTargetException, NoSuchMethodException, IllegalAccessException {
-		RadioMenuItem rmi = (RadioMenuItem) event.getSource();
-		String font = rmi.getText();
-		createBarChart(font, "getSpeed");
-
-	}
 
 	@FXML BarChart chart;
 	private void createBarChart(String name, String methodName) throws NoSuchMethodException, InvocationTargetException, IllegalAccessException {
 
 		Method method = new Track().getClass().getMethod(methodName);
 
-		final CategoryAxis xAxis = new CategoryAxis();
-		final NumberAxis yAxis = new NumberAxis();
-
 		chart.setTitle(name);
-		xAxis.setLabel("Track Name");
-		yAxis.setLabel("Value");
+		chart.getXAxis().setLabel("Track Name");
+		chart.getYAxis().setLabel("Value");
 
 		chart.getData().clear();
 		chart.layout();
-
-
 		XYChart.Series xy = new XYChart.Series();
 		xy.setName(name);
 		for (AbstractTrack at: trackList)
 		{
 			xy.getData().add(new XYChart.Data(at.getName(), method.invoke(at)));
 		}
-		chart.getData().addAll(xy);
+		chart.setData(FXCollections.observableArrayList(xy));
 
+	}
+
+	/* aktualiesiert chart nach änderung der kategorie */
+	private void changeChart() throws InvocationTargetException, NoSuchMethodException, IllegalAccessException {
+		RadioMenuItem rmi = (RadioMenuItem)	tgGraph.getSelectedToggle();
+		createBarChart(rmi.getText(), "get"+rmi.getText());
 	}
 
 	
@@ -426,7 +436,35 @@ public class TrackManagerController implements Initializable, ErrorPopUpControll
 		setUpLists();
 		setUpMenuTrack();
 		showTrackTable(mainTable, trackList);
-		
+
+		initializeHandlers();
+
 	}
+
+	public void initializeHandlers()
+	{
+		/* vergewissert, dass events beim ersten klick nicht ignoriert werden.
+		deshalb werden handlers so angelegt, statt in fxml zu definieren
+		 */
+
+		tgGraph.selectedToggleProperty().addListener(new ChangeListener<Toggle>(){
+		public void changed(ObservableValue<? extends Toggle> ov, Toggle old_toggle, Toggle new_toggle) {
+		if (tgGraph.getSelectedToggle() != null) {
+		RadioMenuItem selectedItem = (RadioMenuItem) tgGraph.getSelectedToggle();
+		String method = "get" +selectedItem.getText();
+		try {
+		createBarChart(selectedItem.getText(), method);
+		} catch (NoSuchMethodException e) {
+		e.printStackTrace();
+		} catch (InvocationTargetException e) {
+		e.printStackTrace();
+		} catch (IllegalAccessException e) {
+		e.printStackTrace();
+		}}}});
+
+
+
+	}
+
 }
 
