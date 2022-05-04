@@ -13,7 +13,6 @@ public class Track extends AbstractTrack {
 	private LocalTime startTime;
 	private List<TrackPoint> trackPoints;
 	private String parentDirectory;
-	private TrackParsingOperations conn;
 
 	public Track(String parentDirectory, String name, LocalDate date, LocalTime startTime, double distance, Duration duration, double elevation, List<TrackPoint> trackPoints) {
 		super(name,distance,duration,elevation);
@@ -31,9 +30,8 @@ public class Track extends AbstractTrack {
 		this.parentDirectory=parentDirectory;
 	}
 	
-	public Track(TrackParsingOperations conn, String parentDirectory, String name, LocalDate date, LocalTime startTime, double distance, Duration duration, int averageBPM, int maximumBPM, double elevation) {
+	public Track(String parentDirectory, String name, LocalDate date, LocalTime startTime, double distance, Duration duration, int averageBPM, int maximumBPM, double elevation) {
 		super(name,distance,duration,averageBPM,maximumBPM,elevation);
-		this.conn=conn;
 		this.date = date;
 		this.startTime = startTime;
 		this.parentDirectory=parentDirectory;
@@ -52,9 +50,6 @@ public class Track extends AbstractTrack {
 	}
 
 	public List<TrackPoint> getTrackPoints() {
-		if(trackPoints==null && conn!=null) {
-			this.trackPoints = conn.getTrackPoints(this);
-		}
 		return this.trackPoints;
 	}
 
@@ -67,5 +62,8 @@ public class Track extends AbstractTrack {
 		return this.parentDirectory;
 	}
 
+	public void setTrackPoints(List<TrackPoint> trackpoints) {
+		this.trackPoints=trackpoints;
+	}
 }
 

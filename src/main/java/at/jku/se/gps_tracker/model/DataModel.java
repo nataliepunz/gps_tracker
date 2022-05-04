@@ -7,6 +7,7 @@ import javafx.collections.ObservableList;
 import org.apache.commons.io.FilenameUtils;
 
 import java.io.File;
+import java.util.List;
 
 public class DataModel implements ErrorPopUpController {
 	
@@ -79,5 +80,14 @@ public class DataModel implements ErrorPopUpController {
 	
 	public void closeConnection() {
 		conn.closeConnection();
+	}
+	
+	public List<TrackPoint> getTrackPoints(Track track){
+		if(track.getTrackPoints()!=null) {
+			return track.getTrackPoints();
+		} else {
+			track.setTrackPoints(conn.getTrackPoints(track));
+			return track.getTrackPoints();
+		}
 	}
 }

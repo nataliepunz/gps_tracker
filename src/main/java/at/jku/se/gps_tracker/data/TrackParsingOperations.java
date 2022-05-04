@@ -91,7 +91,7 @@ public class TrackParsingOperations implements ErrorPopUpController {
 			stmt.setString(1, currentDirectory);
 			ResultSet rs = stmt.executeQuery();
 			while(rs.next()) {
-				trackHelpList.add(new Track(this, rs.getString("folder"), rs.getString("name"), LocalDate.parse(rs.getString("date")), LocalTime.parse(rs.getString("time")), rs.getDouble("distance"), Duration.ofSeconds((long) rs.getDouble("duration")), rs.getInt("averageBPM"), rs.getInt("maximumBPM"), rs.getDouble("elevation")));
+				trackHelpList.add(new Track(rs.getString("folder"), rs.getString("name"), LocalDate.parse(rs.getString("date")), LocalTime.parse(rs.getString("time")), rs.getDouble("distance"), Duration.ofSeconds((long) rs.getDouble("duration")), rs.getInt("averageBPM"), rs.getInt("maximumBPM"), rs.getDouble("elevation")));
 			}
 		} catch (SQLException e) {
 			showErrorPopUp("ERROR! COULD NOT GET TRACKS! "+e.getMessage());
