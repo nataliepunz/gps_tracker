@@ -3,9 +3,6 @@ package at.jku.se.gps_tracker.data;
 import java.io.File;
 import java.time.Duration;
 import java.time.Instant;
-import java.time.LocalDate;
-import java.time.LocalTime;
-import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -141,6 +138,11 @@ class GPXParser extends TrackParser{
 		if(trackTimeDate==null) {
 			trackTimeDate = Instant.now();
 		}
-		return new Track(new File(file).getParentFile().getName(),FilenameUtils.getName(file), LocalDate.ofInstant(trackTimeDate, ZoneId.systemDefault()), LocalTime.parse(LocalTime.ofInstant(trackTimeDate, ZoneId.systemDefault()).format(dtf)), totalDistance, totalDuration, totalElevation, trackPointsList);
+		return new Track.TrackBuilder(new File(file).getParentFile().getName(),FilenameUtils.getName(file), trackTimeDate)
+					.distance(totalDistance)
+					.duration(totalDuration)
+					.elevation(totalElevation)
+					.trackPoints(trackPointsList)
+					.build();
 	}	
 }

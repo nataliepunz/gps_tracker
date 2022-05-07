@@ -28,10 +28,6 @@ public class TrackParsingOperations implements ErrorPopUpController {
 	private Connection conn;
 	private String directory;
 	
-	public TrackParsingOperations(String directory) {
-		this.directory=directory;
-	}
-	
 	public void establishConnection(String dataBaseLocation) {
 		boolean setUpNecessary = new File(dataBaseLocation).exists();
 		String url = "jdbc:sqlite:"+dataBaseLocation;
@@ -90,8 +86,16 @@ public class TrackParsingOperations implements ErrorPopUpController {
 		try(PreparedStatement stmt = conn.prepareStatement("SELECT * FROM tracks WHERE folder=?")){
 			stmt.setString(1, currentDirectory);
 			ResultSet rs = stmt.executeQuery();
+			Track t = null;
 			while(rs.next()) {
-				trackHelpList.add(new Track(rs.getString("folder"), rs.getString("name"), LocalDate.parse(rs.getString("date")), LocalTime.parse(rs.getString("time")), rs.getDouble("distance"), Duration.ofSeconds((long) rs.getDouble("duration")), rs.getInt("averageBPM"), rs.getInt("maximumBPM"), rs.getDouble("elevation")));
+				t = new Track.TrackBuilder(rs.getString("folder"), rs.getString("name"), LocalDate.parse(rs.getString("date")), LocalTime.parse(rs.getString("time")))
+						.distance(rs.getDouble("distance"))
+						.duration(Duration.ofSeconds((long) rs.getDouble("duration")))
+						.averageBPM(rs.getInt("averageBPM"))
+						.maximumBPM(rs.getInt("maximumBPM"))
+						.elevation(rs.getDouble("elevation"))
+						.build();
+				trackHelpList.add(t);
 			}
 		} catch (SQLException e) {
 			showErrorPopUp("ERROR! COULD NOT GET TRACKS! "+e.getMessage());

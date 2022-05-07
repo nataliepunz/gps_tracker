@@ -3,9 +3,6 @@ package at.jku.se.gps_tracker.data;
 import java.io.File;
 import java.time.Duration;
 import java.time.Instant;
-import java.time.LocalDate;
-import java.time.LocalTime;
-import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -127,7 +124,7 @@ class TCXParser extends TrackParser {
 	private void manageTCXTrackPointElement(XMLStreamReader streamReader) throws NumberFormatException, XMLStreamException {
 		trackPointElevation = 0;
 		trackPointElevationChange = 0;
-		trackPointDuration = null;
+		trackPointDuration = Duration.ofSeconds(0);
 		trackPointLatitude = 0;
 		trackPointLongtitude = 0;
 		averageBPMTrackPoint = 0;
@@ -210,7 +207,6 @@ class TCXParser extends TrackParser {
 		if(!trackPointDistanceMetersSet && positionSet && prevTrackPointCoordinatesSet) {
 			trackPointDistanceMeters = distance(trackPointLatitude, prevTrackPointLatitude, trackPointLongtitude, prevTrackPointLongtitude, trackPointElevation, prevTrackPointElevation);
 		}
-		if(trackPointDuration==null) trackPointDuration = Duration.ofSeconds(0);
 		trackPointsList.add(new TrackPoint(String.valueOf(trackPointNr), trackPointDistanceMeters, trackPointDuration, averageBPMTrackPoint, averageBPMTrackPoint, trackPointElevationChange));
 		trackPointNr++;
 		if(positionSet) {
@@ -225,7 +221,14 @@ class TCXParser extends TrackParser {
 		if(trackTimeDate==null) {
 			trackTimeDate = Instant.now();
 		}
-		return new Track(new File(file).getParentFile().getName(),FilenameUtils.getName(file), LocalDate.ofInstant(trackTimeDate, ZoneId.systemDefault()), LocalTime.parse(LocalTime.ofInstant(trackTimeDate, ZoneId.systemDefault()).format(dtf)), totalDistance, totalDuration, averageBPM, maximumBPM, totalElevation, trackPointsList);
+		return new Track.TrackBuilder(new File(file).getParentFile().getName(),FilenameUtils.getName(file), trackTimeDate)
+				.distance(totalDistance)
+				.duration(totalDuration)
+				.averageBPM(averageBPM)
+				.maximumBPM(maximumBPM)
+				.elevation(totalElevation)
+				.trackPoints(trackPointsList)
+				.build();
 	}
 
 	

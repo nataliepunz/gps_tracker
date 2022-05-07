@@ -18,13 +18,12 @@ public class DataModel implements ErrorPopUpController {
 	private String currentDirectory;
 	private ObservableList<String> directoryFolders;
 	private String currentDirectoryFolder;
-	
 	private TrackParsingOperations conn;
 
 	public DataModel() {
 		this.trackList = FXCollections.observableArrayList();
 		this.directoryFolders = FXCollections.observableArrayList();
-		conn = new TrackParsingOperations(currentDirectory);
+		conn = new TrackParsingOperations();
 	}
 
 	public void setCurrrentDirectory(String currentDirectory) {

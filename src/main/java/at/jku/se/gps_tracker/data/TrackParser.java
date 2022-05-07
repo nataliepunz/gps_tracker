@@ -7,7 +7,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.time.Duration;
 import java.time.Instant;
-import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -23,7 +22,7 @@ import at.jku.se.gps_tracker.model.TrackPoint;
 
 public class TrackParser implements ErrorPopUpController {
 	
-	protected static final DateTimeFormatter dtf = DateTimeFormatter.ofPattern("HH:mm:ss");
+	private static final String ERROR_TEXT = "ERROR! File could not be read! ";
 	
 	//data per track
 	List<TrackPoint> trackPointsList;
@@ -70,16 +69,16 @@ public class TrackParser implements ErrorPopUpController {
 				track = new TCXParser().readTCXTrack(file, streamReader);
 			}
 		} catch (FileNotFoundException e) {
-			showErrorPopUpNoWait("ERROR! File "+FilenameUtils.getName(file)+" could not be read! Not possible to access file on disk! Please update the tracks to try again!");
+			showErrorPopUpNoWait(ERROR_TEXT+"("+FilenameUtils.getName(file)+") Not possible to access file on disk! Please update the tracks to try again!");
 		} catch (XMLStreamException e) {
-			showErrorPopUpNoWait("ERROR! File "+FilenameUtils.getName(file)+" could not be read! Please ensure that the file has been made correctly and try again!");
+			showErrorPopUpNoWait(ERROR_TEXT+"("+FilenameUtils.getName(file)+") Please ensure that the file has been made correctly and try again!");
 		} catch (Exception e) {
-			showErrorPopUpNoWait("ERROR! File "+FilenameUtils.getName(file)+" could not be read! An error has been encountered! Please ensure file is correct and try again!");
+			showErrorPopUpNoWait(ERROR_TEXT+"("+FilenameUtils.getName(file)+") An error has been encountered! Please ensure file is correct and try again!");
 		}
 		try {
 			in.close();
 		} catch (IOException e) {
-			showErrorPopUp("ERROR! The file could not be closed correctly. Please restart the application to ensure correct working!");
+			showErrorPopUp(ERROR_TEXT+"("+FilenameUtils.getName(file)+") Please restart the application to ensure correct working!");
 		}
 		return track;
 	}
@@ -94,11 +93,11 @@ public class TrackParser implements ErrorPopUpController {
 				points = new TCXParser().readTCXTrackPoints(streamReader);
 			}
 		} catch (FileNotFoundException e) {
-			showErrorPopUpNoWait("ERROR! File "+FilenameUtils.getName(file)+" could not be read! Not possible to access file on disk! Please update the tracks to try again!");
+			showErrorPopUpNoWait(ERROR_TEXT+"("+FilenameUtils.getName(file)+") Not possible to access file on disk! Please update the tracks to try again!");
 		} catch (XMLStreamException e) {
-			showErrorPopUpNoWait("ERROR! File "+FilenameUtils.getName(file)+" could not be read! Please ensure that the file has been made correctly and try again!");
+			showErrorPopUpNoWait(ERROR_TEXT+"("+FilenameUtils.getName(file)+") Please ensure that the file has been made correctly and try again!");
 		} catch (Exception e) {
-			showErrorPopUpNoWait("ERROR! File "+FilenameUtils.getName(file)+" could not be read! An error has been encountered! Please ensure file is correct and try again!");
+			showErrorPopUpNoWait(ERROR_TEXT+"("+FilenameUtils.getName(file)+") An error has been encountered! Please ensure file is correct and try again!");
 		}
 		try {
 			in.close();
