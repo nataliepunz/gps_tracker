@@ -5,8 +5,6 @@ import java.time.LocalDate;
 import java.time.LocalTime;
 import java.util.List;
 
-import at.jku.se.gps_tracker.data.TrackParsingOperations;
-
 public class Track extends AbstractTrack {
 
 	private LocalDate date;

@@ -177,7 +177,6 @@ public class TrackParsingOperations implements ErrorPopUpController {
 		}
 		
 		TrackParser parser = new TrackParser();
-		parser.createParsers();
 		for(String s : driveFiles) {
 			addTrackToDataBase(mapping.get(s).getAbsolutePath(), parser.getTrack(mapping.get(s).getAbsolutePath()));
 		}

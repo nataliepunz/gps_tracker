@@ -3,11 +3,11 @@ package at.jku.se.gps_tracker.data;
 import java.io.BufferedInputStream;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.io.InputStream;
 import java.time.Duration;
 import java.time.Instant;
-import java.time.LocalDate;
-import java.time.LocalTime;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -23,62 +23,63 @@ import at.jku.se.gps_tracker.model.TrackPoint;
 
 public class TrackParser implements ErrorPopUpController {
 	
-	//TrackData
-	List<TrackPoint> helpList;
-	LocalDate trackDate;
-	LocalTime trackTime;
-	boolean trackDetailSet;
-	double trackDistance;
-	double totalElevation;
-	Duration totalDuration;
+	protected static final DateTimeFormatter dtf = DateTimeFormatter.ofPattern("HH:mm:ss");
 	
-	// for TrackPoints themselves
+	//data per track
+	List<TrackPoint> trackPointsList;
+	Instant trackTimeDate;
+	double totalDistance;
+	Duration totalDuration;
+	double totalElevation;
+	
+	// data per trackPoint
 	int trackPointNr;
-	double elevation;
-	double elevationChange;
-	double latitude;
-	double longtitude;
-	Instant timeRecorded;
-	Duration timeNeeded;
-	LocalTime intermediateTime;
+	double trackPointElevation;
+	double trackPointElevationChange;
+	boolean trackPointElevationSet;
+	double trackPointLatitude;
+	double trackPointLongtitude;
+	Instant trackPointTimePoint;
+	Duration trackPointDuration;
 	
 	//data about previous trackPoint
-	LocalTime prevTime;
-	double prevElevation;
-	boolean prevElevationSet;
-	double prevLatitude;
-	double prevLongtitude;
-	boolean prevCoordinatesSet;
+	Instant prevTrackPointTime;
+	double prevTrackPointElevation;
+	boolean prevTrackPointElevationSet;
+	double prevTrackPointLatitude;
+	double prevTrackPointLongtitude;
+	boolean prevTrackPointCoordinatesSet;
 	
+	//parsing necessities
 	private XMLInputFactory inputFactory;
 	private XMLStreamReader streamReader;
 	private InputStream in;
-	
-	private GPXParser gpx;
-	private TCXParser tcx;
 	
 	public TrackParser() {
 		inputFactory = XMLInputFactory.newInstance();
 		inputFactory.setProperty(XMLInputFactory.SUPPORT_DTD, false);
 	}
-	
-	public void createParsers() {
-		gpx = new GPXParser();
-		tcx = new TCXParser();
-	}
-		
+			
 	public Track getTrack(String file){
 		Track track = null;
 		try {
 			setUpTrackParser(file);
 			if(FilenameUtils.getExtension(file).equals("gpx")) {
-				track = gpx.readGPXTrack(file, streamReader);
+				track = new GPXParser().readGPXTrack(file, streamReader);
 			} else {
-				track = tcx.readTCXTrack(file, streamReader);
+				track = new TCXParser().readTCXTrack(file, streamReader);
 			}
-			in.close();
+		} catch (FileNotFoundException e) {
+			showErrorPopUpNoWait("ERROR! File "+FilenameUtils.getName(file)+" could not be read! Not possible to access file on disk! Please update the tracks to try again!");
+		} catch (XMLStreamException e) {
+			showErrorPopUpNoWait("ERROR! File "+FilenameUtils.getName(file)+" could not be read! Please ensure that the file has been made correctly and try again!");
 		} catch (Exception e) {
-			showErrorPopUp("The GPS-Track "+FilenameUtils.getName(file)+" could not be read! The following Problem was encountered: "+e.getMessage());
+			showErrorPopUpNoWait("ERROR! File "+FilenameUtils.getName(file)+" could not be read! An error has been encountered! Please ensure file is correct and try again!");
+		}
+		try {
+			in.close();
+		} catch (IOException e) {
+			showErrorPopUp("ERROR! The file could not be closed correctly. Please restart the application to ensure correct working!");
 		}
 		return track;
 	}
@@ -92,9 +93,17 @@ public class TrackParser implements ErrorPopUpController {
 			} else {
 				points = new TCXParser().readTCXTrackPoints(streamReader);
 			}
-			in.close();
+		} catch (FileNotFoundException e) {
+			showErrorPopUpNoWait("ERROR! File "+FilenameUtils.getName(file)+" could not be read! Not possible to access file on disk! Please update the tracks to try again!");
+		} catch (XMLStreamException e) {
+			showErrorPopUpNoWait("ERROR! File "+FilenameUtils.getName(file)+" could not be read! Please ensure that the file has been made correctly and try again!");
 		} catch (Exception e) {
-			showErrorPopUp("The GPS-Track "+FilenameUtils.getName(file)+" could not be read! The following Problem was encountered: "+e.getMessage());
+			showErrorPopUpNoWait("ERROR! File "+FilenameUtils.getName(file)+" could not be read! An error has been encountered! Please ensure file is correct and try again!");
+		}
+		try {
+			in.close();
+		} catch (IOException e) {
+			showErrorPopUp("ERROR! The file could not be closed correctly. Please restart the application to ensure correct working!");
 		}
 		return points;
 	}
