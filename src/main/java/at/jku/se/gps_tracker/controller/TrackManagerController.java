@@ -38,7 +38,6 @@ public class TrackManagerController implements Initializable, ErrorPopUpControll
 	//TODO : Optische Korrekturen
 	private DataModel model;
 	private ObservableList<AbstractTrack> trackList;
-	private ObservableList<AbstractTrack> trackPoints;
 	private ObservableList<String> categories;
 	final private ToggleGroup tgMenuTrack;
 
@@ -119,11 +118,8 @@ public class TrackManagerController implements Initializable, ErrorPopUpControll
 	@FXML
 	private void setDirectory(ActionEvent event) {
 		chooseDirectory();
-		setUpLists();
-		setUpMenuTrack();
-		showTrackTable(mainTable, trackList);
+		sideTable.getItems().clear(); //setzt sidetable zurück da sie sonst die letzte instanz anzeigt
 	}
-
 	@FXML
 	private void updateModel(ActionEvent event) {
 		model.updateModel();
@@ -180,7 +176,7 @@ public class TrackManagerController implements Initializable, ErrorPopUpControll
 	private void changeCategory(String category) throws InvocationTargetException, NoSuchMethodException, IllegalAccessException { //index als parameter hinzugefügt - nuray
 		model.setCurrentDirectoryFolder(category);
 		changeChart(); //aktualisiert chart
-		//showTrackTable(mainTable, trackList);
+
 	}
 
 
@@ -362,8 +358,6 @@ public class TrackManagerController implements Initializable, ErrorPopUpControll
 
 		table.getItems().clear();
 		table.getColumns().clear();
-
-		trackPoints = (ObservableList<AbstractTrack>) tp;
 		//Create columns
 		TableColumn<AbstractTrack, String> nameCol = new TableColumn<>("Name");
 
@@ -391,7 +385,7 @@ public class TrackManagerController implements Initializable, ErrorPopUpControll
 		elevationCol.setCellValueFactory(cellValue -> new SimpleDoubleProperty((cellValue.getValue().getElevation())));
 
 		table.getColumns().addAll(nameCol, distanceCol, durationCol, paceCol, speedCol, avgBpmCol, maxBpmCol, elevationCol);
-		table.setItems((ObservableList<AbstractTrack>) trackPoints);
+		table.setItems((ObservableList<AbstractTrack>) tp);
 
 		//further adjustments
 		table.getSelectionModel().setSelectionMode(SelectionMode.SINGLE);
