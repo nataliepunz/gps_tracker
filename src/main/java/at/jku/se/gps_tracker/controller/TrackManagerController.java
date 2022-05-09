@@ -2,6 +2,9 @@ package at.jku.se.gps_tracker.controller;
 
 import at.jku.se.gps_tracker.model.AbstractTrack;
 import at.jku.se.gps_tracker.model.DataModel;
+import at.jku.se.gps_tracker.model.Group.DayGroup;
+import at.jku.se.gps_tracker.model.Group.MonthGroup;
+import at.jku.se.gps_tracker.model.Group.YearGroup;
 import at.jku.se.gps_tracker.model.Track;
 import javafx.beans.property.*;
 import javafx.beans.value.ChangeListener;
@@ -31,8 +34,14 @@ import java.lang.reflect.Method;
 import java.net.URL;
 import java.time.LocalDate;
 import java.time.LocalTime;
+import java.time.Year;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.ResourceBundle;
+import java.util.stream.Collector;
+
+import static java.util.stream.Collectors.groupingBy;
 
 public class TrackManagerController implements Initializable, ErrorPopUpController {
 	//TODO : Optische Korrekturen
@@ -423,6 +432,38 @@ public class TrackManagerController implements Initializable, ErrorPopUpControll
 		createBarChart(rmi.getText(), "get"+rmi.getText());
 	}
 
+	public void groupDay(ObservableList<Track> list)
+	{
+		DayGroup dayGroup = new DayGroup();
+		dayGroup.setTracksDay(list.stream().collect(groupingBy(Track::getDate)));
+	}
+
+	public void groupMonth(ObservableList<Track> list)
+	{
+		MonthGroup monthGroup = new MonthGroup();
+		monthGroup.setTracksMonth(list.stream().collect(groupingBy(t -> t.getDate().getMonth())));
+	}
+
+	YearGroup  gy = new YearGroup();
+	public void groupYear(List<Track> list)
+	{
+		gy.setTracksYear(list.stream().collect(groupingBy(t -> Year.of(t.getDate().getYear()))));
+	}
+
+	public void testGroups(){
+		List<Track> list = new ArrayList<>();
+
+		for (AbstractTrack at: trackList)
+		{
+			list.add((Track) at);
+		}
+		groupYear(list);
+
+		for (Map.Entry<Year, List<Track>> entry : gy.getTracksYear().entrySet()) {
+			System.out.println(entry.getKey() + ":" + entry.getValue().toString());
+		}
+	}
+
 	
 	@Override
 	public void initialize(URL arg0, ResourceBundle arg1) {
@@ -432,6 +473,7 @@ public class TrackManagerController implements Initializable, ErrorPopUpControll
 		showTrackTable(mainTable, trackList);
 
 		initializeHandlers();
+		testGroups();
 
 	}
 
