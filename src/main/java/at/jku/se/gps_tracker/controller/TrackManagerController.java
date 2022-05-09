@@ -326,7 +326,7 @@ public class TrackManagerController implements Initializable, ErrorPopUpControll
 			TableRow<Track> row = new TableRow<>();
 			row.setOnMouseClicked(event -> {
 				Track rowData = row.getItem();
-				showSideTable(sideTable, FXCollections.observableArrayList((rowData.getTrackPoints())));
+				showSideTable(sideTable, FXCollections.observableArrayList((model.getTrackPoints(rowData))));
 			});
 			return row ;});
 
