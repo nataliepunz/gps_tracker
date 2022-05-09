@@ -7,6 +7,7 @@ import javafx.collections.ObservableList;
 import org.apache.commons.io.FilenameUtils;
 
 import java.io.File;
+import java.util.List;
 
 public class DataModel implements ErrorPopUpController {
 	
@@ -17,13 +18,12 @@ public class DataModel implements ErrorPopUpController {
 	private String currentDirectory;
 	private ObservableList<String> directoryFolders;
 	private String currentDirectoryFolder;
-	
 	private TrackParsingOperations conn;
 
 	public DataModel() {
 		this.trackList = FXCollections.observableArrayList();
 		this.directoryFolders = FXCollections.observableArrayList();
-		conn = new TrackParsingOperations(currentDirectory);
+		conn = new TrackParsingOperations();
 	}
 
 	public void setCurrrentDirectory(String currentDirectory) {
@@ -79,5 +79,14 @@ public class DataModel implements ErrorPopUpController {
 	
 	public void closeConnection() {
 		conn.closeConnection();
+	}
+	
+	public List<TrackPoint> getTrackPoints(Track track){
+		if(track.getTrackPoints()!=null) {
+			return track.getTrackPoints();
+		} else {
+			track.setTrackPoints(conn.getTrackPoints(track));
+			return track.getTrackPoints();
+		}
 	}
 }
