@@ -2,9 +2,6 @@ package at.jku.se.gps_tracker.controller;
 
 import at.jku.se.gps_tracker.model.AbstractTrack;
 import at.jku.se.gps_tracker.model.DataModel;
-import at.jku.se.gps_tracker.model.Group.DayGroup;
-import at.jku.se.gps_tracker.model.Group.MonthGroup;
-import at.jku.se.gps_tracker.model.Group.YearGroup;
 import at.jku.se.gps_tracker.model.Track;
 import javafx.beans.property.*;
 import javafx.beans.value.ChangeListener;
@@ -34,14 +31,8 @@ import java.lang.reflect.Method;
 import java.net.URL;
 import java.time.LocalDate;
 import java.time.LocalTime;
-import java.time.Year;
-import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 import java.util.ResourceBundle;
-import java.util.stream.Collector;
-
-import static java.util.stream.Collectors.groupingBy;
 
 public class TrackManagerController implements Initializable, ErrorPopUpController {
 	//TODO : Optische Korrekturen
@@ -52,7 +43,7 @@ public class TrackManagerController implements Initializable, ErrorPopUpControll
 
 	@FXML
 	private ToggleGroup tgGraph;
-	
+
 	@FXML
 	private MenuBar menubar;
 
@@ -60,10 +51,10 @@ public class TrackManagerController implements Initializable, ErrorPopUpControll
 		this.model=model;
 		tgMenuTrack = new ToggleGroup();
 	}
-	
+
 	/** set up the lists and add listeners
-	 * 
-	 * 
+	 *
+	 *
 	 */
 
 	private void setUpLists() {
@@ -99,31 +90,31 @@ public class TrackManagerController implements Initializable, ErrorPopUpControll
 			setUpMenuItems();
 		});
 	}
-	
+
 	private void setUpMenuTrack() {
 		tgMenuTrack.selectedToggleProperty().addListener(new ChangeListener<Toggle>(){
-		    public void changed(ObservableValue<? extends Toggle> ov, Toggle old_toggle, Toggle new_toggle) {
-		         if (tgMenuTrack.getSelectedToggle() != null) {
-		        	 RadioMenuItem selectedItem = (RadioMenuItem) tgMenuTrack.getSelectedToggle();
-					 try {
-						 changeCategory(selectedItem.getText());
-					 } catch (InvocationTargetException e) {
-						 e.printStackTrace();
-					 } catch (NoSuchMethodException e) {
-						 e.printStackTrace();
-					 } catch (IllegalAccessException e) {
-						 e.printStackTrace();
-					 }
-		         }
-		     } 
+			public void changed(ObservableValue<? extends Toggle> ov, Toggle old_toggle, Toggle new_toggle) {
+				if (tgMenuTrack.getSelectedToggle() != null) {
+					RadioMenuItem selectedItem = (RadioMenuItem) tgMenuTrack.getSelectedToggle();
+					try {
+						changeCategory(selectedItem.getText());
+					} catch (InvocationTargetException e) {
+						e.printStackTrace();
+					} catch (NoSuchMethodException e) {
+						e.printStackTrace();
+					} catch (IllegalAccessException e) {
+						e.printStackTrace();
+					}
+				}
+			}
 		});
 	}
-	
+
 	/**
 	 * set up Menu File
-	 * 
+	 *
 	 */
-	
+
 	@FXML
 	private void setDirectory(ActionEvent event) {
 		chooseDirectory();
@@ -139,7 +130,7 @@ public class TrackManagerController implements Initializable, ErrorPopUpControll
 		model.closeConnection();
 		System.exit(1);
 	}
-	
+
 	private void chooseDirectory() {
 		try {
 			FXMLLoader fxmlLoader = new FXMLLoader();
@@ -157,12 +148,12 @@ public class TrackManagerController implements Initializable, ErrorPopUpControll
 			showErrorPopUp("ERROR! Please refer to following information: "+e1.getMessage());
 		}
 	}
-	
+
 	/**
-	 * 
+	 *
 	 * Menu Item Track set up
 	 */
-	
+
 	@FXML
 	private Menu mTracks;
 
@@ -198,7 +189,7 @@ public class TrackManagerController implements Initializable, ErrorPopUpControll
 	@FXML
 	private TextField keywordTextField;
 
-	
+
 
 	/* Action Handler für die Segment MenuItems
 	 * TODO Methoden sinnvoll implementieren */
@@ -272,8 +263,8 @@ public class TrackManagerController implements Initializable, ErrorPopUpControll
 
 	}
 
-	
-	
+
+
 	//TODO: UserGuide Methode Implementieren
 	@FXML
 	private void openUserGuide(ActionEvent event){
@@ -321,8 +312,8 @@ public class TrackManagerController implements Initializable, ErrorPopUpControll
 
 
 
-			table.getColumns().addAll(nameCol, dateCol, startCol, distanceCol, durationCol, paceCol, speedCol, avgBpmCol, maxBpmCol, elevationCol);
-			table.setItems((ObservableList<AbstractTrack>) tl);
+		table.getColumns().addAll(nameCol, dateCol, startCol, distanceCol, durationCol, paceCol, speedCol, avgBpmCol, maxBpmCol, elevationCol);
+		table.setItems((ObservableList<AbstractTrack>) tl);
 
 		//further adjustments
 		table.getSelectionModel().setSelectionMode(SelectionMode.SINGLE);
@@ -335,7 +326,7 @@ public class TrackManagerController implements Initializable, ErrorPopUpControll
 			TableRow<Track> row = new TableRow<>();
 			row.setOnMouseClicked(event -> {
 				Track rowData = row.getItem();
-				showSideTable(sideTable, FXCollections.observableArrayList((rowData.getTrackPoints())));
+				showSideTable(sideTable, FXCollections.observableArrayList((model.getTrackPoints(rowData))));
 			});
 			return row ;});
 
@@ -432,39 +423,7 @@ public class TrackManagerController implements Initializable, ErrorPopUpControll
 		createBarChart(rmi.getText(), "get"+rmi.getText());
 	}
 
-	public void groupDay(ObservableList<Track> list)
-	{
-		DayGroup dayGroup = new DayGroup();
-		dayGroup.setTracksDay(list.stream().collect(groupingBy(Track::getDate)));
-	}
 
-	public void groupMonth(ObservableList<Track> list)
-	{
-		MonthGroup monthGroup = new MonthGroup();
-		monthGroup.setTracksMonth(list.stream().collect(groupingBy(t -> t.getDate().getMonth())));
-	}
-
-	YearGroup  gy = new YearGroup();
-	public void groupYear(List<Track> list)
-	{
-		gy.setTracksYear(list.stream().collect(groupingBy(t -> Year.of(t.getDate().getYear()))));
-	}
-
-	public void testGroups(){
-		List<Track> list = new ArrayList<>();
-
-		for (AbstractTrack at: trackList)
-		{
-			list.add((Track) at);
-		}
-		groupYear(list);
-
-		for (Map.Entry<Year, List<Track>> entry : gy.getTracksYear().entrySet()) {
-			System.out.println(entry.getKey() + ":" + entry.getValue().toString());
-		}
-	}
-
-	
 	@Override
 	public void initialize(URL arg0, ResourceBundle arg1) {
 		chooseDirectory();
@@ -473,7 +432,6 @@ public class TrackManagerController implements Initializable, ErrorPopUpControll
 		showTrackTable(mainTable, trackList);
 
 		initializeHandlers();
-		testGroups();
 
 	}
 
@@ -484,23 +442,20 @@ public class TrackManagerController implements Initializable, ErrorPopUpControll
 		 */
 
 		tgGraph.selectedToggleProperty().addListener(new ChangeListener<Toggle>(){
-		public void changed(ObservableValue<? extends Toggle> ov, Toggle old_toggle, Toggle new_toggle) {
-		if (tgGraph.getSelectedToggle() != null) {
-		RadioMenuItem selectedItem = (RadioMenuItem) tgGraph.getSelectedToggle();
-		String method = "get" +selectedItem.getText();
-		try {
-		createBarChart(selectedItem.getText(), method);
-		} catch (NoSuchMethodException e) {
-		e.printStackTrace();
-		} catch (InvocationTargetException e) {
-		e.printStackTrace();
-		} catch (IllegalAccessException e) {
-		e.printStackTrace();
-		}}}});
+			public void changed(ObservableValue<? extends Toggle> ov, Toggle old_toggle, Toggle new_toggle) {
+				if (tgGraph.getSelectedToggle() != null) {
+					RadioMenuItem selectedItem = (RadioMenuItem) tgGraph.getSelectedToggle();
+					String method = "get" +selectedItem.getText();
+					try {
+						createBarChart(selectedItem.getText(), method);
+					} catch (NoSuchMethodException e) {
+						e.printStackTrace();
+					} catch (InvocationTargetException e) {
+						e.printStackTrace();
+					} catch (IllegalAccessException e) {
+						e.printStackTrace();
+					}}}});
 
 
 
-	}
-
-}
-
+	}}
