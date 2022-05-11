@@ -3,7 +3,9 @@ package at.jku.se.gps_tracker.data;
 import java.io.File;
 import java.time.Duration;
 import java.time.Instant;
-import java.util.List;
+import java.time.LocalDate;
+import java.time.LocalTime;
+import java.time.ZoneId;
 
 import javax.xml.stream.XMLStreamException;
 import javax.xml.stream.XMLStreamReader;
@@ -14,35 +16,33 @@ import at.jku.se.gps_tracker.model.Track;
 import at.jku.se.gps_tracker.model.TrackPoint;
 
 class TCXParser extends TrackParser {
-	private int averageBPM;
-	private int averageBPMCount;
-	private int maximumBPM;
-	private boolean positionSet;
-	private double trackPointDistanceMeters;
-	private boolean trackPointDistanceMetersSet;
-	private int averageBPMTrackPoint;
-	private double prevDistance;
+	private static int averageBPM;
+	private static int averageBPMCount;
+	private static int maximumBPM;
+	private static boolean positionSet;
+	private static double trackPointDistanceMeters;
+	private static boolean trackPointDistanceMetersSet;
+	private static int averageBPMTrackPoint;
+	private static double prevDistance;
 	
-	TCXParser(){
+	private static void resetTCXFields(){
 		averageBPM = 0;
 		averageBPMCount = 0;
 		maximumBPM = 0;
 		prevDistance = 0;
 		resetFields();
 	}
-	
-	List<TrackPoint> readTCXTrackPoints(XMLStreamReader streamReader) throws XMLStreamException {
-		readTrack(streamReader);
-		return trackPointsList;
-	}
-		
-	Track readTCXTrack (String file, XMLStreamReader streamReader) throws XMLStreamException {
+			
+	static Track readTCXTrack (String file, XMLStreamReader streamReader) throws XMLStreamException {
+		resetTCXFields();
 		readTrack(streamReader);		
-		if(averageBPMCount!=0) averageBPM = averageBPM/averageBPMCount;
+		if(averageBPMCount!=0) {
+			averageBPM = averageBPM/averageBPMCount;
+		}
 		return createTCXTrack(file);
 	}
 	
-	private void readTrack(XMLStreamReader streamReader) throws XMLStreamException {
+	private static void readTrack(XMLStreamReader streamReader) throws XMLStreamException {
 		while (streamReader.hasNext()) {
 			if (streamReader.isStartElement() && streamReader.getLocalName().equals("Activity")) {
 					manageTCXActivityElement(streamReader);
@@ -52,13 +52,15 @@ class TCXParser extends TrackParser {
 		streamReader.close();
 	}
 	
-	private void manageTCXActivityElement(XMLStreamReader streamReader) throws NumberFormatException, XMLStreamException {
+	private static void manageTCXActivityElement(XMLStreamReader streamReader) throws NumberFormatException, XMLStreamException {
 		while(streamReader.hasNext()) {
 			streamReader.next();
 			if (streamReader.isStartElement()) {
 				switch(streamReader.getLocalName()) {
 					case "Id" :{
-						if(trackName==null) trackName = streamReader.getElementText();
+						if(trackName==null) {
+							trackName = streamReader.getElementText();
+						}
 						break;
 					}
 					case "Lap" :{
@@ -76,7 +78,7 @@ class TCXParser extends TrackParser {
 		}
 	}
 	
-	private void manageTCXLapElement(XMLStreamReader streamReader) throws NumberFormatException, XMLStreamException {
+	private static void manageTCXLapElement(XMLStreamReader streamReader) throws NumberFormatException, XMLStreamException {
 		if(trackTimeDate==null) {
 			trackTimeDate = Instant.parse(streamReader.getAttributeValue(null, "StartTime"));
 		}
@@ -119,7 +121,7 @@ class TCXParser extends TrackParser {
 		}
 	}
 	
-	private void manageTCXTrackPointElement(XMLStreamReader streamReader) throws NumberFormatException, XMLStreamException {
+	private static void manageTCXTrackPointElement(XMLStreamReader streamReader) throws NumberFormatException, XMLStreamException {
 		trackPointElevation = 0;
 		trackPointElevationChange = 0;
 		trackPointDuration = Duration.ofSeconds(0);
@@ -176,7 +178,7 @@ class TCXParser extends TrackParser {
 		}
 	}
 	
-	private void calculateTCXTrackPointTime(XMLStreamReader streamReader) throws XMLStreamException {
+	private static void calculateTCXTrackPointTime(XMLStreamReader streamReader) throws XMLStreamException {
 		trackPointTimePoint = Instant.parse(streamReader.getElementText());
 		if(prevTrackPointTime==null) {
 			prevTrackPointTime = trackPointTimePoint;
@@ -185,7 +187,7 @@ class TCXParser extends TrackParser {
 		prevTrackPointTime = trackPointTimePoint;
 	}
 	
-	private void calculateTCXTrackPointElevation(XMLStreamReader streamReader) throws XMLStreamException {
+	private static void calculateTCXTrackPointElevation(XMLStreamReader streamReader) throws XMLStreamException {
 		trackPointElevation = Double.parseDouble(streamReader.getElementText());
 		trackPointElevationSet = true;
 		if(!prevTrackPointElevationSet) {
@@ -198,7 +200,7 @@ class TCXParser extends TrackParser {
 		}
 	}
 		
-	private void createTCXTrackPoint() {
+	private static void createTCXTrackPoint() {
 		if(!trackPointElevationSet){
 			trackPointElevation = prevTrackPointElevation;
 		}
@@ -212,17 +214,19 @@ class TCXParser extends TrackParser {
 			prevTrackPointLongtitude = trackPointLongtitude;
 			prevTrackPointCoordinatesSet = true;
 		}
-		if(trackPointElevationSet) prevTrackPointElevation = trackPointElevation;
+		if(trackPointElevationSet) {
+			prevTrackPointElevation = trackPointElevation;
+		}
 	}
 	
-	private Track createTCXTrack(String file) {
+	private static Track createTCXTrack(String file) {
 		if(trackTimeDate==null) {
 			trackTimeDate = Instant.now();
 		}
 		if(trackName==null) {
 			trackName = FilenameUtils.getName(file);
 		}
-		return new Track.TrackBuilder(new File(file).getParentFile().getName(),FilenameUtils.getName(file), trackName, trackTimeDate)
+		return new Track.TrackBuilder(new File(file).getParentFile().getName(),FilenameUtils.getName(file), trackName, LocalDate.ofInstant(trackTimeDate, ZoneId.systemDefault()), LocalTime.parse(LocalTime.ofInstant(trackTimeDate, ZoneId.systemDefault()).format(dtf)))
 				.distance(totalDistance)
 				.duration(totalDuration)
 				.averageBPM(averageBPM)

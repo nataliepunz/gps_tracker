@@ -7,6 +7,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.time.Duration;
 import java.time.Instant;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -22,33 +23,34 @@ import at.jku.se.gps_tracker.model.TrackPoint;
 
 public class TrackParser implements ErrorPopUpController {
 	
+	protected static final DateTimeFormatter dtf = DateTimeFormatter.ofPattern("HH:mm:ss");
 	private static final String ERROR_TEXT = "ERROR! File could not be read! ";
 	
 	//data per track
-	List<TrackPoint> trackPointsList;
-	String trackName;
-	Instant trackTimeDate;
-	double totalDistance;
-	Duration totalDuration;
-	double totalElevation;
+	static List<TrackPoint> trackPointsList;
+	static String trackName;
+	static Instant trackTimeDate;
+	static double totalDistance;
+	static Duration totalDuration;
+	static double totalElevation;
 	
 	// data per trackPoint
-	int trackPointNr;
-	double trackPointElevation;
-	double trackPointElevationChange;
-	boolean trackPointElevationSet;
-	double trackPointLatitude;
-	double trackPointLongtitude;
-	Instant trackPointTimePoint;
-	Duration trackPointDuration;
+	static int trackPointNr;
+	static double trackPointElevation;
+	static double trackPointElevationChange;
+	static boolean trackPointElevationSet;
+	static double trackPointLatitude;
+	static double trackPointLongtitude;
+	static Instant trackPointTimePoint;
+	static Duration trackPointDuration;
 	
 	//data about previous trackPoint
-	Instant prevTrackPointTime;
-	double prevTrackPointElevation;
-	boolean prevTrackPointElevationSet;
-	double prevTrackPointLatitude;
-	double prevTrackPointLongtitude;
-	boolean prevTrackPointCoordinatesSet;
+	static Instant prevTrackPointTime;
+	static double prevTrackPointElevation;
+	static boolean prevTrackPointElevationSet;
+	static double prevTrackPointLatitude;
+	static double prevTrackPointLongtitude;
+	static boolean prevTrackPointCoordinatesSet;
 	
 	//parsing necessities
 	private XMLInputFactory inputFactory;
@@ -65,10 +67,11 @@ public class TrackParser implements ErrorPopUpController {
 		try {
 			setUpTrackParser(file);
 			if(FilenameUtils.getExtension(file).equals("gpx")) {
-				track = new GPXParser().readGPXTrack(file, streamReader);
+				track = GPXParser.readGPXTrack(file, streamReader);
 			} else {
-				track = new TCXParser().readTCXTrack(file, streamReader);
+				track = TCXParser.readTCXTrack(file, streamReader);
 			}
+			resetFields();
 		} catch (FileNotFoundException e) {
 			showErrorPopUpNoWait(ERROR_TEXT+"("+FilenameUtils.getName(file)+") Not possible to access file on disk! Please update the tracks to try again!");
 		} catch (XMLStreamException e) {
@@ -85,27 +88,7 @@ public class TrackParser implements ErrorPopUpController {
 	}
 	
 	public List<TrackPoint> getTrackPoints(String file){
-		List<TrackPoint> points = new ArrayList<>();
-		try {
-			setUpTrackParser(file);
-			if(FilenameUtils.getExtension(file).equals("gpx")) {
-				points = new GPXParser().readGPXTrackPoints(streamReader);
-			} else {
-				points = new TCXParser().readTCXTrackPoints(streamReader);
-			}
-		} catch (FileNotFoundException e) {
-			showErrorPopUpNoWait(ERROR_TEXT+"("+FilenameUtils.getName(file)+") Not possible to access file on disk! Please update the tracks to try again!");
-		} catch (XMLStreamException e) {
-			showErrorPopUpNoWait(ERROR_TEXT+"("+FilenameUtils.getName(file)+") Please ensure that the file has been made correctly and try again!");
-		} catch (Exception e) {
-			showErrorPopUpNoWait(ERROR_TEXT+"("+FilenameUtils.getName(file)+") An error has been encountered! Please ensure file is correct and try again!");
-		}
-		try {
-			in.close();
-		} catch (IOException e) {
-			showErrorPopUp("ERROR! The file could not be closed correctly. Please restart the application to ensure correct working!");
-		}
-		return points;
+		return this.getTrack(file).getTrackPoints();
 	}
 	
 	private void setUpTrackParser(String file) throws XMLStreamException, FileNotFoundException  {
@@ -114,7 +97,7 @@ public class TrackParser implements ErrorPopUpController {
 	}
 		
 	//from here: https://stackoverflow.com/a/16794680
-	protected double distance(double lat1, double lat2, double lon1,
+	protected static double distance(double lat1, double lat2, double lon1,
 	        double lon2, double el1, double el2) {
 		
 	    final int R = 6371; // Radius of the earth
@@ -134,14 +117,14 @@ public class TrackParser implements ErrorPopUpController {
 	    return Math.sqrt(distance);
 	}
 	
-	protected final void resetFields() {
+	protected static final void resetFields() {
+		trackName = null;
 		trackPointsList = new ArrayList<>();
 		trackTimeDate = null;
 		totalDistance = 0;
 		totalElevation = 0;
 		totalDuration = Duration.ofSeconds(0);
-		trackName = null;
-		
+				
 		trackPointNr = 1;
 		
 		prevTrackPointTime = null;

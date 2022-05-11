@@ -1,10 +1,8 @@
 package at.jku.se.gps_tracker.model;
 
 import java.time.Duration;
-import java.time.Instant;
 import java.time.LocalDate;
 import java.time.LocalTime;
-import java.time.ZoneId;
 import java.util.List;
 
 public class Track extends AbstractTrack {
@@ -69,14 +67,6 @@ public class Track extends AbstractTrack {
 		private int maximumBPM;
 		private double elevation;
 		private List<TrackPoint> trackPoints;
-		
-		public TrackBuilder (String parentDirectory, String fileName ,String name, Instant trackTimeDate) {
-			this.name=name;
-			this.fileName=fileName;
-			this.parentDirectory=parentDirectory;
-			this.trackDate=LocalDate.ofInstant(trackTimeDate, ZoneId.systemDefault());
-			this.trackTime=LocalTime.ofInstant(trackTimeDate, ZoneId.systemDefault());
-		}
 		
 		public TrackBuilder (String parentDirectory, String fileName, String name, LocalDate trackDate, LocalTime trackTime) {
 			this.name=name;

@@ -124,11 +124,11 @@ public class TracksDB implements ErrorPopUpController {
 		files.forEach(f -> driveFiles.add(FilenameUtils.getName(f.getAbsolutePath())));
 		
 		HashSet<String> dataBaseFiles = new HashSet<>();
-		try(PreparedStatement stmt = conn.prepareStatement("SELECT name FROM tracks WHERE folder=?")){
+		try(PreparedStatement stmt = conn.prepareStatement("SELECT fileName FROM tracks WHERE folder=?")){
 			stmt.setString(1, currentDirectoryFolder);
 			ResultSet rs = stmt.executeQuery();
 			while(rs.next()) {
-				dataBaseFiles.add(rs.getString("name"));
+				dataBaseFiles.add(rs.getString("fileName"));
 			}
 		} catch (SQLException e) {
 			showErrorPopUp("ERROR! COULD NOT GET TRACKS TO CHECK! "+e.getMessage());
@@ -139,7 +139,7 @@ public class TracksDB implements ErrorPopUpController {
 			return;
 		}
 		
-		try(PreparedStatement stmt = conn.prepareStatement("DELETE FROM tracks WHERE name=? AND folder=?")){
+		try(PreparedStatement stmt = conn.prepareStatement("DELETE FROM tracks WHERE fileName=? AND folder=?")){
 			for(String s : dataBaseFiles) {
 				stmt.setString(1, s);
 				stmt.setString(2, currentDirectoryFolder);
@@ -165,11 +165,11 @@ public class TracksDB implements ErrorPopUpController {
 		});
 		
 		HashSet<String> dataBaseFiles = new HashSet<>();
-		try(PreparedStatement stmt = conn.prepareStatement("SELECT name FROM tracks WHERE folder=?")){
+		try(PreparedStatement stmt = conn.prepareStatement("SELECT fileName FROM tracks WHERE folder=?")){
 			stmt.setString(1, currentDirectoryFolder);
 			ResultSet rs = stmt.executeQuery();
 			while(rs.next()) {
-				dataBaseFiles.add(rs.getString("name"));
+				dataBaseFiles.add(rs.getString("fileName"));
 			}
 		} catch (SQLException e) {
 			showErrorPopUp("ERROR! COULD NOT GET TRACKS TO CHECK! "+e.getMessage());

@@ -33,8 +33,8 @@ public class DataModel implements ErrorPopUpController {
 		this.currentDirectory = currentDirectory;
 		this.directoryFolders.clear();
 		this.directoryFolders.addAll(new File(this.currentDirectory).list((dir, name) -> new File(dir, name).isDirectory()));            
-		establishDBConnection();
 		if(!directoryFolders.isEmpty()){
+			establishDBConnection();
 			setCurrentDirectoryFolder(directoryFolders.get(0));
 		}
 	}
@@ -57,16 +57,18 @@ public class DataModel implements ErrorPopUpController {
 	}
 
 	public void updateModel() {
+		trackList.clear();
 		if(currentDirectoryFolder!=null && new File(FilenameUtils.concat(currentDirectoryFolder,currentDirectoryFolder)).exists()) {
 			showErrorPopUp("Directory does not exist anymore! Remember to update afer every change in the directory!");
 			this.directoryFolders = FXCollections.observableArrayList(new File(this.currentDirectory).list((dir, name) -> new File(dir, name).isDirectory()));
 			return;
 		}
-		long start = System.nanoTime();
-		conn.updateDataBase(currentDirectory, currentDirectoryFolder, EXTENSIONS);
-		trackList.clear();
-		trackList.addAll(conn.getTracks(currentDirectoryFolder));
-		System.out.println("Zeit fürs Einlesen von "+ trackList.size() +" GPS-Dateien: "+(double) (System.nanoTime()-start)/1000000);
+		if(currentDirectoryFolder!=null && currentDirectory!=null) {
+			long start = System.nanoTime();
+			conn.updateDataBase(currentDirectory, currentDirectoryFolder, EXTENSIONS);
+			trackList.addAll(conn.getTracks(currentDirectoryFolder));
+			System.out.println("Zeit fürs Einlesen von "+ trackList.size() +" GPS-Dateien: "+(double) (System.nanoTime()-start)/1000000);
+		}
 	}
 
 	public ObservableList<AbstractTrack> getTrackList(){

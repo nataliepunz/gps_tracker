@@ -2,12 +2,9 @@ package at.jku.se.gps_tracker.model;
 
 import javafx.beans.property.*;
 import java.time.Duration;
-import java.time.format.DateTimeFormatter;
 
 public abstract class AbstractTrack {
-	
-	protected static final DateTimeFormatter dtf = DateTimeFormatter.ofPattern("HH:mm:ss");
-	
+		
 	private String name;
 	private double distance;
 	private Duration duration;
@@ -140,7 +137,10 @@ public abstract class AbstractTrack {
 		if(distance==0 || duration.getSeconds()==0) {
 			return Duration.ofSeconds(0);
 		} else {
-			return Duration.ofSeconds((long) (duration.getSeconds()/distance));
+			double minutes = ((double)duration.getSeconds()/60)/(distance/1000);
+			Duration pace = Duration.ofMinutes((long) minutes);
+			pace = pace.plusSeconds((long) ((minutes%1)*60));
+			return pace;
 		}
 	}
 	
