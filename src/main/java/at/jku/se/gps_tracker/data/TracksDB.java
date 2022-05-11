@@ -44,7 +44,7 @@ public class TracksDB implements ErrorPopUpController {
 	
 	private void setUpTables() {		
 		try(Statement stmt = conn.createStatement()){
-			stmt.execute("CREATE TABLE tracks (name TEXT NOT NULL, folder TEXT NOT NULL, date TEXT NOT NULL, time TEXT NOT NULL, distance REAL NOT NULL, duration REAL NOT NULL, averageBPM INTEGER NOT NULL, maximumBPM INTEGER NOT NULL, elevation REAL NOT NULL, PRIMARY KEY(name,folder));");
+			stmt.execute("CREATE TABLE tracks (name TEXT NOT NULL, fileName TEXT NOT NULL, folder TEXT NOT NULL, date TEXT NOT NULL, time TEXT NOT NULL, distance REAL NOT NULL, duration REAL NOT NULL, averageBPM INTEGER NOT NULL, maximumBPM INTEGER NOT NULL, elevation REAL NOT NULL, PRIMARY KEY(fileName,folder));");
             conn.commit();
         } catch (SQLException e) {  
         	showErrorPopUp("ERROR! COULD NOT CREATE TABLES! "+e.getMessage());
@@ -58,16 +58,17 @@ public class TracksDB implements ErrorPopUpController {
 	
 	public void addTrackToDataBase(String file, Track track) {
 		if(file==null || track==null) return;
-		try(PreparedStatement stmt = conn.prepareStatement("INSERT INTO tracks VALUES(?,?,?,?,?,?,?,?,?)")){
+		try(PreparedStatement stmt = conn.prepareStatement("INSERT INTO tracks VALUES(?,?,?,?,?,?,?,?,?,?)")){
 			stmt.setString(1, track.getName());
-			stmt.setString(2, new File(file).getParentFile().getName());
-			stmt.setString(3, track.getDate().toString());
-			stmt.setString(4, track.getStartTime().toString());
-			stmt.setDouble(5, track.getDistance());
-			stmt.setDouble(6, track.getDurationNormal().toSeconds());
-			stmt.setInt(7, track.getAverageBPM());
-			stmt.setInt(8, track.getMaximumBPM());
-			stmt.setDouble(9, track.getElevation());
+			stmt.setString(2, track.getFileName());
+			stmt.setString(3, new File(file).getParentFile().getName());
+			stmt.setString(4, track.getDate().toString());
+			stmt.setString(5, track.getStartTime().toString());
+			stmt.setDouble(6, track.getDistance());
+			stmt.setDouble(7, track.getDurationNormal().toSeconds());
+			stmt.setInt(8, track.getAverageBPM());
+			stmt.setInt(9, track.getMaximumBPM());
+			stmt.setDouble(10, track.getElevation());
 			stmt.execute();
 			
 			conn.commit();
@@ -88,7 +89,7 @@ public class TracksDB implements ErrorPopUpController {
 			ResultSet rs = stmt.executeQuery();
 			Track t = null;
 			while(rs.next()) {
-				t = new Track.TrackBuilder(rs.getString("folder"), rs.getString("name"), LocalDate.parse(rs.getString("date")), LocalTime.parse(rs.getString("time")))
+				t = new Track.TrackBuilder(rs.getString("folder"), rs.getString("fileName"), rs.getString("name"), LocalDate.parse(rs.getString("date")), LocalTime.parse(rs.getString("time")))
 						.distance(rs.getDouble("distance"))
 						.duration(Duration.ofSeconds((long) rs.getDouble("duration")))
 						.averageBPM(rs.getInt("averageBPM"))
@@ -104,8 +105,8 @@ public class TracksDB implements ErrorPopUpController {
 	}
 	
 	public List<TrackPoint> getTrackPoints(Track track){
-		if(new File(FilenameUtils.concat(FilenameUtils.concat(directory, track.getParentDirectory()),track.getName())).exists()) {
-			return new TrackParser().getTrackPoints(FilenameUtils.concat(FilenameUtils.concat(directory, track.getParentDirectory()),track.getName()));
+		if(new File(FilenameUtils.concat(FilenameUtils.concat(directory, track.getParentDirectory()),track.getFileName())).exists()) {
+			return new TrackParser().getTrackPoints(FilenameUtils.concat(FilenameUtils.concat(directory, track.getParentDirectory()),track.getFileName()));
 		} else {
 			showErrorPopUp("ERROR! REMEMBER TO UPDATE THE PROGRAM AFTER EVERY CHANGE!");
 			return new ArrayList<>();

@@ -12,10 +12,12 @@ public class Track extends AbstractTrack {
 	private LocalDate date;
 	private LocalTime startTime;
 	private List<TrackPoint> trackPoints;
+	private String fileName;
 	private String parentDirectory;
 	
 	private Track(TrackBuilder trackBuilder) {
 		super(trackBuilder.name,trackBuilder.distance,trackBuilder.duration,trackBuilder.averageBPM,trackBuilder.maximumBPM,trackBuilder.elevation);
+		this.fileName=trackBuilder.fileName;
 		this.date=trackBuilder.trackDate;
 		this.startTime = trackBuilder.trackTime;
 		this.parentDirectory=trackBuilder.parentDirectory;
@@ -38,9 +40,8 @@ public class Track extends AbstractTrack {
 		return this.trackPoints;
 	}
 
-	@Override
-	public String toString() {
-		return this.getName();
+	public String getFileName() {
+		return this.fileName;
 	}
 
 	public String getParentDirectory() {
@@ -51,8 +52,14 @@ public class Track extends AbstractTrack {
 		this.trackPoints=trackpoints;
 	}
 	
+	@Override
+	public String toString() {
+		return this.getName();
+	}
+	
 	public static class TrackBuilder{
 		private String name;
+		private String fileName;
 		private String parentDirectory;
 		private LocalDate trackDate;
 		private LocalTime trackTime;
@@ -63,15 +70,17 @@ public class Track extends AbstractTrack {
 		private double elevation;
 		private List<TrackPoint> trackPoints;
 		
-		public TrackBuilder (String parentDirectory, String name, Instant trackTimeDate) {
+		public TrackBuilder (String parentDirectory, String fileName ,String name, Instant trackTimeDate) {
 			this.name=name;
+			this.fileName=fileName;
 			this.parentDirectory=parentDirectory;
 			this.trackDate=LocalDate.ofInstant(trackTimeDate, ZoneId.systemDefault());
 			this.trackTime=LocalTime.ofInstant(trackTimeDate, ZoneId.systemDefault());
 		}
 		
-		public TrackBuilder (String parentDirectory, String name, LocalDate trackDate, LocalTime trackTime) {
+		public TrackBuilder (String parentDirectory, String fileName, String name, LocalDate trackDate, LocalTime trackTime) {
 			this.name=name;
+			this.fileName=fileName;
 			this.parentDirectory=parentDirectory;
 			this.trackDate=trackDate;
 			this.trackTime=trackTime;

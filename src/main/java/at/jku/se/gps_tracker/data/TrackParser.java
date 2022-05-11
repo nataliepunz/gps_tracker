@@ -26,6 +26,7 @@ public class TrackParser implements ErrorPopUpController {
 	
 	//data per track
 	List<TrackPoint> trackPointsList;
+	String trackName;
 	Instant trackTimeDate;
 	double totalDistance;
 	Duration totalDuration;
@@ -73,7 +74,7 @@ public class TrackParser implements ErrorPopUpController {
 		} catch (XMLStreamException e) {
 			showErrorPopUpNoWait(ERROR_TEXT+"("+FilenameUtils.getName(file)+") Please ensure that the file has been made correctly and try again!");
 		} catch (Exception e) {
-			showErrorPopUpNoWait(ERROR_TEXT+"("+FilenameUtils.getName(file)+") An error has been encountered! Please ensure file is correct and try again!");
+			showErrorPopUpNoWait(ERROR_TEXT+"("+FilenameUtils.getName(file)+") An error has been encountered! Please ensure file is correct and try again! ");
 		}
 		try {
 			in.close();
@@ -131,5 +132,23 @@ public class TrackParser implements ErrorPopUpController {
 	    distance = Math.pow(distance, 2) + Math.pow(height, 2);
 
 	    return Math.sqrt(distance);
-	}	
+	}
+	
+	protected final void resetFields() {
+		trackPointsList = new ArrayList<>();
+		trackTimeDate = null;
+		totalDistance = 0;
+		totalElevation = 0;
+		totalDuration = Duration.ofSeconds(0);
+		trackName = null;
+		
+		trackPointNr = 1;
+		
+		prevTrackPointTime = null;
+		prevTrackPointElevation = 0;
+		prevTrackPointElevationSet = false;
+		prevTrackPointLatitude = 0;
+		prevTrackPointLongtitude = 0;
+		prevTrackPointCoordinatesSet = false;
+	}
 }

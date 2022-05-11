@@ -60,10 +60,6 @@ public abstract class AbstractTrack {
 		return averageBPM;
 	}
 
-	public int getHeartbeat() {
-		return averageBPM;
-	}
-
 	public void setAverageBPM(int averageBPM) {
 		this.averageBPM = averageBPM;
 	}

@@ -3,7 +3,6 @@ package at.jku.se.gps_tracker.data;
 import java.io.File;
 import java.time.Duration;
 import java.time.Instant;
-import java.util.ArrayList;
 import java.util.List;
 
 import javax.xml.stream.XMLStreamException;
@@ -25,24 +24,11 @@ class TCXParser extends TrackParser {
 	private double prevDistance;
 	
 	TCXParser(){
-		trackPointsList = new ArrayList<>();
-		trackTimeDate = null;
 		averageBPM = 0;
 		averageBPMCount = 0;
 		maximumBPM = 0;
-		totalDistance = 0;
-		totalElevation = 0;
-		totalDuration = Duration.ofSeconds(0);
-		
-		trackPointNr = 1;
-		
-		prevTrackPointTime = null;
-		prevTrackPointElevation = 0;
-		prevTrackPointElevationSet = false;
-		prevTrackPointLatitude = 0;
-		prevTrackPointLongtitude = 0;
 		prevDistance = 0;
-		prevTrackPointCoordinatesSet = false;
+		resetFields();
 	}
 	
 	List<TrackPoint> readTCXTrackPoints(XMLStreamReader streamReader) throws XMLStreamException {
@@ -69,8 +55,20 @@ class TCXParser extends TrackParser {
 	private void manageTCXActivityElement(XMLStreamReader streamReader) throws NumberFormatException, XMLStreamException {
 		while(streamReader.hasNext()) {
 			streamReader.next();
-			if (streamReader.isStartElement() && streamReader.getLocalName().equals("Lap")) {
-				manageTCXLapElement(streamReader);
+			if (streamReader.isStartElement()) {
+				switch(streamReader.getLocalName()) {
+					case "Id" :{
+						if(trackName==null) trackName = streamReader.getElementText();
+						break;
+					}
+					case "Lap" :{
+						manageTCXLapElement(streamReader);
+						break;
+					}
+					default :{
+						break;
+					}
+				}
 			}
 			if(streamReader.isEndElement() && "Activity".equals(streamReader.getLocalName())) {
 				break;
@@ -221,7 +219,10 @@ class TCXParser extends TrackParser {
 		if(trackTimeDate==null) {
 			trackTimeDate = Instant.now();
 		}
-		return new Track.TrackBuilder(new File(file).getParentFile().getName(),FilenameUtils.getName(file), trackTimeDate)
+		if(trackName==null) {
+			trackName = FilenameUtils.getName(file);
+		}
+		return new Track.TrackBuilder(new File(file).getParentFile().getName(),FilenameUtils.getName(file), trackName, trackTimeDate)
 				.distance(totalDistance)
 				.duration(totalDuration)
 				.averageBPM(averageBPM)
