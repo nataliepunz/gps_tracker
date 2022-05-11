@@ -19,12 +19,11 @@ public class GpsTracker extends Application {
 		DataModel model = new DataModel();
 		FXMLLoader loader = new FXMLLoader(getClass().getResource("/fxml/TrackManager.fxml"));
 		TrackManagerController start = new TrackManagerController(model);
-		 
+				 
 		loader.setController(start);
 		 
 		Parent root = loader.load();
-		 
-		primaryStage.setTitle("TrackStar");
+		
 		primaryStage.getIcons().add(new Image(getClass().getResourceAsStream("/icon/icon.png")));
 		primaryStage.setScene(new Scene(root,800,600));
 		primaryStage.show();

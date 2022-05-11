@@ -33,7 +33,7 @@ public class StartViewController {
         window.setOnCloseRequest(c -> System.exit(1));
         File selectedDirectory = directoryChooser.showDialog(window);
         if(selectedDirectory!=null) {
-        	this.model.setCurrrentDirectory(selectedDirectory.getAbsolutePath());
+        	this.model.setDirectory(selectedDirectory.getAbsolutePath());
         }
 	}
 }

@@ -120,6 +120,12 @@ public class TrackManagerController implements Initializable, ErrorPopUpControll
 		chooseDirectory();
 		sideTable.getItems().clear(); //setzt sidetable zurück da sie sonst die letzte instanz anzeigt
 	}
+	
+	@FXML
+	private void updateDirectoryFolders(ActionEvent event) {
+		model.setDirectoryFolders();
+	}
+	
 	@FXML
 	private void updateModel(ActionEvent event) {
 		model.updateModel();
@@ -174,9 +180,8 @@ public class TrackManagerController implements Initializable, ErrorPopUpControll
 
 	//je nach Index entsprechend holen! (erster Eintrag ausgewählt --> hier erste (bzw 0 auswählen!)
 	private void changeCategory(String category) throws InvocationTargetException, NoSuchMethodException, IllegalAccessException { //index als parameter hinzugefügt - nuray
-		model.setCurrentDirectoryFolder(category);
+		model.setDirectoryFolder(category);
 		changeChart(); //aktualisiert chart
-
 	}
 
 

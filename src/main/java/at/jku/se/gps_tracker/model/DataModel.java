@@ -15,9 +15,9 @@ public class DataModel implements ErrorPopUpController {
 	private static final String[] EXTENSIONS = new String[] { "gpx", "tcx" };
 	
 	private ObservableList<AbstractTrack> trackList;
-	private String currentDirectory;
+	private String directory;
 	private ObservableList<String> directoryFolders;
-	private String currentDirectoryFolder;
+	private String directoryFolder;
 	private TracksDB conn;
 
 	public DataModel() {
@@ -26,48 +26,76 @@ public class DataModel implements ErrorPopUpController {
 		conn = new TracksDB();
 	}
 
-	public void setCurrrentDirectory(String currentDirectory) {
-		if(currentDirectory==null) {
+	public void setDirectory(String currentDirectory) {
+		if(currentDirectory == null) {
 			return;
 		}
-		this.currentDirectory = currentDirectory;
+		this.directory = currentDirectory;
+		this.adjustDirectoryFolders();
+	}
+	
+	private void adjustDirectoryFolders() {
+		this.setDirectoryFolders();
+		this.changeModel();
+	}
+	
+	public void setDirectoryFolders() {
+		if(directory==null) {
+			return;
+		}
 		this.directoryFolders.clear();
-		this.directoryFolders.addAll(new File(this.currentDirectory).list((dir, name) -> new File(dir, name).isDirectory()));            
+		this.directoryFolders.addAll(new File(this.directory).list((dir, name) -> new File(dir, name).isDirectory()));
+	}
+	
+	private void changeModel() {
 		if(!directoryFolders.isEmpty()){
 			establishDBConnection();
-			setCurrentDirectoryFolder(directoryFolders.get(0));
+			setDirectoryFolder(directoryFolders.get(0));
+		} else {
+			directoryFolder = null;
+			trackList.clear();
 		}
 	}
 		
 	private void establishDBConnection() {
 		if(conn!=null){
-			conn.establishConnection(FilenameUtils.concat(currentDirectory, DATABASE_NAME));
-			conn.setDirectory(currentDirectory);
+			conn.establishConnection(FilenameUtils.concat(directory, DATABASE_NAME));
+			conn.setDirectory(directory);
 		}
 	}
 
-	public void setCurrentDirectoryFolder(String directory) {
-		if(currentDirectoryFolder!=null && !new File(FilenameUtils.concat(currentDirectory,directory)).exists()) {
-			showErrorPopUp("Directory does not exist anymore! Remember to update afer every change in the directory!");
-			this.directoryFolders = FXCollections.observableArrayList(new File(this.currentDirectory).list((dir, name) -> new File(dir, name).isDirectory()));
+	public void setDirectoryFolder(String directoryFolder) {
+		this.directoryFolder = directoryFolder;
+		if(!checkFolderExistence()) {
+			this.directoryFolder=null;
 			return;
 		}
-		this.currentDirectoryFolder = directory;
 		updateModel();
 	}
 
 	public void updateModel() {
 		trackList.clear();
-		if(currentDirectoryFolder!=null && new File(FilenameUtils.concat(currentDirectoryFolder,currentDirectoryFolder)).exists()) {
-			showErrorPopUp("Directory does not exist anymore! Remember to update afer every change in the directory!");
-			this.directoryFolders = FXCollections.observableArrayList(new File(this.currentDirectory).list((dir, name) -> new File(dir, name).isDirectory()));
+		if(!checkFolderExistence()) {
 			return;
 		}
-		if(currentDirectoryFolder!=null && currentDirectory!=null) {
+		if(directoryFolder!=null && directory!=null) {
 			long start = System.nanoTime();
-			conn.updateDataBase(currentDirectory, currentDirectoryFolder, EXTENSIONS);
-			trackList.addAll(conn.getTracks(currentDirectoryFolder));
+			conn.updateDataBase(directory, directoryFolder, EXTENSIONS);
+			trackList.addAll(conn.getTracks(directoryFolder));
 			System.out.println("Zeit fürs Einlesen von "+ trackList.size() +" GPS-Dateien: "+(double) (System.nanoTime()-start)/1000000);
+		}
+	}
+	
+	private boolean checkFolderExistence() {
+		if((this.directory==null || this.directoryFolder==null)) {
+			showErrorPopUp("Directory does not exist anymore! Remember to update after every change in the directory!");
+			return false;
+		} else if (!new File(FilenameUtils.concat(directory,directoryFolder)).exists()) {
+			showErrorPopUp("Directory does not exist anymore! Remember to update after every change in the directory!");
+			setDirectoryFolders();
+			return false;
+		} else {
+			return true;
 		}
 	}
 
