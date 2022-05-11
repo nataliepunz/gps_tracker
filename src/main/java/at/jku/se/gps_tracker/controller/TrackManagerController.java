@@ -92,21 +92,19 @@ public class TrackManagerController implements Initializable, ErrorPopUpControll
 	}
 	
 	private void setUpMenuTrack() {
-		tgMenuTrack.selectedToggleProperty().addListener(new ChangeListener<Toggle>(){
-		    public void changed(ObservableValue<? extends Toggle> ov, Toggle old_toggle, Toggle new_toggle) {
-		         if (tgMenuTrack.getSelectedToggle() != null) {
-		        	 RadioMenuItem selectedItem = (RadioMenuItem) tgMenuTrack.getSelectedToggle();
-					 try {
-						 changeCategory(selectedItem.getText());
-					 } catch (InvocationTargetException e) {
-						 e.printStackTrace();
-					 } catch (NoSuchMethodException e) {
-						 e.printStackTrace();
-					 } catch (IllegalAccessException e) {
-						 e.printStackTrace();
-					 }
-		         }
-		     } 
+		tgMenuTrack.selectedToggleProperty().addListener(listener -> {
+			if (tgMenuTrack.getSelectedToggle() != null) {
+		        RadioMenuItem selectedItem = (RadioMenuItem) tgMenuTrack.getSelectedToggle();
+				try {
+					changeCategory(selectedItem.getText());
+				} catch (InvocationTargetException e) {
+					e.printStackTrace();
+				} catch (NoSuchMethodException e) {
+					e.printStackTrace();
+				} catch (IllegalAccessException e) {
+					e.printStackTrace();
+				}
+			}
 		});
 	}
 	
