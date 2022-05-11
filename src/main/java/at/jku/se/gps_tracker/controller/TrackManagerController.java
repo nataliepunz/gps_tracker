@@ -310,8 +310,6 @@ public class TrackManagerController implements Initializable, ErrorPopUpControll
 		TableColumn<AbstractTrack, Number> elevationCol = new TableColumn<>("Elevation");
 		elevationCol.setCellValueFactory(cellValue -> new SimpleDoubleProperty((cellValue.getValue().getElevation())));
 
-
-
 			table.getColumns().addAll(nameCol, dateCol, startCol, distanceCol, durationCol, paceCol, speedCol, avgBpmCol, maxBpmCol, elevationCol);
 			table.setItems((ObservableList<AbstractTrack>) tl);
 

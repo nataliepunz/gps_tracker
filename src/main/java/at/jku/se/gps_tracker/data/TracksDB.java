@@ -22,7 +22,7 @@ import at.jku.se.gps_tracker.controller.ErrorPopUpController;
 import at.jku.se.gps_tracker.model.Track;
 import at.jku.se.gps_tracker.model.TrackPoint;
 
-public class TrackParsingOperations implements ErrorPopUpController {
+public class TracksDB implements ErrorPopUpController {
 
 	private static final String ERROR_ROLLBACK_MESSAGE = "ERROR! COULD NOT CONNECT TO DATABASE! ";
 	private Connection conn;

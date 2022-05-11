@@ -1,7 +1,7 @@
 package at.jku.se.gps_tracker.model;
 
 import at.jku.se.gps_tracker.controller.ErrorPopUpController;
-import at.jku.se.gps_tracker.data.TrackParsingOperations;
+import at.jku.se.gps_tracker.data.TracksDB;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import org.apache.commons.io.FilenameUtils;
@@ -18,12 +18,12 @@ public class DataModel implements ErrorPopUpController {
 	private String currentDirectory;
 	private ObservableList<String> directoryFolders;
 	private String currentDirectoryFolder;
-	private TrackParsingOperations conn;
+	private TracksDB conn;
 
 	public DataModel() {
 		this.trackList = FXCollections.observableArrayList();
 		this.directoryFolders = FXCollections.observableArrayList();
-		conn = new TrackParsingOperations();
+		conn = new TracksDB();
 	}
 
 	public void setCurrrentDirectory(String currentDirectory) {
