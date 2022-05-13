@@ -121,7 +121,11 @@ public class TrackManagerController implements Initializable, ErrorPopUpControll
 	
 	@FXML
 	private void updateDirectoryFolders(ActionEvent event) {
-		model.setDirectoryFolders();
+		String currentDirectory = model.getDirectoryFolder();
+		model.adjustDirectoryFolders();
+		if(currentDirectory!=null && !currentDirectory.equals(model.getDirectoryFolder())) {
+			model.updateModel();
+		}
 	}
 	
 	@FXML
@@ -173,12 +177,19 @@ public class TrackManagerController implements Initializable, ErrorPopUpControll
 			help.setToggleGroup(tgMenuTrack);
 			mTracks.getItems().add(help);
 		}
+		help = new RadioMenuItem("All/Tracks");
+		help.setToggleGroup(tgMenuTrack);
+		mTracks.getItems().add(help);
 		if(first!=null) tgMenuTrack.selectToggle(first);
 	}
 
 	//je nach Index entsprechend holen! (erster Eintrag ausgewählt --> hier erste (bzw 0 auswählen!)
 	private void changeCategory(String category) throws InvocationTargetException, NoSuchMethodException, IllegalAccessException { //index als parameter hinzugefügt - nuray
+		String s = model.getDirectoryFolder();
 		model.setDirectoryFolder(category);
+		if(!category.equals(s) && model.checkConnection()) {
+			model.updateModel();
+		}
 		changeChart(); //aktualisiert chart
 	}
 
@@ -421,7 +432,9 @@ public class TrackManagerController implements Initializable, ErrorPopUpControll
 	/* aktualiesiert chart nach änderung der kategorie */
 	private void changeChart() throws InvocationTargetException, NoSuchMethodException, IllegalAccessException {
 		RadioMenuItem rmi = (RadioMenuItem)	tgGraph.getSelectedToggle();
-		createBarChart(rmi.getText(), "get"+rmi.getText());
+		if(rmi!=null) {
+			createBarChart(rmi.getText(), "get"+rmi.getText());
+		}
 	}
 
 	

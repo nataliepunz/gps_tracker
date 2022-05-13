@@ -28,7 +28,7 @@ public class TracksDB implements ErrorPopUpController {
 	private Connection conn;
 	private String directory;
 	
-	public void establishConnection(String dataBaseLocation) {
+	public void establishConnection(String dataBaseLocation, String dataBaseFilePath) {
 		boolean setUpNecessary = new File(dataBaseLocation).exists();
 		String url = "jdbc:sqlite:"+dataBaseLocation;
 		try {
@@ -37,6 +37,7 @@ public class TracksDB implements ErrorPopUpController {
 			if(!setUpNecessary) {
 				setUpTables();
 			}
+			this.directory=dataBaseFilePath;
 		} catch (SQLException e) {  
 			showErrorPopUp(ERROR_ROLLBACK_MESSAGE+e.getMessage());
 		}
@@ -104,7 +105,7 @@ public class TracksDB implements ErrorPopUpController {
 		return trackHelpList;
 	}
 	
-	public List<TrackPoint> getTrackPoints(Track track){
+	public List<TrackPoint> getTrackPoints(String directory, Track track){
 		if(new File(FilenameUtils.concat(FilenameUtils.concat(directory, track.getParentDirectory()),track.getFileName())).exists()) {
 			return new TrackParser().getTrackPoints(FilenameUtils.concat(FilenameUtils.concat(directory, track.getParentDirectory()),track.getFileName()));
 		} else {
@@ -114,7 +115,7 @@ public class TracksDB implements ErrorPopUpController {
 	}
 	
 	public void updateDataBase(String currentDirectory, String currentDirectoryFolder, String... extensions) {
-		List<File> files = (List<File>) FileUtils.listFiles(new File(currentDirectory,currentDirectoryFolder), extensions, true);
+		List<File> files = (List<File>) FileUtils.listFiles(new File(currentDirectory,currentDirectoryFolder), extensions, false);
 		removeTracks(files, currentDirectoryFolder);
 		addTracks(files, currentDirectoryFolder);
 	}
@@ -187,15 +188,27 @@ public class TracksDB implements ErrorPopUpController {
 		}
 	}
 		
-	public void setDirectory(String directory) {
-		this.directory=directory;
-	}
-	
 	public void closeConnection() {
 		try {
 			this.conn.close();
 		} catch (SQLException e) {
 			showErrorPopUp("COULD NOT CLOSE DATABASE! "+e.getMessage());
+		}
+	}
+		
+	public String getDirectory() {
+		return this.directory;
+	}
+	
+	public boolean checkConnection() {
+		try {
+			if(this.conn==null) {
+				return false;
+			}
+			return this.conn.isValid(0);
+		} catch (SQLException e) {
+			showErrorPopUp("No connection to Database! Restart the Application please");
+			return false;
 		}
 	}
 }
