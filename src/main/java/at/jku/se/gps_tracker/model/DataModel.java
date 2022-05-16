@@ -9,14 +9,16 @@ import javafx.stage.Stage;
 import org.apache.commons.io.FilenameUtils;
 
 import java.io.File;
+import java.util.ArrayList;
 import java.util.List;
 
 public class DataModel implements ErrorPopUpController {
 	
 	private static final String DATABASE_NAME = "track.db";
 	private static final String[] EXTENSIONS = new String[] { "gpx", "tcx" };
+	private static final String ALL_TRACK_KEYWORD = "All/Tracks";
 	
-	private ObservableList<AbstractTrack> trackList;
+	private ObservableList<Track> trackList;
 	private String directory;
 	private ObservableList<String> directoryFolders;
 	private String directoryFolder;
@@ -26,7 +28,7 @@ public class DataModel implements ErrorPopUpController {
 	public DataModel(Stage primaryStage) {
 		this.trackList = FXCollections.observableArrayList();
 		this.directoryFolders = FXCollections.observableArrayList();
-		conn = new TracksDB();
+		conn = new TracksDB(EXTENSIONS);
 		this.stage = primaryStage;
 	}
 
@@ -47,68 +49,95 @@ public class DataModel implements ErrorPopUpController {
 		if(directory==null) {
 			return;
 		}
+		this.directoryFolder=null;
 		this.directoryFolders.clear();
 		this.directoryFolders.addAll(new File(this.directory).list((dir, name) -> new File(dir, name).isDirectory()));
 	}
 	
-	private void changeModel() {
+	public void changeModel() {
 		if(!directoryFolders.isEmpty()){
 			establishDBConnection();
-			setDirectoryFolder(directoryFolders.get(0));
+			adjustDirectoryFolder(directoryFolders.get(0));
 		} else {
-			directoryFolder = null;
+			stage.setTitle("TrackStar - "+directory);
 			trackList.clear();
 		}
 	}
-		
+			
 	private void establishDBConnection() {
 		if(!this.directory.equals(conn.getDirectory())){
-			if(conn.checkConnection()) {
-				conn.closeConnection();
-			}
 			conn.establishConnection(FilenameUtils.concat(directory, DATABASE_NAME), directory);
 		}
 	}
-
-	public void setDirectoryFolder(String directoryFolder) {
-		this.directoryFolder = directoryFolder;
-		if(directoryFolder.equals("All/Tracks")) {
-			stage.setTitle("TrackStar");
-		} else {
-			stage.setTitle("TrackStar - "+FilenameUtils.concat(directory, directoryFolder));
-		}	
+	
+	public void adjustDirectoryFolder(String directoryFolder) {
+		setDirectoryFolder(directoryFolder);
+		updateTrackListFromDB();
 	}
 
+	private void setDirectoryFolder(String directoryFolder) {
+		this.directoryFolder = directoryFolder;
+		if(directoryFolder.equals(ALL_TRACK_KEYWORD)) {
+			stage.setTitle("TrackStar - "+directory+" - ALL TRACKS!");
+		} else {
+			stage.setTitle("TrackStar - "+FilenameUtils.concat(directory, directoryFolder));
+		}
+	}
+
+	private void updateTrackListFromDB(){
+		if(conn.checkConnection()) {
+			trackList.clear();
+			if(this.directoryFolder.equals(ALL_TRACK_KEYWORD)) {
+				for(String directoryFolderFromLoop : directoryFolders) {
+					if (!new File(FilenameUtils.concat(directory,directoryFolderFromLoop)).exists()) {
+						continue;
+					}
+					trackList.addAll(conn.getTracks(directoryFolderFromLoop));
+				}
+			} else {
+				this.trackList.addAll(conn.getTracks(directoryFolder));
+			}
+		}
+	}
+	
 	public void updateModel() {
 		long start = System.nanoTime();
-		if(this.directoryFolder.equals("All/Tracks")) {
+		if(this.directoryFolder!=null && this.directoryFolder.equals(ALL_TRACK_KEYWORD)) {
 			updateModelAllTracks();
 		} else {
 			updateModelOneFolder();
 		}
 		System.out.println("Zeit fürs Einlesen von "+ trackList.size() +" GPS-Dateien: "+(double) (System.nanoTime()-start)/1000000);
-		
 	}
 	
 	private void updateModelAllTracks() {
-		trackList.clear();
-		for(String s : directoryFolders) {
-			if (!new File(FilenameUtils.concat(directory,s)).exists()) {
+		for(String directoryFolderFromLoop : directoryFolders) {
+			if (!new File(FilenameUtils.concat(directory,directoryFolderFromLoop)).exists()) {
 				continue;
 			}
-			conn.updateDataBase(directory, s, EXTENSIONS);
-			trackList.addAll(conn.getTracks(s));
+			trackList.removeAll(removeTracks(conn.toBeRemovedTracks(directoryFolderFromLoop)));
+			trackList.addAll(conn.toBeAddedTracks(directoryFolderFromLoop));
 		}
 	}
-	
+		
 	private void updateModelOneFolder() {
-		trackList.clear();
 		if(!checkDirectoryExistence()) {
 			return;
 		}
-		conn.updateDataBase(directory, directoryFolder, EXTENSIONS);
-		trackList.addAll(conn.getTracks(directoryFolder));
-		
+		trackList.removeAll(removeTracks(conn.toBeRemovedTracks(directoryFolder)));
+		trackList.addAll(conn.toBeAddedTracks(directoryFolder));
+	}
+	
+	private List<Track> removeTracks(List<List<String>> trackDetails) {
+		List<Track> toBeRemovedTracks = new ArrayList<>();
+		for(List<String> trackDetail : trackDetails) {
+			toBeRemovedTracks.add(trackList.stream()
+				.filter(t -> t.getFileName().equals(trackDetail.get(0)) && t.getParentDirectory().equals(trackDetail.get(1)))
+				.findAny()
+				.orElse(null)
+			);
+		}		
+		return toBeRemovedTracks;
 	}
 	
 	private boolean checkDirectoryExistence() {
@@ -125,7 +154,7 @@ public class DataModel implements ErrorPopUpController {
 		}
 	}
 
-	public ObservableList<AbstractTrack> getTrackList(){
+	public ObservableList<Track> getTrackList(){
 		return this.trackList;
 	}
 	
@@ -138,7 +167,9 @@ public class DataModel implements ErrorPopUpController {
 	}
 	
 	public void closeConnection() {
-		conn.closeConnection();
+		if(conn.checkConnection()) {
+			conn.closeConnection();
+		}
 	}
 	
 	public boolean checkConnection() {
@@ -146,10 +177,12 @@ public class DataModel implements ErrorPopUpController {
 	}
 	
 	public List<TrackPoint> getTrackPoints(Track track){
-		if(track.getTrackPoints()!=null) {
+		if(track==null) {
+			return new ArrayList<>();
+		} else if(track.getTrackPoints()!=null) {
 			return track.getTrackPoints();
 		} else {
-			track.setTrackPoints(conn.getTrackPoints(this.directory, track));
+			track.setTrackPoints(conn.getTrackPoints(track));
 			return track.getTrackPoints();
 		}
 	}

@@ -121,11 +121,7 @@ public class TrackManagerController implements Initializable, ErrorPopUpControll
 	
 	@FXML
 	private void updateDirectoryFolders(ActionEvent event) {
-		String currentDirectory = model.getDirectoryFolder();
 		model.adjustDirectoryFolders();
-		if(currentDirectory!=null && !currentDirectory.equals(model.getDirectoryFolder())) {
-			model.updateModel();
-		}
 	}
 	
 	@FXML
@@ -186,7 +182,7 @@ public class TrackManagerController implements Initializable, ErrorPopUpControll
 	//je nach Index entsprechend holen! (erster Eintrag ausgewählt --> hier erste (bzw 0 auswählen!)
 	private void changeCategory(String category) throws InvocationTargetException, NoSuchMethodException, IllegalAccessException { //index als parameter hinzugefügt - nuray
 		String s = model.getDirectoryFolder();
-		model.setDirectoryFolder(category);
+		model.adjustDirectoryFolder(category);
 		if(!category.equals(s) && model.checkConnection()) {
 			model.updateModel();
 		}

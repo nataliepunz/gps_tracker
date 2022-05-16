@@ -11,6 +11,7 @@ import java.time.Duration;
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -25,19 +26,27 @@ import at.jku.se.gps_tracker.model.TrackPoint;
 public class TracksDB implements ErrorPopUpController {
 
 	private static final String ERROR_ROLLBACK_MESSAGE = "ERROR! COULD NOT CONNECT TO DATABASE! ";
+	private final String[] extensions;
 	private Connection conn;
 	private String directory;
+	
+	public TracksDB(String... extensions) {
+		this.extensions=extensions;
+	}
 	
 	public void establishConnection(String dataBaseLocation, String dataBaseFilePath) {
 		boolean setUpNecessary = new File(dataBaseLocation).exists();
 		String url = "jdbc:sqlite:"+dataBaseLocation;
+		this.directory=dataBaseFilePath;
 		try {
+			if(checkConnection()) {
+				closeConnection();
+			}
 			conn = DriverManager.getConnection(url);
 			conn.setAutoCommit(false);
 			if(!setUpNecessary) {
 				setUpTables();
 			}
-			this.directory=dataBaseFilePath;
 		} catch (SQLException e) {  
 			showErrorPopUp(ERROR_ROLLBACK_MESSAGE+e.getMessage());
 		}
@@ -83,10 +92,10 @@ public class TracksDB implements ErrorPopUpController {
 		}
 	}
 	
-	public List<Track> getTracks(String currentDirectory){
+	public List<Track> getTracks(String directoryFolder){
 		List<Track> trackHelpList = new ArrayList<>();
 		try(PreparedStatement stmt = conn.prepareStatement("SELECT * FROM tracks WHERE folder=?")){
-			stmt.setString(1, currentDirectory);
+			stmt.setString(1, directoryFolder);
 			ResultSet rs = stmt.executeQuery();
 			Track t = null;
 			while(rs.next()) {
@@ -105,7 +114,7 @@ public class TracksDB implements ErrorPopUpController {
 		return trackHelpList;
 	}
 	
-	public List<TrackPoint> getTrackPoints(String directory, Track track){
+	public List<TrackPoint> getTrackPoints(Track track){
 		if(new File(FilenameUtils.concat(FilenameUtils.concat(directory, track.getParentDirectory()),track.getFileName())).exists()) {
 			return new TrackParser().getTrackPoints(FilenameUtils.concat(FilenameUtils.concat(directory, track.getParentDirectory()),track.getFileName()));
 		} else {
@@ -114,19 +123,18 @@ public class TracksDB implements ErrorPopUpController {
 		}
 	}
 	
-	public void updateDataBase(String currentDirectory, String currentDirectoryFolder, String... extensions) {
-		List<File> files = (List<File>) FileUtils.listFiles(new File(currentDirectory,currentDirectoryFolder), extensions, false);
-		removeTracks(files, currentDirectoryFolder);
-		addTracks(files, currentDirectoryFolder);
+	public List<File> returnFilesInFolder(String currentDirectoryFolder) {
+		return (List<File>) FileUtils.listFiles(new File(directory,currentDirectoryFolder), extensions, false);
 	}
 	
-	private void removeTracks(List<File> files, String currentDirectoryFolder){
+	public List<List<String>> toBeRemovedTracks(String directoryFolder){
+		List<List<String>> toBeRemovedTracksDetails = new ArrayList<>();
 		HashSet<String> driveFiles = new HashSet<>();
-		files.forEach(f -> driveFiles.add(FilenameUtils.getName(f.getAbsolutePath())));
+		returnFilesInFolder(directoryFolder).forEach(f -> driveFiles.add(FilenameUtils.getName(f.getAbsolutePath())));
 		
 		HashSet<String> dataBaseFiles = new HashSet<>();
 		try(PreparedStatement stmt = conn.prepareStatement("SELECT fileName FROM tracks WHERE folder=?")){
-			stmt.setString(1, currentDirectoryFolder);
+			stmt.setString(1, directoryFolder);
 			ResultSet rs = stmt.executeQuery();
 			while(rs.next()) {
 				dataBaseFiles.add(rs.getString("fileName"));
@@ -136,14 +144,12 @@ public class TracksDB implements ErrorPopUpController {
 		}
 		
 		dataBaseFiles.removeAll(driveFiles);
-		if(driveFiles.isEmpty()) {
-			return;
-		}
 		
 		try(PreparedStatement stmt = conn.prepareStatement("DELETE FROM tracks WHERE fileName=? AND folder=?")){
 			for(String s : dataBaseFiles) {
+				toBeRemovedTracksDetails.add(new ArrayList<>(Arrays.asList(s, directoryFolder)));
 				stmt.setString(1, s);
-				stmt.setString(2, currentDirectoryFolder);
+				stmt.setString(2, directoryFolder);
 				stmt.execute();
 			}
 			conn.commit();
@@ -154,20 +160,22 @@ public class TracksDB implements ErrorPopUpController {
 			} catch (SQLException e1) {
 				showErrorPopUp(ERROR_ROLLBACK_MESSAGE+e1.getMessage());
 			}
-		}		
+		}
+		return toBeRemovedTracksDetails;
 	}
 
-	private void addTracks(List<File> files, String currentDirectoryFolder) {
+	public List<Track> toBeAddedTracks(String directoryFolder) {
+		List<Track> toBeAddedTracks = new ArrayList<>();
 		HashMap<String, File> mapping = new HashMap<>();
-		HashSet<String> driveFiles = new HashSet<>();
-		files.forEach(f -> {
-			driveFiles.add(FilenameUtils.getName(f.getAbsolutePath()));
+		HashSet<String> folderFiles = new HashSet<>();
+		returnFilesInFolder(directoryFolder).forEach(f -> {
+			folderFiles.add(FilenameUtils.getName(f.getAbsolutePath()));
 			mapping.put(FilenameUtils.getName(f.getAbsolutePath()), f);
 		});
 		
 		HashSet<String> dataBaseFiles = new HashSet<>();
 		try(PreparedStatement stmt = conn.prepareStatement("SELECT fileName FROM tracks WHERE folder=?")){
-			stmt.setString(1, currentDirectoryFolder);
+			stmt.setString(1, directoryFolder);
 			ResultSet rs = stmt.executeQuery();
 			while(rs.next()) {
 				dataBaseFiles.add(rs.getString("fileName"));
@@ -176,16 +184,16 @@ public class TracksDB implements ErrorPopUpController {
 			showErrorPopUp("ERROR! COULD NOT GET TRACKS TO CHECK! "+e.getMessage());
 		}
 		
-		driveFiles.removeAll(dataBaseFiles);
-		
-		if(driveFiles.isEmpty()) {
-			return;
-		}
-		
+		folderFiles.removeAll(dataBaseFiles);
+				
 		TrackParser parser = new TrackParser();
-		for(String s : driveFiles) {
-			addTrackToDataBase(mapping.get(s).getAbsolutePath(), parser.getTrack(mapping.get(s).getAbsolutePath()));
+		Track t;
+		for(String s : folderFiles) {
+			t = parser.getTrack(mapping.get(s).getAbsolutePath());
+			toBeAddedTracks.add(t);
+			addTrackToDataBase(mapping.get(s).getAbsolutePath(),t);
 		}
+		return toBeAddedTracks;
 	}
 		
 	public void closeConnection() {
