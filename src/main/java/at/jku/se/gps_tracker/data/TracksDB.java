@@ -39,7 +39,7 @@ public class TracksDB implements ErrorPopUpController {
 		String url = "jdbc:sqlite:"+dataBaseLocation;
 		this.directory=dataBaseFilePath;
 		try {
-			if(checkConnection()) {
+			if(checkConnection(this.directory)) {
 				closeConnection();
 			}
 			conn = DriverManager.getConnection(url);
@@ -208,9 +208,9 @@ public class TracksDB implements ErrorPopUpController {
 		return this.directory;
 	}
 	
-	public boolean checkConnection() {
+	public boolean checkConnection(String modelDirectory) {
 		try {
-			if(this.conn==null) {
+			if(this.conn==null || !modelDirectory.equals(this.directory) ) {
 				return false;
 			}
 			return this.conn.isValid(0);

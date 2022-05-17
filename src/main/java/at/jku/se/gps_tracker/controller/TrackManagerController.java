@@ -76,6 +76,7 @@ public class TrackManagerController implements Initializable, ErrorPopUpControll
 			}
 		});
 	}
+	
 	private void setCategories() {
 		categories = FXCollections.observableArrayList(model.getDirectoryFolders());
 		model.getDirectoryFolders().addListener((ListChangeListener<? super String>) c -> {
@@ -164,6 +165,7 @@ public class TrackManagerController implements Initializable, ErrorPopUpControll
 	private void setUpMenuItems() {
 
 		mTracks.getItems().clear();
+		tgMenuTrack.selectToggle(null);
 		RadioMenuItem help;
 		RadioMenuItem first=null;
 
@@ -173,19 +175,20 @@ public class TrackManagerController implements Initializable, ErrorPopUpControll
 			help.setToggleGroup(tgMenuTrack);
 			mTracks.getItems().add(help);
 		}
-		help = new RadioMenuItem("All/Tracks");
+		
+		help = new RadioMenuItem(DataModel.ALL_TRACK_KEYWORD);
 		help.setToggleGroup(tgMenuTrack);
 		mTracks.getItems().add(help);
-		if(first!=null) tgMenuTrack.selectToggle(first);
+		
+		if(first!=null) {
+			tgMenuTrack.selectToggle(first);
+		}
 	}
 
 	//je nach Index entsprechend holen! (erster Eintrag ausgewählt --> hier erste (bzw 0 auswählen!)
 	private void changeCategory(String category) throws InvocationTargetException, NoSuchMethodException, IllegalAccessException { //index als parameter hinzugefügt - nuray
-		String s = model.getDirectoryFolder();
 		model.adjustDirectoryFolder(category);
-		if(!category.equals(s) && model.checkConnection()) {
-			model.updateModel();
-		}
+		model.updateModel();
 		changeChart(); //aktualisiert chart
 	}
 
@@ -436,9 +439,10 @@ public class TrackManagerController implements Initializable, ErrorPopUpControll
 	
 	@Override
 	public void initialize(URL arg0, ResourceBundle arg1) {
-		chooseDirectory();
 		setUpLists();
+		chooseDirectory();
 		setUpMenuTrack();
+		model.updateModel();
 		showTrackTable(mainTable, trackList);
 
 		initializeHandlers();

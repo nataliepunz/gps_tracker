@@ -34,7 +34,6 @@ public class StartViewController {
         File selectedDirectory = directoryChooser.showDialog(window);
         if(selectedDirectory!=null) {
         	this.model.setDirectory(selectedDirectory.getAbsolutePath());
-        	this.model.updateModel();
         }
 	}
 }

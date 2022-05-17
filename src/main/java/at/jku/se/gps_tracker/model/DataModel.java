@@ -14,10 +14,11 @@ import java.util.List;
 
 public class DataModel implements ErrorPopUpController {
 	
+	public static final String ALL_TRACK_KEYWORD = "All/Tracks";
 	private static final String DATABASE_NAME = "track.db";
 	private static final String[] EXTENSIONS = new String[] { "gpx", "tcx" };
-	private static final String ALL_TRACK_KEYWORD = "All/Tracks";
-	
+	private static final String APPLICATION_TITEL = "TrackStar - ";
+		
 	private ObservableList<Track> trackList;
 	private String directory;
 	private ObservableList<String> directoryFolders;
@@ -59,7 +60,9 @@ public class DataModel implements ErrorPopUpController {
 			establishDBConnection();
 			adjustDirectoryFolder(directoryFolders.get(0));
 		} else {
-			stage.setTitle("TrackStar - "+directory);
+			if(directory!=null) {
+				stage.setTitle(APPLICATION_TITEL+directory);
+			}
 			trackList.clear();
 		}
 	}
@@ -78,14 +81,14 @@ public class DataModel implements ErrorPopUpController {
 	private void setDirectoryFolder(String directoryFolder) {
 		this.directoryFolder = directoryFolder;
 		if(directoryFolder.equals(ALL_TRACK_KEYWORD)) {
-			stage.setTitle("TrackStar - "+directory+" - ALL TRACKS!");
+			stage.setTitle(APPLICATION_TITEL+directory+" - ALL TRACKS!");
 		} else {
-			stage.setTitle("TrackStar - "+FilenameUtils.concat(directory, directoryFolder));
+			stage.setTitle(APPLICATION_TITEL+FilenameUtils.concat(directory, directoryFolder));
 		}
 	}
 
 	private void updateTrackListFromDB(){
-		if(conn.checkConnection()) {
+		if(checkConnection()) {
 			trackList.clear();
 			if(this.directoryFolder.equals(ALL_TRACK_KEYWORD)) {
 				for(String directoryFolderFromLoop : directoryFolders) {
@@ -102,10 +105,12 @@ public class DataModel implements ErrorPopUpController {
 	
 	public void updateModel() {
 		long start = System.nanoTime();
-		if(this.directoryFolder!=null && this.directoryFolder.equals(ALL_TRACK_KEYWORD)) {
-			updateModelAllTracks();
-		} else {
-			updateModelOneFolder();
+		if(checkConnection()) {
+			if(this.directoryFolder!=null && this.directoryFolder.equals(ALL_TRACK_KEYWORD)) {
+				updateModelAllTracks();
+			} else {
+				updateModelOneFolder();
+			}
 		}
 		System.out.println("Zeit fürs Einlesen von "+ trackList.size() +" GPS-Dateien: "+(double) (System.nanoTime()-start)/1000000);
 	}
@@ -167,13 +172,13 @@ public class DataModel implements ErrorPopUpController {
 	}
 	
 	public void closeConnection() {
-		if(conn.checkConnection()) {
+		if(checkConnection()) {
 			conn.closeConnection();
 		}
 	}
 	
 	public boolean checkConnection() {
-		return this.conn.checkConnection();
+		return this.conn.checkConnection(this.directory);
 	}
 	
 	public List<TrackPoint> getTrackPoints(Track track){
