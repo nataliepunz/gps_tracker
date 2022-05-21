@@ -71,7 +71,6 @@ public class TrackParser implements ErrorPopUpController {
 			} else {
 				track = TCXParser.readTCXTrack(file, streamReader);
 			}
-			resetFields();
 		} catch (FileNotFoundException e) {
 			showErrorPopUpNoWait(ERROR_TEXT+"("+FilenameUtils.getName(file)+") Not possible to access file on disk! Please update the tracks to try again!");
 		} catch (XMLStreamException e) {
@@ -79,6 +78,7 @@ public class TrackParser implements ErrorPopUpController {
 		} catch (Exception e) {
 			showErrorPopUpNoWait(ERROR_TEXT+"("+FilenameUtils.getName(file)+") An error has been encountered! Please ensure file is correct and try again! ");
 		}
+		resetFields();
 		try {
 			in.close();
 		} catch (IOException e) {

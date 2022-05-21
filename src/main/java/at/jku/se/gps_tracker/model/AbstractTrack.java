@@ -5,43 +5,44 @@ import java.time.Duration;
 
 public abstract class AbstractTrack {
 		
-	private String name;
-	private double distance;
-	private Duration duration;
-	private int averageBPM;
-	private int maximumBPM;
-	private double elevation;
+	private final String name;
+	private final double distance;
+	private final Duration duration;
+	private final int averageBPM;
+	private final int maximumBPM;
+	private final double elevation;
 	
 	protected AbstractTrack() {
-
-	}
-
-	protected AbstractTrack(String name, double distance, Duration duration, double elevation) {
-		this.name = name;
-		this.distance = distance;
-		this.duration = duration;
-		this.elevation = elevation;
+		this.name = null;
+		this.distance = 0;
+		this.duration = Duration.ofSeconds(0);
+		this.averageBPM = 0;
+		this.maximumBPM = 0;
+		this.elevation = 0;
 	}
 
 	protected AbstractTrack(String name, double distance, Duration duration, int averageBPM, int maximumBPM, double elevation) {
-		this(name, distance, duration, elevation);
+		this.name = name;
+		this.distance = distance;
+		this.duration = duration;
 		this.averageBPM = averageBPM;
 		this.maximumBPM = maximumBPM;
+		this.elevation = elevation;
+	}
+
+	protected AbstractTrack(String name, double distance, Duration duration, double elevation) {
+		this(name, distance, duration, 0, 0, elevation);
 	}
 
 	public String getName() {
 		return name;
 	}
 
-	public Double getDistance() {
-		return doubleFormatter(distance);
-	}
-
-	public Double getDuration() {
-		return Double.valueOf(duration.toMinutes());
+	public double getDistance() {
+		return distance;
 	}
 	
-	public Duration getDurationNormal() {
+	public Duration getDuration() {
 		return duration;
 	}
 
@@ -49,60 +50,24 @@ public abstract class AbstractTrack {
 		return calculatePace();
 	}
 
-	public Double getSpeed() {
-		return doubleFormatter(calculateSpeed());
+	public double getSpeed() {
+		return calculateSpeed();
 	}
 
 	public int getAverageBPM() {
 		return averageBPM;
 	}
 
-	public void setAverageBPM(int averageBPM) {
-		this.averageBPM = averageBPM;
-	}
-
 	public int getMaximumBPM() {
 		return maximumBPM;
 	}
 
-	public void setMaximumBPM(int maximumBPM) {
-		this.maximumBPM = maximumBPM;
+	public double getElevation() {
+		return elevation;
 	}
-
-	public Double getElevation() {
-		return doubleFormatter(elevation);
-	}
-
-	//Quelle: https://stackoverflow.com/a/266846/5750106
-	private static String formatDuration(Duration duration) {
-		long seconds = duration.getSeconds();
-		long absSeconds = Math.abs(seconds);
-		String positive = String.format(
-				"%d:%02d:%02d",
-				absSeconds / 3600,
-				(absSeconds % 3600) / 60,
-				absSeconds % 60);
-		return seconds < 0 ? "-" + positive : positive;
-	}
-	
-	public void setName(String name) {
-		this.name = name;
-	}
-	
-	public void setDistance(double distance) {
-		this.distance = distance;
-	}
-
-	public void setDuration(Duration duration) {
-		this.duration = duration;
-	}
-
-	public void setDistance(Double distance) {
-		this.distance = distance;
-	}
-	
-	public void setElevation(double elevation) {
-		this.elevation = elevation;
+		
+	public SimpleDoubleProperty getDistanceProperty() {
+		return new SimpleDoubleProperty(doubleFormatter(distance));
 	}
 	
 	public SimpleStringProperty getDurationProperty() {
@@ -112,25 +77,18 @@ public abstract class AbstractTrack {
 	public SimpleStringProperty getPaceProperty() {
 		return new SimpleStringProperty(formatDuration(calculatePace()));
 	}
-
-	public String nameProperty() {
-		return name;
-	}
-
-	public Double distanceProperty() {
-		return doubleFormatter(distance);
+	
+	public SimpleDoubleProperty getSpeedProperty() {
+		return new SimpleDoubleProperty(doubleFormatter(calculateSpeed()));
 	}
 	
-	public SimpleDoubleProperty getDistanceProperty() {
-		return new SimpleDoubleProperty(Math.round(distance));
+	public SimpleDoubleProperty getElevationProperty() {
+		return new SimpleDoubleProperty(doubleFormatter(elevation));
 	}
-	public SimpleDoubleProperty getSpeedProperty() {
-		return new SimpleDoubleProperty(calculateSpeed());
-	}
-
+	
 	//zum Runden auf zwei Dezimalstellen
-	private Double doubleFormatter(Double d) {
-		return Math.floor(d * 100) / 100;
+	private static double doubleFormatter(double number) {
+		return (double) Math.round(number * 100) / 100;
 	}
 	
 	private Duration calculatePace() {
@@ -148,7 +106,19 @@ public abstract class AbstractTrack {
 		if(distance==0 || duration.getSeconds()==0) {
 			return 0;
 		} else {
-			return ((distance/duration.getSeconds()) * (60*60)/1000);
+			return ((distance/duration.getSeconds()) * 3.6);
 		}
+	}
+	
+	//Quelle: https://stackoverflow.com/a/266846/5750106
+	private static String formatDuration(Duration duration) {
+		long seconds = duration.getSeconds();
+		long absSeconds = Math.abs(seconds);
+		String positive = String.format(
+				"%d:%02d:%02d",
+				absSeconds / 3600,
+				(absSeconds % 3600) / 60,
+				absSeconds % 60);
+		return seconds < 0 ? "-" + positive : positive;
 	}
 }

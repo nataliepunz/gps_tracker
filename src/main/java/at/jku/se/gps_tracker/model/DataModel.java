@@ -184,7 +184,7 @@ public class DataModel implements ErrorPopUpController {
 	public List<TrackPoint> getTrackPoints(Track track){
 		if(track==null) {
 			return new ArrayList<>();
-		} else if(track.getTrackPoints()!=null || !track.getTrackPoints().isEmpty()) {
+		} else if(track.getTrackPoints()!=null && !track.getTrackPoints().isEmpty()) {
 			return track.getTrackPoints();
 		} else {
 			track.setTrackPoints(this.conn.getTrackPoints(track));

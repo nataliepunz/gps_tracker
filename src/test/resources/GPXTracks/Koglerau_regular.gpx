@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<gpx xmlns="http://www.topografix.com/GPX/1/1" xmlns:xalan="http://xml.apache.org/xalan" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" creator="MotionX Live" version="1.1">
+  <trk>
+    <name>Koglerau</name>
+    <desc>01.04.2021  7:31 pm</desc>
+    <trkseg>
+      <trkpt lat="48.338900" lon="14.239740">
+        <ele>594.000000</ele>
+        <time>2021-04-01T17:31:51Z</time>
+      </trkpt>
+      <trkpt lat="48.338851" lon="14.239740">
+        <ele>596.873324</ele>
+        <time>2021-04-01T17:31:56Z</time>
+      </trkpt>
+    </trkseg>
+  </trk>
+</gpx>
+

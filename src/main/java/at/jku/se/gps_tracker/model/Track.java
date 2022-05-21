@@ -7,11 +7,11 @@ import java.util.List;
 
 public class Track extends AbstractTrack {
 
-	private LocalDate date;
-	private LocalTime startTime;
+	private final LocalDate date;
+	private final LocalTime startTime;
+	private final String fileName;
+	private final String parentDirectory;
 	private List<TrackPoint> trackPoints;
-	private String fileName;
-	private String parentDirectory;
 	
 	private Track(TrackBuilder trackBuilder) {
 		super(trackBuilder.name,trackBuilder.distance,trackBuilder.duration,trackBuilder.averageBPM,trackBuilder.maximumBPM,trackBuilder.elevation);
@@ -21,9 +21,12 @@ public class Track extends AbstractTrack {
 		this.parentDirectory=trackBuilder.parentDirectory;
 		this.trackPoints = trackBuilder.trackPoints;
 	}
-
+	
 	public Track() {
-
+		this.date = null;
+		this.startTime = null;
+		this.fileName = null;
+		this.parentDirectory = null;
 	}
 
 	public LocalDate getDate() {

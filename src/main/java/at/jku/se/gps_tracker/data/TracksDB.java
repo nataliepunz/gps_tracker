@@ -77,7 +77,7 @@ public class TracksDB implements ErrorPopUpController {
 			stmt.setString(4, track.getDate().toString());
 			stmt.setString(5, track.getStartTime().toString());
 			stmt.setDouble(6, track.getDistance());
-			stmt.setDouble(7, track.getDurationNormal().toSeconds());
+			stmt.setDouble(7, track.getDuration().toSeconds());
 			stmt.setInt(8, track.getAverageBPM());
 			stmt.setInt(9, track.getMaximumBPM());
 			stmt.setDouble(10, track.getElevation());

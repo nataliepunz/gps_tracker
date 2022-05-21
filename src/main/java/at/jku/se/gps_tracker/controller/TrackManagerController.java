@@ -295,37 +295,34 @@ public class TrackManagerController implements Initializable, ErrorPopUpControll
 
 		//Create columns
 		TableColumn<AbstractTrack, String> nameCol = new TableColumn<>("Name");
-
-		nameCol.setCellValueFactory(cellValue -> new SimpleStringProperty(cellValue.getValue().getName()));
+		nameCol.setCellValueFactory(new PropertyValueFactory<>("name"));
 
 		TableColumn<AbstractTrack, LocalDate> dateCol = new TableColumn<>("Date");
-		dateCol.setCellValueFactory(
-				new PropertyValueFactory<>("date"));
+		dateCol.setCellValueFactory(new PropertyValueFactory<>("date"));
 
 		TableColumn<AbstractTrack, LocalTime> startCol = new TableColumn<>("Start");
-		startCol.setCellValueFactory(
-				new PropertyValueFactory<>("startTime"));
+		startCol.setCellValueFactory(new PropertyValueFactory<>("startTime"));
 
 		TableColumn<AbstractTrack, Number> distanceCol = new TableColumn<>("Distance");
-		distanceCol.setCellValueFactory(cellValue -> new SimpleDoubleProperty(cellValue.getValue().getDistance()));
+		distanceCol.setCellValueFactory(cellValue -> cellValue.getValue().getDistanceProperty());
 
 		TableColumn<AbstractTrack, String> durationCol= new TableColumn<>("Duration");
 		durationCol.setCellValueFactory(cellValue -> cellValue.getValue().getDurationProperty());
 
 		TableColumn<AbstractTrack, String> paceCol = new TableColumn<>("Pace");
-		paceCol.setCellValueFactory(cellValue -> (cellValue.getValue().getPaceProperty()));
+		paceCol.setCellValueFactory(cellValue -> cellValue.getValue().getPaceProperty());
 
 		TableColumn<AbstractTrack, Number> speedCol = new TableColumn<>("Speed");
-		speedCol.setCellValueFactory(cellValue -> new SimpleDoubleProperty((cellValue.getValue().getSpeed())));
+		speedCol.setCellValueFactory(cellValue -> cellValue.getValue().getSpeedProperty());
 
 		TableColumn<AbstractTrack, Number> avgBpmCol = new TableColumn<>("Average bpm");
-		avgBpmCol.setCellValueFactory(cellValue -> new SimpleIntegerProperty((cellValue.getValue().getAverageBPM())));
+		avgBpmCol.setCellValueFactory(new PropertyValueFactory<>("averageBPM"));
 
 		TableColumn<AbstractTrack, Number> maxBpmCol = new TableColumn<>("Max bpm");
-		maxBpmCol.setCellValueFactory(cellValue -> new SimpleIntegerProperty((cellValue.getValue().getMaximumBPM())));
+		maxBpmCol.setCellValueFactory(new PropertyValueFactory<>("maximumBPM"));
 
 		TableColumn<AbstractTrack, Number> elevationCol = new TableColumn<>("Elevation");
-		elevationCol.setCellValueFactory(cellValue -> new SimpleDoubleProperty((cellValue.getValue().getElevation())));
+		elevationCol.setCellValueFactory(cellValue -> cellValue.getValue().getElevationProperty());
 
 			table.getColumns().addAll(nameCol, dateCol, startCol, distanceCol, durationCol, paceCol, speedCol, avgBpmCol, maxBpmCol, elevationCol);
 			table.setItems((ObservableList<AbstractTrack>) tl);
@@ -364,40 +361,38 @@ public class TrackManagerController implements Initializable, ErrorPopUpControll
 		table.setItems(sortedData);
 
 		trackList = (ObservableList<AbstractTrack>) tl;
-
-
 	}
 
-	@FXML
 	private void showSideTable(TableView table, List<?> tp ){
 
 		table.getItems().clear();
 		table.getColumns().clear();
 		//Create columns
-		TableColumn<AbstractTrack, String> nameCol = new TableColumn<>("Name");
-
-		nameCol.setCellValueFactory(cellValue -> new SimpleStringProperty(cellValue.getValue().getName()));
+		
+		
+		TableColumn<AbstractTrack, String> nameCol = new TableColumn<>("Nr");
+		nameCol.setCellValueFactory(new PropertyValueFactory<>("name"));
 
 		TableColumn<AbstractTrack, Number> distanceCol = new TableColumn<>("Distance");
-		distanceCol.setCellValueFactory(cellValue -> new SimpleDoubleProperty(cellValue.getValue().getDistance()));
+		distanceCol.setCellValueFactory(cellValue -> cellValue.getValue().getDistanceProperty());
 
 		TableColumn<AbstractTrack, String> durationCol= new TableColumn<>("Duration");
 		durationCol.setCellValueFactory(cellValue -> cellValue.getValue().getDurationProperty());
 
 		TableColumn<AbstractTrack, String> paceCol = new TableColumn<>("Pace");
-		paceCol.setCellValueFactory(cellValue -> (cellValue.getValue().getPaceProperty()));
+		paceCol.setCellValueFactory(cellValue -> cellValue.getValue().getPaceProperty());
 
 		TableColumn<AbstractTrack, Number> speedCol = new TableColumn<>("Speed");
-		speedCol.setCellValueFactory(cellValue -> new SimpleDoubleProperty((cellValue.getValue().getSpeed())));
+		speedCol.setCellValueFactory(cellValue -> cellValue.getValue().getSpeedProperty());
 
 		TableColumn<AbstractTrack, Number> avgBpmCol = new TableColumn<>("Average bpm");
-		avgBpmCol.setCellValueFactory(cellValue -> new SimpleIntegerProperty((cellValue.getValue().getAverageBPM())));
+		avgBpmCol.setCellValueFactory(new PropertyValueFactory<>("averageBPM"));
 
 		TableColumn<AbstractTrack, Number> maxBpmCol = new TableColumn<>("Max bpm");
-		maxBpmCol.setCellValueFactory(cellValue -> new SimpleIntegerProperty((cellValue.getValue().getMaximumBPM())));
+		maxBpmCol.setCellValueFactory(new PropertyValueFactory<>("maximumBPM"));
 
 		TableColumn<AbstractTrack, Number> elevationCol = new TableColumn<>("Elevation");
-		elevationCol.setCellValueFactory(cellValue -> new SimpleDoubleProperty((cellValue.getValue().getElevation())));
+		elevationCol.setCellValueFactory(cellValue -> cellValue.getValue().getElevationProperty());
 
 		table.getColumns().addAll(nameCol, distanceCol, durationCol, paceCol, speedCol, avgBpmCol, maxBpmCol, elevationCol);
 		table.setItems((ObservableList<AbstractTrack>) tp);

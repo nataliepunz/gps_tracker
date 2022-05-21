@@ -101,6 +101,7 @@ class GPXParser extends TrackParser{
 		trackPointElevationSet = true;
 		if(!prevTrackPointElevationSet) {
 			prevTrackPointElevation = trackPointElevation;
+			prevTrackPointElevationSet = true;
 		}
 		if(trackPointElevation>prevTrackPointElevation) {
 			trackPointElevationChange = trackPointElevation - prevTrackPointElevation;
