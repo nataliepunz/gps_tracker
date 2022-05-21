@@ -39,7 +39,8 @@ import java.util.ResourceBundle;
 public class TrackManagerController implements Initializable, ErrorPopUpController {
 	//TODO : Optische Korrekturen
 	private DataModel model;
-	private ObservableList<AbstractTrack> trackList;
+	private ObservableList<Track> trackList;
+	//private ObservableList<GroupTracks> groupedTracks; die Implementierung der GroupedTracks erfolgt über eine eigene Liste. die trackList bleibt im Hintergrund so wie sie ist.
 	private ObservableList<String> categories;
 	final private ToggleGroup tgMenuTrack;
 
@@ -67,7 +68,7 @@ public class TrackManagerController implements Initializable, ErrorPopUpControll
 
 	private void setTrackList() {
 		trackList = FXCollections.observableArrayList(model.getTrackList());
-		model.getTrackList().addListener((ListChangeListener<? super AbstractTrack>) c -> {
+		model.getTrackList().addListener((ListChangeListener<? super Track>) c -> {
 			while (c.next()) {
 				if (c.wasAdded()) {
 					trackList.addAll(c.getFrom(), c.getAddedSubList());
@@ -360,7 +361,7 @@ public class TrackManagerController implements Initializable, ErrorPopUpControll
 		sortedData.comparatorProperty().bind(table.comparatorProperty());
 		table.setItems(sortedData);
 
-		trackList = (ObservableList<AbstractTrack>) tl;
+		trackList = (ObservableList<Track>) tl;
 	}
 
 	private void showSideTable(TableView table, List<?> tp ){
