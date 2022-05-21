@@ -50,11 +50,6 @@ public class Track extends AbstractTrack {
 		this.trackPoints=trackpoints;
 	}
 	
-	@Override
-	public String toString() {
-		return this.getName();
-	}
-	
 	public static class TrackBuilder{
 		private String name;
 		private String fileName;

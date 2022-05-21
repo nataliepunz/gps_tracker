@@ -148,7 +148,7 @@ public class DataModel implements ErrorPopUpController {
 	private boolean checkDirectoryExistence() {
 		if(directoryFolder==null || directory==null) {
 			showErrorPopUpNoWait("Ensure that a valid directory has been choosen! Otherwise update the directory!");
-			stage.setTitle("TrackStar");
+			//stage.setTitle(APPLICATION_TITEL);
 			return false;
 		} else if (!new File(FilenameUtils.concat(directory,directoryFolder)).exists()) {
 			showErrorPopUpNoWait("Directory does not exist anymore! Remember to update after every change in the directory!");
