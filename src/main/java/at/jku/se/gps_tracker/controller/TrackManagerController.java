@@ -3,6 +3,7 @@ package at.jku.se.gps_tracker.controller;
 import at.jku.se.gps_tracker.model.AbstractTrack;
 import at.jku.se.gps_tracker.model.DataModel;
 import at.jku.se.gps_tracker.model.Track;
+import javafx.application.Platform;
 import javafx.beans.property.*;
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
@@ -23,6 +24,7 @@ import javafx.scene.chart.NumberAxis;
 import javafx.scene.chart.XYChart;
 import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
+import javafx.scene.image.Image;
 import javafx.stage.Stage;
 
 import java.io.IOException;
@@ -117,6 +119,7 @@ public class TrackManagerController implements Initializable, ErrorPopUpControll
 	@FXML
 	private void setDirectory(ActionEvent event) {
 		chooseDirectory();
+		model.updateModel();
 		sideTable.getItems().clear(); //setzt sidetable zurück da sie sonst die letzte instanz anzeigt
 	}
 	
@@ -133,7 +136,7 @@ public class TrackManagerController implements Initializable, ErrorPopUpControll
 	@FXML
 	private void closeApplication(ActionEvent event) {
 		model.closeConnection();
-		System.exit(1);
+		Platform.exit();
 	}
 	
 	private void chooseDirectory() {
@@ -146,6 +149,7 @@ public class TrackManagerController implements Initializable, ErrorPopUpControll
 			Parent parent = (Parent) fxmlLoader.load();
 			Scene popupScene = new Scene(parent);
 			popup.setTitle("TrackStar - Choose Directory");
+			popup.getIcons().add(new Image(getClass().getResourceAsStream("/icon/folder.jpg")));
 			popup.setAlwaysOnTop(true);
 			popup.setScene(popupScene);
 			popup.showAndWait();
