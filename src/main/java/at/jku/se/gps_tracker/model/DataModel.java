@@ -4,88 +4,190 @@ import at.jku.se.gps_tracker.controller.ErrorPopUpController;
 import at.jku.se.gps_tracker.data.TracksDB;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
+import javafx.stage.Stage;
+
 import org.apache.commons.io.FilenameUtils;
 
 import java.io.File;
+import java.util.ArrayList;
 import java.util.List;
 
 public class DataModel implements ErrorPopUpController {
 	
+	public static final String ALL_TRACK_KEYWORD = "All/Tracks";
 	private static final String DATABASE_NAME = "track.db";
 	private static final String[] EXTENSIONS = new String[] { "gpx", "tcx" };
-	
-	private ObservableList<AbstractTrack> trackList;
-	private String currentDirectory;
+	private static final String APPLICATION_TITEL = "TrackStar";
+		
+	private ObservableList<Track> trackList;
+	private String directory;
 	private ObservableList<String> directoryFolders;
-	private String currentDirectoryFolder;
+	private String directoryFolder;
 	private TracksDB conn;
+	private Stage stage;
 
-	public DataModel() {
-		this.trackList = FXCollections.observableArrayList();
-		this.directoryFolders = FXCollections.observableArrayList();
-		conn = new TracksDB();
+	public DataModel(Stage primaryStage) {
+		trackList = FXCollections.observableArrayList();
+		directoryFolders = FXCollections.observableArrayList();
+		conn = new TracksDB(EXTENSIONS);
+		stage = primaryStage;
 	}
 
-	public void setCurrrentDirectory(String currentDirectory) {
-		if(currentDirectory==null) {
+	public void setDirectory(String directory) {
+		if(directory == null) {
 			return;
 		}
-		this.currentDirectory = currentDirectory;
-		this.directoryFolders.clear();
-		this.directoryFolders.addAll(new File(this.currentDirectory).list((dir, name) -> new File(dir, name).isDirectory()));            
-		establishDBConnection();
+		this.directory = directory;
+		adjustDirectoryFolders();
+	}
+	
+	public void adjustDirectoryFolders() {
+		setDirectoryFolders();
+		changeModel();
+	}
+	
+	private void setDirectoryFolders() {
+		if(directory==null) {
+			return;
+		}
+		directoryFolder=null;
+		directoryFolders.clear();
+		directoryFolders.addAll(new File(directory).list((dir, name) -> new File(dir, name).isDirectory()));
+	}
+	
+	public void changeModel() {
 		if(!directoryFolders.isEmpty()){
-			setCurrentDirectoryFolder(directoryFolders.get(0));
+			establishDBConnection();
+			adjustDirectoryFolder(directoryFolders.get(0));
+		} else {
+			if(directory!=null) {
+				stage.setTitle(APPLICATION_TITEL+" - "+directory);
+			}
+			trackList.clear();
+		}
+	}
+			
+	private void establishDBConnection() {
+		if(!directory.equals(conn.getDirectory())){
+			conn.establishConnection(directory, DATABASE_NAME);
+		}
+	}
+	
+	public void adjustDirectoryFolder(String directoryFolder) {
+		setDirectoryFolder(directoryFolder);
+		updateTrackListFromDB();
+	}
+
+	private void setDirectoryFolder(String directoryFolder) {
+		this.directoryFolder = directoryFolder;
+		if(directoryFolder.equals(ALL_TRACK_KEYWORD)) {
+			stage.setTitle(APPLICATION_TITEL+" - "+directory+" - ALL TRACKS!");
+		} else {
+			stage.setTitle(APPLICATION_TITEL+" - "+FilenameUtils.concat(directory, directoryFolder));
+		}
+	}
+
+	private void updateTrackListFromDB(){
+		if(checkConnection()) {
+			trackList.clear();
+			if(directoryFolder.equals(ALL_TRACK_KEYWORD)) {
+				for(String directoryFolderFromLoop : directoryFolders) {
+					if (!new File(FilenameUtils.concat(directory,directoryFolderFromLoop)).exists()) {
+						continue;
+					}
+					trackList.addAll(conn.getTracks(directoryFolderFromLoop));
+				}
+			} else {
+				trackList.addAll(conn.getTracks(directoryFolder));
+			}
+		}
+	}
+	
+	public void updateModel() {
+		long start = System.nanoTime();
+		if(checkConnection()) {
+			if(directoryFolder!=null && directoryFolder.equals(ALL_TRACK_KEYWORD)) {
+				updateModelAllTracks();
+			} else {
+				updateModelOneFolder();
+			}
+		}
+		System.out.println("Zeit fürs Einlesen von "+ trackList.size() +" GPS-Dateien: "+(double) (System.nanoTime()-start)/1000000);
+	}
+	
+	private void updateModelAllTracks() {
+		for(String directoryFolderFromLoop : directoryFolders) {
+			if (!new File(FilenameUtils.concat(directory,directoryFolderFromLoop)).exists()) {
+				continue;
+			}
+			trackList.removeAll(removeTracks(conn.toBeRemovedTracks(directoryFolderFromLoop)));
+			trackList.addAll(conn.toBeAddedTracks(directoryFolderFromLoop));
 		}
 	}
 		
-	private void establishDBConnection() {
-		if(conn!=null){
-			conn.establishConnection(FilenameUtils.concat(currentDirectory, DATABASE_NAME));
-			conn.setDirectory(currentDirectory);
-		}
-	}
-
-	public void setCurrentDirectoryFolder(String directory) {
-		if(currentDirectoryFolder!=null && !new File(FilenameUtils.concat(currentDirectory,directory)).exists()) {
-			showErrorPopUp("Directory does not exist anymore! Remember to update afer every change in the directory!");
-			this.directoryFolders = FXCollections.observableArrayList(new File(this.currentDirectory).list((dir, name) -> new File(dir, name).isDirectory()));
+	private void updateModelOneFolder() {
+		if(!checkDirectoryExistence()) {
 			return;
 		}
-		this.currentDirectoryFolder = directory;
-		updateModel();
+		trackList.removeAll(removeTracks(conn.toBeRemovedTracks(directoryFolder)));
+		trackList.addAll(conn.toBeAddedTracks(directoryFolder));
 	}
-
-	public void updateModel() {
-		if(currentDirectoryFolder!=null && new File(FilenameUtils.concat(currentDirectoryFolder,currentDirectoryFolder)).exists()) {
-			showErrorPopUp("Directory does not exist anymore! Remember to update afer every change in the directory!");
-			this.directoryFolders = FXCollections.observableArrayList(new File(this.currentDirectory).list((dir, name) -> new File(dir, name).isDirectory()));
-			return;
+	
+	private List<Track> removeTracks(List<List<String>> trackDetails) {
+		List<Track> toBeRemovedTracks = new ArrayList<>();
+		for(List<String> trackDetail : trackDetails) {
+			toBeRemovedTracks.add(trackList.stream()
+				.filter(t -> t.getFileName().equals(trackDetail.get(0)) && t.getParentDirectory().equals(trackDetail.get(1)))
+				.findAny()
+				.orElse(null)
+			);
+		}		
+		return toBeRemovedTracks;
+	}
+	
+	private boolean checkDirectoryExistence() {
+		if(directoryFolder==null || directory==null) {
+			showErrorPopUpNoWait("Ensure that a valid directory has been choosen! Otherwise update the directory!");
+			//stage.setTitle(APPLICATION_TITEL);
+			return false;
+		} else if (!new File(FilenameUtils.concat(directory,directoryFolder)).exists()) {
+			showErrorPopUpNoWait("Directory does not exist anymore! Remember to update after every change in the directory!");
+			adjustDirectoryFolders();
+			return false;
+		} else {
+			return true;
 		}
-		long start = System.nanoTime();
-		conn.updateDataBase(currentDirectory, currentDirectoryFolder, EXTENSIONS);
-		trackList.clear();
-		trackList.addAll(conn.getTracks(currentDirectoryFolder));
-		System.out.println("Zeit fürs Einlesen von "+ trackList.size() +" GPS-Dateien: "+(double) (System.nanoTime()-start)/1000000);
 	}
 
-	public ObservableList<AbstractTrack> getTrackList(){
-		return this.trackList;
+	public ObservableList<Track> getTrackList(){
+		return trackList;
 	}
 	
 	public ObservableList<String> getDirectoryFolders() {
-		return this.directoryFolders;
-	}	
+		return directoryFolders;
+	}
+	
+	public String getDirectoryFolder() {
+		return directoryFolder;
+	}
 	
 	public void closeConnection() {
-		conn.closeConnection();
+		if(checkConnection()) {
+			conn.closeConnection();
+		}
+	}
+	
+	private boolean checkConnection() {
+		return this.conn.checkConnection(this.directory);
 	}
 	
 	public List<TrackPoint> getTrackPoints(Track track){
-		if(track.getTrackPoints()!=null) {
+		if(track==null) {
+			return new ArrayList<>();
+		} else if(track.getTrackPoints()!=null && !track.getTrackPoints().isEmpty()) {
 			return track.getTrackPoints();
 		} else {
-			track.setTrackPoints(conn.getTrackPoints(track));
+			track.setTrackPoints(this.conn.getTrackPoints(track));
 			return track.getTrackPoints();
 		}
 	}

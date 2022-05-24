@@ -9,6 +9,7 @@ import javafx.stage.DirectoryChooser;
 import javafx.stage.Stage;
 
 public class StartViewController {
+	
 	@FXML
 	private Button buttonChoseDirectory;
 	
@@ -31,6 +32,8 @@ public class StartViewController {
         window.setAlwaysOnTop(true);
         window.setOnCloseRequest(c -> System.exit(1));
         File selectedDirectory = directoryChooser.showDialog(window);
-        this.model.setCurrrentDirectory(selectedDirectory.getAbsolutePath());
+        if(selectedDirectory!=null) {
+        	this.model.setDirectory(selectedDirectory.getAbsolutePath());
+        }
 	}
 }

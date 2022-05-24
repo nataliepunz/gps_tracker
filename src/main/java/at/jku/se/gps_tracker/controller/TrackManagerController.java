@@ -3,6 +3,7 @@ package at.jku.se.gps_tracker.controller;
 import at.jku.se.gps_tracker.model.AbstractTrack;
 import at.jku.se.gps_tracker.model.DataModel;
 import at.jku.se.gps_tracker.model.Track;
+import javafx.application.Platform;
 import javafx.beans.property.*;
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
@@ -23,6 +24,7 @@ import javafx.scene.chart.NumberAxis;
 import javafx.scene.chart.XYChart;
 import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
+import javafx.scene.image.Image;
 import javafx.stage.Stage;
 
 import java.io.IOException;
@@ -37,7 +39,8 @@ import java.util.ResourceBundle;
 public class TrackManagerController implements Initializable, ErrorPopUpController {
 	//TODO : Optische Korrekturen
 	private DataModel model;
-	private ObservableList<AbstractTrack> trackList;
+	private ObservableList<Track> trackList;
+	//private ObservableList<GroupTracks> groupedTracks; die Implementierung der GroupedTracks erfolgt über eine eigene Liste. die trackList bleibt im Hintergrund so wie sie ist.
 	private ObservableList<String> categories;
 	final private ToggleGroup tgMenuTrack;
 
@@ -65,7 +68,7 @@ public class TrackManagerController implements Initializable, ErrorPopUpControll
 
 	private void setTrackList() {
 		trackList = FXCollections.observableArrayList(model.getTrackList());
-		model.getTrackList().addListener((ListChangeListener<? super AbstractTrack>) c -> {
+		model.getTrackList().addListener((ListChangeListener<? super Track>) c -> {
 			while (c.next()) {
 				if (c.wasAdded()) {
 					trackList.addAll(c.getFrom(), c.getAddedSubList());
@@ -76,6 +79,7 @@ public class TrackManagerController implements Initializable, ErrorPopUpControll
 			}
 		});
 	}
+	
 	private void setCategories() {
 		categories = FXCollections.observableArrayList(model.getDirectoryFolders());
 		model.getDirectoryFolders().addListener((ListChangeListener<? super String>) c -> {
@@ -92,21 +96,19 @@ public class TrackManagerController implements Initializable, ErrorPopUpControll
 	}
 	
 	private void setUpMenuTrack() {
-		tgMenuTrack.selectedToggleProperty().addListener(new ChangeListener<Toggle>(){
-		    public void changed(ObservableValue<? extends Toggle> ov, Toggle old_toggle, Toggle new_toggle) {
-		         if (tgMenuTrack.getSelectedToggle() != null) {
-		        	 RadioMenuItem selectedItem = (RadioMenuItem) tgMenuTrack.getSelectedToggle();
-					 try {
-						 changeCategory(selectedItem.getText());
-					 } catch (InvocationTargetException e) {
-						 e.printStackTrace();
-					 } catch (NoSuchMethodException e) {
-						 e.printStackTrace();
-					 } catch (IllegalAccessException e) {
-						 e.printStackTrace();
-					 }
-		         }
-		     } 
+		tgMenuTrack.selectedToggleProperty().addListener(listener -> {
+			if (tgMenuTrack.getSelectedToggle() != null) {
+		        RadioMenuItem selectedItem = (RadioMenuItem) tgMenuTrack.getSelectedToggle();
+				try {
+					changeCategory(selectedItem.getText());
+				} catch (InvocationTargetException e) {
+					e.printStackTrace();
+				} catch (NoSuchMethodException e) {
+					e.printStackTrace();
+				} catch (IllegalAccessException e) {
+					e.printStackTrace();
+				}
+			}
 		});
 	}
 	
@@ -118,8 +120,15 @@ public class TrackManagerController implements Initializable, ErrorPopUpControll
 	@FXML
 	private void setDirectory(ActionEvent event) {
 		chooseDirectory();
+		model.updateModel();
 		sideTable.getItems().clear(); //setzt sidetable zurück da sie sonst die letzte instanz anzeigt
 	}
+	
+	@FXML
+	private void updateDirectoryFolders(ActionEvent event) {
+		model.adjustDirectoryFolders();
+	}
+	
 	@FXML
 	private void updateModel(ActionEvent event) {
 		model.updateModel();
@@ -128,7 +137,7 @@ public class TrackManagerController implements Initializable, ErrorPopUpControll
 	@FXML
 	private void closeApplication(ActionEvent event) {
 		model.closeConnection();
-		System.exit(1);
+		Platform.exit();
 	}
 	
 	private void chooseDirectory() {
@@ -141,6 +150,7 @@ public class TrackManagerController implements Initializable, ErrorPopUpControll
 			Parent parent = (Parent) fxmlLoader.load();
 			Scene popupScene = new Scene(parent);
 			popup.setTitle("TrackStar - Choose Directory");
+			popup.getIcons().add(new Image(getClass().getResourceAsStream("/icon/folder.jpg")));
 			popup.setAlwaysOnTop(true);
 			popup.setScene(popupScene);
 			popup.showAndWait();
@@ -160,6 +170,7 @@ public class TrackManagerController implements Initializable, ErrorPopUpControll
 	private void setUpMenuItems() {
 
 		mTracks.getItems().clear();
+		tgMenuTrack.selectToggle(null);
 		RadioMenuItem help;
 		RadioMenuItem first=null;
 
@@ -169,14 +180,21 @@ public class TrackManagerController implements Initializable, ErrorPopUpControll
 			help.setToggleGroup(tgMenuTrack);
 			mTracks.getItems().add(help);
 		}
-		if(first!=null) tgMenuTrack.selectToggle(first);
+		
+		help = new RadioMenuItem(DataModel.ALL_TRACK_KEYWORD);
+		help.setToggleGroup(tgMenuTrack);
+		mTracks.getItems().add(help);
+		
+		if(first!=null) {
+			tgMenuTrack.selectToggle(first);
+		}
 	}
 
 	//je nach Index entsprechend holen! (erster Eintrag ausgewählt --> hier erste (bzw 0 auswählen!)
 	private void changeCategory(String category) throws InvocationTargetException, NoSuchMethodException, IllegalAccessException { //index als parameter hinzugefügt - nuray
-		model.setCurrentDirectoryFolder(category);
+		model.adjustDirectoryFolder(category);
+		model.updateModel();
 		changeChart(); //aktualisiert chart
-
 	}
 
 
@@ -278,37 +296,34 @@ public class TrackManagerController implements Initializable, ErrorPopUpControll
 
 		//Create columns
 		TableColumn<AbstractTrack, String> nameCol = new TableColumn<>("Name");
-
-		nameCol.setCellValueFactory(cellValue -> new SimpleStringProperty(cellValue.getValue().getName()));
+		nameCol.setCellValueFactory(new PropertyValueFactory<>("name"));
 
 		TableColumn<AbstractTrack, LocalDate> dateCol = new TableColumn<>("Date");
-		dateCol.setCellValueFactory(
-				new PropertyValueFactory<>("date"));
+		dateCol.setCellValueFactory(new PropertyValueFactory<>("date"));
 
 		TableColumn<AbstractTrack, LocalTime> startCol = new TableColumn<>("Start");
-		startCol.setCellValueFactory(
-				new PropertyValueFactory<>("startTime"));
+		startCol.setCellValueFactory(new PropertyValueFactory<>("startTime"));
 
 		TableColumn<AbstractTrack, Number> distanceCol = new TableColumn<>("Distance");
-		distanceCol.setCellValueFactory(cellValue -> new SimpleDoubleProperty(cellValue.getValue().getDistance()));
+		distanceCol.setCellValueFactory(cellValue -> cellValue.getValue().getDistanceProperty());
 
 		TableColumn<AbstractTrack, String> durationCol= new TableColumn<>("Duration");
 		durationCol.setCellValueFactory(cellValue -> cellValue.getValue().getDurationProperty());
 
 		TableColumn<AbstractTrack, String> paceCol = new TableColumn<>("Pace");
-		paceCol.setCellValueFactory(cellValue -> (cellValue.getValue().getPaceProperty()));
+		paceCol.setCellValueFactory(cellValue -> cellValue.getValue().getPaceProperty());
 
 		TableColumn<AbstractTrack, Number> speedCol = new TableColumn<>("Speed");
-		speedCol.setCellValueFactory(cellValue -> new SimpleDoubleProperty((cellValue.getValue().getSpeed())));
+		speedCol.setCellValueFactory(cellValue -> cellValue.getValue().getSpeedProperty());
 
 		TableColumn<AbstractTrack, Number> avgBpmCol = new TableColumn<>("Average bpm");
-		avgBpmCol.setCellValueFactory(cellValue -> new SimpleIntegerProperty((cellValue.getValue().getAverageBPM())));
+		avgBpmCol.setCellValueFactory(new PropertyValueFactory<>("averageBPM"));
 
 		TableColumn<AbstractTrack, Number> maxBpmCol = new TableColumn<>("Max bpm");
-		maxBpmCol.setCellValueFactory(cellValue -> new SimpleIntegerProperty((cellValue.getValue().getMaximumBPM())));
+		maxBpmCol.setCellValueFactory(new PropertyValueFactory<>("maximumBPM"));
 
 		TableColumn<AbstractTrack, Number> elevationCol = new TableColumn<>("Elevation");
-		elevationCol.setCellValueFactory(cellValue -> new SimpleDoubleProperty((cellValue.getValue().getElevation())));
+		elevationCol.setCellValueFactory(cellValue -> cellValue.getValue().getElevationProperty());
 
 			table.getColumns().addAll(nameCol, dateCol, startCol, distanceCol, durationCol, paceCol, speedCol, avgBpmCol, maxBpmCol, elevationCol);
 			table.setItems((ObservableList<AbstractTrack>) tl);
@@ -346,41 +361,39 @@ public class TrackManagerController implements Initializable, ErrorPopUpControll
 		sortedData.comparatorProperty().bind(table.comparatorProperty());
 		table.setItems(sortedData);
 
-		trackList = (ObservableList<AbstractTrack>) tl;
-
-
+		trackList = (ObservableList<Track>) tl;
 	}
 
-	@FXML
 	private void showSideTable(TableView table, List<?> tp ){
 
 		table.getItems().clear();
 		table.getColumns().clear();
 		//Create columns
-		TableColumn<AbstractTrack, String> nameCol = new TableColumn<>("Name");
-
-		nameCol.setCellValueFactory(cellValue -> new SimpleStringProperty(cellValue.getValue().getName()));
+		
+		
+		TableColumn<AbstractTrack, String> nameCol = new TableColumn<>("Nr");
+		nameCol.setCellValueFactory(new PropertyValueFactory<>("name"));
 
 		TableColumn<AbstractTrack, Number> distanceCol = new TableColumn<>("Distance");
-		distanceCol.setCellValueFactory(cellValue -> new SimpleDoubleProperty(cellValue.getValue().getDistance()));
+		distanceCol.setCellValueFactory(cellValue -> cellValue.getValue().getDistanceProperty());
 
 		TableColumn<AbstractTrack, String> durationCol= new TableColumn<>("Duration");
 		durationCol.setCellValueFactory(cellValue -> cellValue.getValue().getDurationProperty());
 
 		TableColumn<AbstractTrack, String> paceCol = new TableColumn<>("Pace");
-		paceCol.setCellValueFactory(cellValue -> (cellValue.getValue().getPaceProperty()));
+		paceCol.setCellValueFactory(cellValue -> cellValue.getValue().getPaceProperty());
 
 		TableColumn<AbstractTrack, Number> speedCol = new TableColumn<>("Speed");
-		speedCol.setCellValueFactory(cellValue -> new SimpleDoubleProperty((cellValue.getValue().getSpeed())));
+		speedCol.setCellValueFactory(cellValue -> cellValue.getValue().getSpeedProperty());
 
 		TableColumn<AbstractTrack, Number> avgBpmCol = new TableColumn<>("Average bpm");
-		avgBpmCol.setCellValueFactory(cellValue -> new SimpleIntegerProperty((cellValue.getValue().getAverageBPM())));
+		avgBpmCol.setCellValueFactory(new PropertyValueFactory<>("averageBPM"));
 
 		TableColumn<AbstractTrack, Number> maxBpmCol = new TableColumn<>("Max bpm");
-		maxBpmCol.setCellValueFactory(cellValue -> new SimpleIntegerProperty((cellValue.getValue().getMaximumBPM())));
+		maxBpmCol.setCellValueFactory(new PropertyValueFactory<>("maximumBPM"));
 
 		TableColumn<AbstractTrack, Number> elevationCol = new TableColumn<>("Elevation");
-		elevationCol.setCellValueFactory(cellValue -> new SimpleDoubleProperty((cellValue.getValue().getElevation())));
+		elevationCol.setCellValueFactory(cellValue -> cellValue.getValue().getElevationProperty());
 
 		table.getColumns().addAll(nameCol, distanceCol, durationCol, paceCol, speedCol, avgBpmCol, maxBpmCol, elevationCol);
 		table.setItems((ObservableList<AbstractTrack>) tp);
@@ -418,15 +431,18 @@ public class TrackManagerController implements Initializable, ErrorPopUpControll
 	/* aktualiesiert chart nach änderung der kategorie */
 	private void changeChart() throws InvocationTargetException, NoSuchMethodException, IllegalAccessException {
 		RadioMenuItem rmi = (RadioMenuItem)	tgGraph.getSelectedToggle();
-		createBarChart(rmi.getText(), "get"+rmi.getText());
+		if(rmi!=null) {
+			createBarChart(rmi.getText(), "get"+rmi.getText());
+		}
 	}
 
 	
 	@Override
 	public void initialize(URL arg0, ResourceBundle arg1) {
-		chooseDirectory();
 		setUpLists();
+		chooseDirectory();
 		setUpMenuTrack();
+		model.updateModel();
 		showTrackTable(mainTable, trackList);
 
 		initializeHandlers();
