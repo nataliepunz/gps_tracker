@@ -4,6 +4,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import java.time.Duration;
@@ -17,14 +18,19 @@ import at.jku.se.gps_tracker.model.TrackPoint;
 
 class TrackNormalTest {
 
-	private Track track = new Track.TrackBuilder("testParentDirectory", "testFileName", "testName", LocalDate.now(), LocalTime.now().truncatedTo(ChronoUnit.SECONDS))
-									.distance(12345)
-									.duration(Duration.ofSeconds(100))
-									.averageBPM(100)
-									.maximumBPM(600)
-									.elevation(123)
-									.trackPoints(Arrays.asList(new TrackPoint("1", 0, null, 0)))
-									.build();
+	private Track track;
+	
+	@BeforeEach
+	void setUp() {
+		track = new Track.TrackBuilder("testParentDirectory", "testFileName", "testName", LocalDate.now(), LocalTime.now().truncatedTo(ChronoUnit.SECONDS))
+				.distance(12345)
+				.duration(Duration.ofSeconds(100))
+				.averageBPM(100)
+				.maximumBPM(600)
+				.elevation(123)
+				.trackPoints(Arrays.asList(new TrackPoint("1", 0, null, 0)))
+				.build();
+	}
 	
 	@Test
 	void normalConstructorTest() {

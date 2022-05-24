@@ -1,10 +1,8 @@
 package at.jku.se.gps_tracker.model;
 
-import at.jku.se.gps_tracker.controller.ErrorPopUpController;
 import at.jku.se.gps_tracker.data.TracksDB;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
-import javafx.stage.Stage;
 
 import org.apache.commons.io.FilenameUtils;
 
@@ -12,25 +10,22 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 
-public class DataModel implements ErrorPopUpController {
+public class DataModel {
 	
 	public static final String ALL_TRACK_KEYWORD = "All/Tracks";
-	private static final String DATABASE_NAME = "track.db";
+	public static final String DATABASE_NAME = "track.db";
 	private static final String[] EXTENSIONS = new String[] { "gpx", "tcx" };
-	private static final String APPLICATION_TITEL = "TrackStar";
 		
 	private ObservableList<Track> trackList;
 	private String directory;
 	private ObservableList<String> directoryFolders;
 	private String directoryFolder;
 	private TracksDB conn;
-	private Stage stage;
 
-	public DataModel(Stage primaryStage) {
+	public DataModel() {
 		trackList = FXCollections.observableArrayList();
 		directoryFolders = FXCollections.observableArrayList();
 		conn = new TracksDB(EXTENSIONS);
-		stage = primaryStage;
 	}
 
 	public void setDirectory(String directory) {
@@ -55,35 +50,19 @@ public class DataModel implements ErrorPopUpController {
 		directoryFolders.addAll(new File(directory).list((dir, name) -> new File(dir, name).isDirectory()));
 	}
 	
-	public void changeModel() {
+	private void changeModel() {
 		if(!directoryFolders.isEmpty()){
-			establishDBConnection();
+			conn.establishConnection(directory, DATABASE_NAME);
 			adjustDirectoryFolder(directoryFolders.get(0));
 		} else {
-			if(directory!=null) {
-				stage.setTitle(APPLICATION_TITEL+" - "+directory);
-			}
 			trackList.clear();
-		}
-	}
-			
-	private void establishDBConnection() {
-		if(!directory.equals(conn.getDirectory())){
-			conn.establishConnection(directory, DATABASE_NAME);
 		}
 	}
 	
 	public void adjustDirectoryFolder(String directoryFolder) {
-		setDirectoryFolder(directoryFolder);
-		updateTrackListFromDB();
-	}
-
-	private void setDirectoryFolder(String directoryFolder) {
-		this.directoryFolder = directoryFolder;
-		if(directoryFolder.equals(ALL_TRACK_KEYWORD)) {
-			stage.setTitle(APPLICATION_TITEL+" - "+directory+" - ALL TRACKS!");
-		} else {
-			stage.setTitle(APPLICATION_TITEL+" - "+FilenameUtils.concat(directory, directoryFolder));
+		if(directoryFolders.contains(directoryFolder) || directoryFolder.equals(ALL_TRACK_KEYWORD)) {
+			this.directoryFolder = directoryFolder;
+			updateTrackListFromDB();
 		}
 	}
 
@@ -147,11 +126,8 @@ public class DataModel implements ErrorPopUpController {
 	
 	private boolean checkDirectoryExistence() {
 		if(directoryFolder==null || directory==null) {
-			showErrorPopUpNoWait("Ensure that a valid directory has been choosen! Otherwise update the directory!");
-			//stage.setTitle(APPLICATION_TITEL);
 			return false;
 		} else if (!new File(FilenameUtils.concat(directory,directoryFolder)).exists()) {
-			showErrorPopUpNoWait("Directory does not exist anymore! Remember to update after every change in the directory!");
 			adjustDirectoryFolders();
 			return false;
 		} else {
@@ -168,9 +144,9 @@ public class DataModel implements ErrorPopUpController {
 	}
 	
 	public String getDirectoryFolder() {
-		return directoryFolder;
+		return this.directoryFolder;
 	}
-	
+		
 	public void closeConnection() {
 		if(checkConnection()) {
 			conn.closeConnection();

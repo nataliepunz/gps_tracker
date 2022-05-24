@@ -1,6 +1,7 @@
 package at.jku.se.gps_tracker.data;
 
 import java.io.File;
+import java.io.IOException;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;
@@ -15,40 +16,47 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import javax.xml.stream.XMLStreamException;
+
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
 
-import at.jku.se.gps_tracker.controller.ErrorPopUpController;
 import at.jku.se.gps_tracker.model.Track;
 import at.jku.se.gps_tracker.model.TrackPoint;
 
-public class TracksDB implements ErrorPopUpController {
+public class TracksDB {
 
-	private static final String ERROR_ROLLBACK_MESSAGE = "ERROR! COULD NOT CONNECT TO DATABASE! ";
 	private final String[] extensions;
 	private Connection conn;
 	private String directory;
+	private TrackParser parser;
 	
 	public TracksDB(String... extensions) {
 		this.extensions=extensions;
+		parser = new TrackParser();
 	}
 	
 	public void establishConnection(String directory, String dataBaseName) {
+		if(this.directory!=null && this.directory.equals(directory)) {
+			return;
+		}
 		String dataBaseLocation = FilenameUtils.concat(directory, dataBaseName);
 		boolean setUpNecessary = new File(dataBaseLocation).exists();
 		String url = "jdbc:sqlite:"+dataBaseLocation;
 		this.directory=directory;
 		try {
-			if(checkConnection(this.directory)) {
-				closeConnection();
-			}
 			conn = DriverManager.getConnection(url);
 			conn.setAutoCommit(false);
 			if(!setUpNecessary) {
 				setUpTables();
 			}
-		} catch (SQLException e) {  
-			showErrorPopUp(ERROR_ROLLBACK_MESSAGE+e.getMessage());
+		} catch (SQLException e) {
+			this.directory=null;
+			try {
+				conn.rollback();
+			} catch (SQLException e1) {
+				
+			}
 		}
 	}
 	
@@ -57,11 +65,10 @@ public class TracksDB implements ErrorPopUpController {
 			stmt.execute("CREATE TABLE tracks (name TEXT NOT NULL, fileName TEXT NOT NULL, folder TEXT NOT NULL, date TEXT NOT NULL, time TEXT NOT NULL, distance REAL NOT NULL, duration REAL NOT NULL, averageBPM INTEGER NOT NULL, maximumBPM INTEGER NOT NULL, elevation REAL NOT NULL, PRIMARY KEY(fileName,folder));");
             conn.commit();
         } catch (SQLException e) {  
-        	showErrorPopUp("ERROR! COULD NOT CREATE TABLES! "+e.getMessage());
             try {
 				conn.rollback();
 			} catch (SQLException e1) {
-				showErrorPopUp(ERROR_ROLLBACK_MESSAGE+e1.getMessage());
+				
 			}
         }  
 	}
@@ -85,11 +92,10 @@ public class TracksDB implements ErrorPopUpController {
 			
 			conn.commit();
 		} catch (SQLException e) {
-			showErrorPopUp("ERROR! COULD NOT ADD TRACK! "+e.getMessage());
 			try {
 				conn.rollback();
 			} catch (SQLException e1) {
-				showErrorPopUp(ERROR_ROLLBACK_MESSAGE+e1.getMessage());
+				
 			}
 		}
 	}
@@ -110,17 +116,21 @@ public class TracksDB implements ErrorPopUpController {
 				);
 			}
 		} catch (SQLException e) {
-			showErrorPopUp("ERROR! COULD NOT GET TRACKS! "+e.getMessage());
+			
 		}
 		return trackHelpList;
 	}
 	
-	public List<TrackPoint> getTrackPoints(Track track){
+	public List<TrackPoint> getTrackPoints(Track track) {
 		String trackFileString = getTrackPath(track.getParentDirectory(),track.getFileName());
 		if(new File(trackFileString).exists()) {
-			return new TrackParser().getTrackPoints(trackFileString);
+			try {
+				return parser.getTrackPoints(trackFileString);
+			} catch (XMLStreamException | IOException e) {
+				
+			}
+			return new ArrayList<>();
 		} else {
-			showErrorPopUp("ERROR! REMEMBER TO UPDATE THE PROGRAM AFTER EVERY CHANGE!");
 			return new ArrayList<>();
 		}
 	}
@@ -138,20 +148,7 @@ public class TracksDB implements ErrorPopUpController {
 	}
 	
 	public List<List<String>> toBeRemovedTracks(String directoryFolder){
-		List<String> driveTracks = returnTracksInFolder(directoryFolder);
-		
-		List<String> dataBaseTracks = new ArrayList<>();
-		try(PreparedStatement stmt = conn.prepareStatement("SELECT fileName FROM tracks WHERE folder=?")){
-			stmt.setString(1, directoryFolder);
-			ResultSet rs = stmt.executeQuery();
-			while(rs.next()) {
-				dataBaseTracks.add(rs.getString("fileName"));
-			}
-		} catch (SQLException e) {
-			showErrorPopUp("ERROR! COULD NOT GET TRACKS TO CHECK! "+e.getMessage());
-		}
-		
-		dataBaseTracks.removeAll(driveTracks);
+		List<String> dataBaseTracks = returnDifferenceDriveAndDB(false, directoryFolder);
 		
 		List<List<String>> toBeRemovedTracksDetails = new ArrayList<>();
 		try(PreparedStatement stmt = conn.prepareStatement("DELETE FROM tracks WHERE fileName=? AND folder=?")){
@@ -163,37 +160,26 @@ public class TracksDB implements ErrorPopUpController {
 			}
 			conn.commit();
 		} catch (SQLException e) {
-			showErrorPopUp("ERROR! COULD NOT REMOVE TRACK! "+e.getMessage());
 			try {
 				conn.rollback();
 			} catch (SQLException e1) {
-				showErrorPopUp(ERROR_ROLLBACK_MESSAGE+e1.getMessage());
+				
 			}
 		}
 		return toBeRemovedTracksDetails;
 	}
 
 	public List<Track> toBeAddedTracks(String directoryFolder) {
-		List<String> driveTracks = returnTracksInFolder(directoryFolder);
-		
-		List<String> dataBaseFiles = new ArrayList<>();
-		try(PreparedStatement stmt = conn.prepareStatement("SELECT fileName FROM tracks WHERE folder=?")){
-			stmt.setString(1, directoryFolder);
-			ResultSet rs = stmt.executeQuery();
-			while(rs.next()) {
-				dataBaseFiles.add(rs.getString("fileName"));
-			}
-		} catch (SQLException e) {
-			showErrorPopUp("ERROR! COULD NOT GET TRACKS TO CHECK! "+e.getMessage());
-		}
-		
-		driveTracks.removeAll(dataBaseFiles);
+		List<String> driveTracks = returnDifferenceDriveAndDB(true, directoryFolder);
 		
 		List<Track> toBeAddedTracks = new ArrayList<>();
-		TrackParser parser = new TrackParser();
 		Track t = null;
 		for(String track : driveTracks) {
-			t = parser.getTrack(getTrackPath(directoryFolder,track));
+			try {
+				t = parser.getTrack(getTrackPath(directoryFolder,track));
+			} catch (XMLStreamException | IOException e) {
+				t=null;
+			}
 			if(t!=null) {
 				toBeAddedTracks.add(t);
 				addTrackToDataBase(t);
@@ -201,12 +187,34 @@ public class TracksDB implements ErrorPopUpController {
 		}
 		return toBeAddedTracks;
 	}
+	
+	private List<String> returnDifferenceDriveAndDB(boolean getTracksFromDrive, String directoryFolder){
+		List<String> driveTracks = returnTracksInFolder(directoryFolder);
 		
+		List<String> dataBaseTracks = new ArrayList<>();
+		try(PreparedStatement stmt = conn.prepareStatement("SELECT fileName FROM tracks WHERE folder=?")){
+			stmt.setString(1, directoryFolder);
+			ResultSet rs = stmt.executeQuery();
+			while(rs.next()) {
+				dataBaseTracks.add(rs.getString("fileName"));
+			}
+		} catch (SQLException e) {
+		}
+		
+		if(getTracksFromDrive) {
+			driveTracks.removeAll(dataBaseTracks);
+			return driveTracks;
+		} else {
+			dataBaseTracks.removeAll(driveTracks);
+			return dataBaseTracks;
+		}
+	}
+	
 	public void closeConnection() {
 		try {
 			conn.close();
 		} catch (SQLException e) {
-			showErrorPopUp("COULD NOT CLOSE DATABASE! "+e.getMessage());
+			
 		}
 	}
 		
@@ -221,7 +229,6 @@ public class TracksDB implements ErrorPopUpController {
 			}
 			return conn.isValid(0);
 		} catch (SQLException e) {
-			showErrorPopUp("No connection to Database! Restart the Application please");
 			return false;
 		}
 	}

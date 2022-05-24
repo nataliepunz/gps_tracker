@@ -5,6 +5,7 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
+import java.math.BigDecimal;
 import java.time.Duration;
 import java.time.Instant;
 import java.time.format.DateTimeFormatter;
@@ -17,14 +18,12 @@ import javax.xml.stream.XMLStreamReader;
 
 import org.apache.commons.io.FilenameUtils;
 
-import at.jku.se.gps_tracker.controller.ErrorPopUpController;
 import at.jku.se.gps_tracker.model.Track;
 import at.jku.se.gps_tracker.model.TrackPoint;
 
-public class TrackParser implements ErrorPopUpController {
+public class TrackParser {
 	
 	protected static final DateTimeFormatter dtf = DateTimeFormatter.ofPattern("HH:mm:ss");
-	private static final String ERROR_TEXT = "ERROR! File could not be read! ";
 	
 	//data per track
 	static List<TrackPoint> trackPointsList;
@@ -36,7 +35,7 @@ public class TrackParser implements ErrorPopUpController {
 	
 	// data per trackPoint
 	static int trackPointNr;
-	static double trackPointElevation;
+	static BigDecimal trackPointElevation;
 	static double trackPointElevationChange;
 	static boolean trackPointElevationSet;
 	static double trackPointLatitude;
@@ -46,7 +45,7 @@ public class TrackParser implements ErrorPopUpController {
 	
 	//data about previous trackPoint
 	static Instant prevTrackPointTime;
-	static double prevTrackPointElevation;
+	static BigDecimal prevTrackPointElevation;
 	static boolean prevTrackPointElevationSet;
 	static double prevTrackPointLatitude;
 	static double prevTrackPointLongtitude;
@@ -62,32 +61,31 @@ public class TrackParser implements ErrorPopUpController {
 		inputFactory.setProperty(XMLInputFactory.SUPPORT_DTD, false);
 	}
 			
-	public Track getTrack(String file){
+	public Track getTrack(String file) throws XMLStreamException, IOException{
 		Track track = null;
-		try {
-			setUpTrackParser(file);
-			if(FilenameUtils.getExtension(file).equals("gpx")) {
-				track = GPXParser.readGPXTrack(file, streamReader);
-			} else {
-				track = TCXParser.readTCXTrack(file, streamReader);
-			}
-		} catch (FileNotFoundException e) {
-			showErrorPopUpNoWait(ERROR_TEXT+"("+FilenameUtils.getName(file)+") Not possible to access file on disk! Please update the tracks to try again!");
-		} catch (XMLStreamException e) {
-			showErrorPopUpNoWait(ERROR_TEXT+"("+FilenameUtils.getName(file)+") Please ensure that the file has been made correctly and try again!");
-		} catch (Exception e) {
-			showErrorPopUpNoWait(ERROR_TEXT+"("+FilenameUtils.getName(file)+") An error has been encountered! Please ensure file is correct and try again! ");
+		cleanUp();
+		setUpTrackParser(file);
+		if(FilenameUtils.getExtension(file).equals("gpx")) {
+			track = GPXParser.readGPXTrack(file, streamReader);
+		} else {
+			track = TCXParser.readTCXTrack(file, streamReader);
 		}
-		resetFields();
-		try {
-			in.close();
-		} catch (IOException e) {
-			showErrorPopUp(ERROR_TEXT+"("+FilenameUtils.getName(file)+") Please restart the application to ensure correct working!");
-		}
+		cleanUp();
 		return track;
 	}
 	
-	public List<TrackPoint> getTrackPoints(String file){
+	public void cleanUp() {
+		resetFields();
+		if(in!=null) {
+			try {
+				in.close();
+			} catch (IOException e) {
+				in = null;
+			}
+		}
+	}
+	
+	public List<TrackPoint> getTrackPoints(String file) throws XMLStreamException, IOException{
 		return this.getTrack(file).getTrackPoints();
 	}
 	
@@ -128,7 +126,7 @@ public class TrackParser implements ErrorPopUpController {
 		trackPointNr = 1;
 		
 		prevTrackPointTime = null;
-		prevTrackPointElevation = 0;
+		prevTrackPointElevation = new BigDecimal(0);
 		prevTrackPointElevationSet = false;
 		prevTrackPointLatitude = 0;
 		prevTrackPointLongtitude = 0;

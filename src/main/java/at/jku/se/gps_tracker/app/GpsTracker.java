@@ -18,12 +18,10 @@ public class GpsTracker extends Application {
 	public void start(Stage primaryStage) throws Exception {		
 		primaryStage.setTitle("TrackStar");
 		FXMLLoader loader = new FXMLLoader(getClass().getResource("/fxml/TrackManager.fxml"));
-		TrackManagerController start = new TrackManagerController(new DataModel(primaryStage));
+		TrackManagerController start = new TrackManagerController(new DataModel());
 				 
 		loader.setController(start);
-		 
 		Parent root = loader.load();
-		
 		
 		primaryStage.getIcons().add(new Image(getClass().getResourceAsStream("/icon/icon.png")));
 		primaryStage.setScene(new Scene(root,800,600));

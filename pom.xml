@@ -50,7 +50,7 @@
     		<artifactId>sqlite-jdbc</artifactId>
     		<version>3.36.0.3</version>
 		</dependency>
-		
+						
 	</dependencies>
 	
 	<build>

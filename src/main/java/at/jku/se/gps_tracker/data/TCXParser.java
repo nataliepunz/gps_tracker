@@ -1,6 +1,7 @@
 package at.jku.se.gps_tracker.data;
 
 import java.io.File;
+import java.math.BigDecimal;
 import java.time.Duration;
 import java.time.Instant;
 import java.time.LocalDate;
@@ -14,8 +15,14 @@ import org.apache.commons.io.FilenameUtils;
 
 import at.jku.se.gps_tracker.model.Track;
 import at.jku.se.gps_tracker.model.TrackPoint;
-
-class TCXParser extends TrackParser {
+/**
+ * throw exception when totalDistance = zero? or change code to make sure it reads 100%
+ * @author Ozan
+ *
+ */
+final class TCXParser extends TrackParser {
+	private static boolean totalDistanceMetersSet;
+	private static boolean totalDurationSet;
 	private static int averageBPM;
 	private static int averageBPMCount;
 	private static int maximumBPM;
@@ -30,6 +37,8 @@ class TCXParser extends TrackParser {
 		averageBPMCount = 0;
 		maximumBPM = 0;
 		prevDistance = 0;
+		totalDistanceMetersSet=false;
+		totalDurationSet=false;
 		resetFields();
 	}
 			
@@ -88,10 +97,12 @@ class TCXParser extends TrackParser {
 				switch (streamReader.getLocalName()) {
 					case "TotalTimeSeconds":{
 						totalDuration = totalDuration.plusSeconds((long) Double.parseDouble(streamReader.getElementText()));
+						totalDurationSet=true;
 						break;
 					}
 					case "DistanceMeters":{
 						totalDistance+= Double.parseDouble(streamReader.getElementText());
+						totalDistanceMetersSet=true;
 						break;
 					}
 					case "AverageHeartRateBpm":{
@@ -122,7 +133,7 @@ class TCXParser extends TrackParser {
 	}
 	
 	private static void manageTCXTrackPointElement(XMLStreamReader streamReader) throws NumberFormatException, XMLStreamException {
-		trackPointElevation = 0;
+		trackPointElevation = new BigDecimal(0);
 		trackPointElevationChange = 0;
 		trackPointDuration = Duration.ofSeconds(0);
 		trackPointLatitude = 0;
@@ -188,14 +199,14 @@ class TCXParser extends TrackParser {
 	}
 	
 	private static void calculateTCXTrackPointElevation(XMLStreamReader streamReader) throws XMLStreamException {
-		trackPointElevation = Double.parseDouble(streamReader.getElementText());
+		trackPointElevation = new BigDecimal(streamReader.getElementText());
 		trackPointElevationSet = true;
 		if(!prevTrackPointElevationSet) {
 			prevTrackPointElevation = trackPointElevation;
 			prevTrackPointElevationSet=true;
 		}
-		if(trackPointElevation>prevTrackPointElevation) {
-			trackPointElevationChange = trackPointElevation - prevTrackPointElevation;
+		if(trackPointElevation.doubleValue()>prevTrackPointElevation.doubleValue()) {
+			trackPointElevationChange = trackPointElevation.subtract(prevTrackPointElevation).doubleValue();
 			totalElevation += trackPointElevationChange;
 		}
 	}
@@ -205,7 +216,7 @@ class TCXParser extends TrackParser {
 			trackPointElevation = prevTrackPointElevation;
 		}
 		if(!trackPointDistanceMetersSet && positionSet && prevTrackPointCoordinatesSet) {
-			trackPointDistanceMeters = distance(trackPointLatitude, prevTrackPointLatitude, trackPointLongtitude, prevTrackPointLongtitude, trackPointElevation, prevTrackPointElevation);
+			trackPointDistanceMeters = distance(trackPointLatitude, prevTrackPointLatitude, trackPointLongtitude, prevTrackPointLongtitude, trackPointElevation.doubleValue(), prevTrackPointElevation.doubleValue());
 		}
 		trackPointsList.add(new TrackPoint(String.valueOf(trackPointNr), trackPointDistanceMeters, trackPointDuration, averageBPMTrackPoint, averageBPMTrackPoint, trackPointElevationChange));
 		trackPointNr++;
@@ -219,12 +230,15 @@ class TCXParser extends TrackParser {
 		}
 	}
 	
-	private static Track createTCXTrack(String file) {
+	private static Track createTCXTrack(String file) throws XMLStreamException {
 		if(trackTimeDate==null) {
 			trackTimeDate = Instant.now();
 		}
 		if(trackName==null) {
 			trackName = FilenameUtils.getName(file);
+		}
+		if(!totalDistanceMetersSet || !totalDurationSet) {
+			throw new XMLStreamException();
 		}
 		return new Track.TrackBuilder(new File(file).getParentFile().getName(),FilenameUtils.getName(file), trackName, LocalDate.ofInstant(trackTimeDate, ZoneId.systemDefault()), LocalTime.parse(LocalTime.ofInstant(trackTimeDate, ZoneId.systemDefault()).format(dtf)))
 				.distance(totalDistance)

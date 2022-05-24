@@ -31,7 +31,7 @@ class TrackUnusualTest {
 	}
 	
 	@Test
-	void geFileNameTest() {
+	void getFileNameTest() {
 		assertEquals(null, track.getFileName());
 	}
 	

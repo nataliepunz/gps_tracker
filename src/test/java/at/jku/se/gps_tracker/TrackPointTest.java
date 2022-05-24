@@ -3,6 +3,7 @@ package at.jku.se.gps_tracker;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import java.time.Duration;
@@ -10,7 +11,12 @@ import at.jku.se.gps_tracker.model.TrackPoint;
 
 public class TrackPointTest {
 	
-	private TrackPoint trackPoint = new TrackPoint("1", 123, Duration.ofSeconds(100), 100, 150, 50);
+	private TrackPoint trackPoint;
+	
+	@BeforeEach
+	void setUp() {
+		trackPoint = new TrackPoint("1", 123, Duration.ofSeconds(100), 100, 150, 50);
+	}
 	
 	@Test
 	void constructorTest() {

@@ -3,6 +3,7 @@ package at.jku.se.gps_tracker.controller;
 import at.jku.se.gps_tracker.model.AbstractTrack;
 import at.jku.se.gps_tracker.model.DataModel;
 import at.jku.se.gps_tracker.model.Track;
+import at.jku.se.gps_tracker.model.TrackPoint;
 import javafx.application.Platform;
 import javafx.beans.property.*;
 import javafx.beans.value.ChangeListener;
@@ -33,8 +34,11 @@ import java.lang.reflect.Method;
 import java.net.URL;
 import java.time.LocalDate;
 import java.time.LocalTime;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.ResourceBundle;
+
+import javax.xml.stream.XMLStreamException;
 
 public class TrackManagerController implements Initializable, ErrorPopUpController {
 	//TODO : Optische Korrekturen
@@ -114,6 +118,8 @@ public class TrackManagerController implements Initializable, ErrorPopUpControll
 	
 	/**
 	 * set up Menu File
+	 * @throws IOException 
+	 * @throws XMLStreamException 
 	 * 
 	 */
 	
@@ -206,7 +212,6 @@ public class TrackManagerController implements Initializable, ErrorPopUpControll
 
 	@FXML
 	private TextField keywordTextField;
-
 	
 
 	/* Action Handler für die Segment MenuItems
@@ -339,7 +344,7 @@ public class TrackManagerController implements Initializable, ErrorPopUpControll
 			TableRow<Track> row = new TableRow<>();
 			row.setOnMouseClicked(event -> {
 				Track rowData = row.getItem();
-				showSideTable(sideTable, FXCollections.observableArrayList((model.getTrackPoints(rowData))));
+				showSideTable(sideTable, FXCollections.observableArrayList((getTrackPointsOnClick(rowData))));
 			});
 			return row ;});
 
@@ -362,6 +367,10 @@ public class TrackManagerController implements Initializable, ErrorPopUpControll
 		table.setItems(sortedData);
 
 		trackList = (ObservableList<Track>) tl;
+	}
+	
+	private List<TrackPoint> getTrackPointsOnClick(Track track) {
+		return model.getTrackPoints(track);
 	}
 
 	private void showSideTable(TableView table, List<?> tp ){
