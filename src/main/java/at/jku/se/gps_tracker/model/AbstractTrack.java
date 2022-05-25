@@ -9,7 +9,7 @@ public abstract class AbstractTrack {
 	protected static final DateTimeFormatter dtf = DateTimeFormatter.ofPattern("HH:mm:ss");
 	
 	private String name;
-	private double distance;
+	protected double distance;
 	private Duration duration;
 	private int averageBPM;
 	private int maximumBPM;

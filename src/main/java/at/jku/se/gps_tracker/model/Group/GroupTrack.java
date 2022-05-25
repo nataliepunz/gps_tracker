@@ -1,87 +1,20 @@
 package at.jku.se.gps_tracker.model.Group;
 
+import at.jku.se.gps_tracker.model.AbstractTrack;
 import at.jku.se.gps_tracker.model.Track;
 
 import java.time.Duration;
 import java.time.Year;
+import java.util.ArrayList;
 import java.util.List;
 
-public abstract class GroupTrack {
+public abstract class GroupTrack extends AbstractTrack {
 
+
+    protected int year;
+    private List<Track> tracks = new ArrayList<>();
+    private int count = tracks.size();
     private String name;
-    private double distance;
-    private Duration duration;
-    private Duration pace;
-    private double speed;
-    private int averageBPM;
-    private int maxBPM;
-    private double elevation;
-
-    private List<Track> tracks;
-
-    public String getName() {
-        return name;
-    }
-
-    public void setName(String name) {
-        this.name = name;
-    }
-
-    public double getDistance() {
-        return distance;
-    }
-
-    public void setDistance(double distance) {
-        this.distance = distance;
-    }
-
-    public Duration getDuration() {
-        return duration;
-    }
-
-    public void setDuration(Duration duration) {
-        this.duration = duration;
-    }
-
-    public Duration getPace() {
-        return pace;
-    }
-
-    public void setPace(Duration pace) {
-        this.pace = pace;
-    }
-
-    public double getSpeed() {
-        return speed;
-    }
-
-    public void setSpeed(double speed) {
-        this.speed = speed;
-    }
-
-    public int getAverageBPM() {
-        return averageBPM;
-    }
-
-    public void setAverageBPM(int averageBPM) {
-        this.averageBPM = averageBPM;
-    }
-
-    public int getMaxBPM() {
-        return maxBPM;
-    }
-
-    public void setMaxBPM(int maxBPM) {
-        this.maxBPM = maxBPM;
-    }
-
-    public double getElevation() {
-        return elevation;
-    }
-
-    public void setElevation(double elevation) {
-        this.elevation = elevation;
-    }
 
     public List<Track> getTracks() {
         return tracks;
@@ -97,6 +30,20 @@ public abstract class GroupTrack {
         return true;
     }
 
+    public int getWeek()
+    {
+        return 0;
+    }
+
+    public void setName(String name)
+    {
+        this.name = name;
+    }
+
+    public String getName() {
+        return name;
+    }
+
     public Boolean contains(Track track){
         return tracks.contains(track);
     }
@@ -107,10 +54,69 @@ public abstract class GroupTrack {
 
     public void add(Track track){
         tracks.add(track);
+        count = tracks.size();
+        if (tracks.size() <2)
+        {
+            super.distance += track.getDistance();
+            super.setAverageBPM((track.getAverageBPM()));
+            super.setMaximumBPM(track.getMaximumBPM());
+            super.setDuration(track.getDurationNormal());
+            super.setElevation(track.getElevation());
+        }
+        else {
+            super.distance += track.getDistance();
+            super.setAverageBPM(newAverageBPM(track.getAverageBPM()));
+            super.setMaximumBPM(newMaximumBPM(track.getMaximumBPM()));
+            super.setDuration(super.getDurationNormal().plus(track.getDurationNormal()));
+            super.setElevation(newElevation(track.getElevation()));
+        }
     }
 
-    public Year getYear() {
-        //TODO: methode implementieren
-        return null;
+    public int getYear() {
+       return year;
     }
+    @Override
+    public void setDistance(Double distance) {
+        super.distance += distance;
+    }
+
+    public Duration newDuration (Duration duration) {
+
+            Duration dur =  super.getDurationNormal();
+            dur.plus(duration);
+
+        return dur;
+    }
+
+    public double newElevation (double elevation) {
+        double temp = elevation;
+        for (Track t: tracks) {
+            temp += t.getElevation();
+        }
+        return temp / tracks.size();
+    }
+
+    public int newAverageBPM (int averageBPM) {
+        int avg = averageBPM;
+        for (Track t: tracks) {
+            avg += t.getAverageBPM();
+        }
+        return avg / tracks.size();
+    }
+    public int newMaximumBPM (int maxBPM) {
+        int max = 0;
+        for (Track t: tracks) {
+            if (t.getMaximumBPM() > max )
+                max = t.getMaximumBPM();
+        }
+        return max;
+    }
+
+    public int getCount(){
+        return count;
+    }
+
+
+
+
 }

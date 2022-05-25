@@ -9,28 +9,29 @@ import java.util.Map;
 
 public class MonthGroup extends GroupTrack {
 
-    private Month month;
-    private Year year;
+    private int month;
 
-    private Map<Month, List<Track>> tracksMonth;
-
-    public Map<Month, List<Track>> getTracksMonth() {
-        return tracksMonth;
+    public MonthGroup(int month, int year)
+    {
+        super();
+        this.month = month;
+        super.year = year;
+        setName(month, year);
     }
 
-    public void setTracksMonth(Map<Month, List<Track>> tracksMonth) {
-        this.tracksMonth = tracksMonth;
-    }
-
-    public void setMonth(Month month) {
+    public void setMonth(int month) {
         this.month = month;
     }
 
-    public Month getMonth() {
+    public int getMonth() {
         return month;
     }
 
-    public Year getYear() {return year; } //notwendig?
+
+    public void setName(int month, int year){
+        super.setName(month + " " + super.getYear());
+    }
+
 
     @Override
     public String toString() {

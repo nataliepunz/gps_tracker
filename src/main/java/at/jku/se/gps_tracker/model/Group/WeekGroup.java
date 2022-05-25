@@ -4,14 +4,26 @@ import java.time.Year;
 
 public class WeekGroup extends GroupTrack {
 
-    private Week week;
-    private Year year;
+    private int week;
 
-    public Week getWeek() {
+
+    public WeekGroup(int week)
+    {
+        super();
+        this.week = week;
+        setName();
+    }
+
+
+    public void setName() {
+        super.setName("W:" + week);
+    }
+
+    @Override
+    public int getWeek() {
         return week;
     }
 
-    public Year getYear() {return year; } //notwendig?
 
     @Override
     public String toString() {
@@ -19,4 +31,5 @@ public class WeekGroup extends GroupTrack {
                 "week=" + week +
                 '}';
     }
+
 }

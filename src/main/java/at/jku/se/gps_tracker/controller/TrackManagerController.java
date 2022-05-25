@@ -2,8 +2,14 @@ package at.jku.se.gps_tracker.controller;
 
 import at.jku.se.gps_tracker.model.AbstractTrack;
 import at.jku.se.gps_tracker.model.DataModel;
+import at.jku.se.gps_tracker.model.Group.DayGroup;
+import at.jku.se.gps_tracker.model.Group.GroupTrack;
+import at.jku.se.gps_tracker.model.Group.MonthGroup;
+import at.jku.se.gps_tracker.model.Group.WeekGroup;
 import at.jku.se.gps_tracker.model.Track;
-import javafx.beans.property.*;
+import javafx.beans.property.SimpleDoubleProperty;
+import javafx.beans.property.SimpleIntegerProperty;
+import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
 import javafx.collections.FXCollections;
@@ -18,8 +24,6 @@ import javafx.fxml.Initializable;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.chart.BarChart;
-import javafx.scene.chart.CategoryAxis;
-import javafx.scene.chart.NumberAxis;
 import javafx.scene.chart.XYChart;
 import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
@@ -31,18 +35,133 @@ import java.lang.reflect.Method;
 import java.net.URL;
 import java.time.LocalDate;
 import java.time.LocalTime;
+import java.time.temporal.WeekFields;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 import java.util.ResourceBundle;
 
 public class TrackManagerController implements Initializable, ErrorPopUpController {
 	//TODO : Optische Korrekturen
-	private DataModel model;
+	private final DataModel model;
 	private ObservableList<AbstractTrack> trackList;
+	private ObservableList<AbstractTrack> backUp;
 	private ObservableList<String> categories;
 	final private ToggleGroup tgMenuTrack;
 
+
+	private ObservableList<GroupTrack> weeks = FXCollections.observableArrayList();
+	private ObservableList<MonthGroup> months = FXCollections.observableArrayList();
+	private ObservableList<DayGroup> days = FXCollections.observableArrayList();
+
+
+	private void groupAll() {
+
+		groupWeek();
+		groupMonth();
+		groupDay();
+	}
+
+
+
+	private void groupWeek() {
+
+		ObservableList<Track> tracks = FXCollections.observableArrayList();
+
+		for (AbstractTrack at : backUp) {
+			tracks.add((Track) at);
+		}
+		WeekGroup temp = null;
+		for (Track track: tracks)
+		{
+			int week = track.getDate().get(WeekFields.of(Locale.GERMANY).weekOfWeekBasedYear());
+
+			boolean added = false;
+			for (GroupTrack wg: weeks)
+			{
+				if (wg.getWeek() == week)
+				{
+					wg.add(track);
+					added = true;
+					break;
+				}
+			}
+
+			if (added==false)
+				weeks.add(new WeekGroup(week));
+				weeks.get(weeks.size()-1).add(track);
+			}
+		}
+
+	private void groupMonth() {
+
+		ObservableList<Track> tracks = FXCollections.observableArrayList();
+
+		for (AbstractTrack at : backUp) {
+			tracks.add((Track) at);
+		}
+		MonthGroup temp = null;
+		for (Track track: tracks)
+		{
+			int month = track.getDate().getMonthValue();
+			int year = track.getDate().getYear();
+			boolean added = false;
+			for (MonthGroup mg: months)
+			{
+				if (mg.getMonth() == month && mg.getYear() == year)
+				{
+					mg.add(track);
+					added = true;
+					break;
+				}
+			}
+
+			if (added==false)
+				months.add(new MonthGroup(month, year));
+			    months.get(months.size()-1).add(track);
+		}
+	}
+
+	private void groupDay() {
+
+		ObservableList<Track> tracks = FXCollections.observableArrayList();
+
+		for (AbstractTrack at : backUp) {
+			tracks.add((Track) at);
+		}
+		DayGroup temp = null;
+		for (Track track: tracks)
+		{
+			int month = track.getDate().getMonthValue();
+			int year = track.getDate().getYear();
+			LocalDate day = track.getDate();
+			boolean added = false;
+			for (DayGroup dg: days)
+			{
+				if (dg.getDate() == day )
+				{
+					dg.add(track);
+					added = true;
+					break;
+				}
+			}
+
+			if (added==false)
+				days.add(new DayGroup(day));
+			days.get(days.size()-1).add(track);
+		}
+	}
+
+
+
 	@FXML
 	private ToggleGroup tgGraph;
+
+	@FXML
+	private ToggleGroup tgView;
+
+
+
 
 	@FXML
 	private MenuBar menubar;
@@ -115,6 +234,7 @@ public class TrackManagerController implements Initializable, ErrorPopUpControll
 	 *
 	 */
 
+
 	@FXML
 	private void setDirectory(ActionEvent event) {
 		chooseDirectory();
@@ -159,6 +279,8 @@ public class TrackManagerController implements Initializable, ErrorPopUpControll
 
 	private void setUpMenuItems() {
 
+
+
 		mTracks.getItems().clear();
 		RadioMenuItem help;
 		RadioMenuItem first=null;
@@ -181,7 +303,7 @@ public class TrackManagerController implements Initializable, ErrorPopUpControll
 
 
 	@FXML
-	private TableView<AbstractTrack> mainTable;
+	private TableView mainTable;
 
 	@FXML
 	private TableView<AbstractTrack> sideTable;
@@ -250,19 +372,104 @@ public class TrackManagerController implements Initializable, ErrorPopUpControll
 	 * TODO Methoden sinnvoll implementieren */
 	@FXML
 	private void viewDay(ActionEvent event){
-
+		showWeekTable(days);
 	}
 
 	@FXML
 	private void viewMonth(ActionEvent event){
 
+		showWeekTable(months);
 	}
 
 	@FXML
 	private void viewWeek(ActionEvent event){
 
+		showWeekTable(weeks);
 	}
+	private void showWeekTable(ObservableList<?> tl) {
 
+
+
+		mainTable.getColumns().clear();
+	//	mainTable.getItems().clear();
+		trackList.clear();
+
+
+		TableView<GroupTrack> table= new TableView<>();
+
+		//Create columns
+		TableColumn<AbstractTrack, String> nameCol = new TableColumn<>("Name");
+
+		nameCol.setCellValueFactory(cellValue -> new SimpleStringProperty(cellValue.getValue().getName()));
+
+		TableColumn<GroupTrack, Number> countCol = new TableColumn<>("Count");
+		countCol.setCellValueFactory(cellValue -> new SimpleDoubleProperty(cellValue.getValue().getCount()));
+
+		TableColumn<AbstractTrack, Number> distanceCol = new TableColumn<>("Distance");
+		distanceCol.setCellValueFactory(cellValue -> new SimpleDoubleProperty(cellValue.getValue().getDistance()));
+
+		TableColumn<AbstractTrack, String> durationCol= new TableColumn<>("Duration");
+		durationCol.setCellValueFactory(cellValue -> cellValue.getValue().getDurationProperty());
+
+		TableColumn<AbstractTrack, String> paceCol = new TableColumn<>("Pace");
+		paceCol.setCellValueFactory(cellValue -> (cellValue.getValue().getPaceProperty()));
+
+		TableColumn<AbstractTrack, Number> speedCol = new TableColumn<>("Speed");
+		speedCol.setCellValueFactory(cellValue -> new SimpleDoubleProperty((cellValue.getValue().getSpeed())));
+
+		TableColumn<AbstractTrack, Number> avgBpmCol = new TableColumn<>("Average bpm");
+		avgBpmCol.setCellValueFactory(cellValue -> new SimpleIntegerProperty((cellValue.getValue().getAverageBPM())));
+
+		TableColumn<AbstractTrack, Number> maxBpmCol = new TableColumn<>("Max bpm");
+		maxBpmCol.setCellValueFactory(cellValue -> new SimpleIntegerProperty((cellValue.getValue().getMaximumBPM())));
+
+		TableColumn<AbstractTrack, Number> elevationCol = new TableColumn<>("Elevation");
+		elevationCol.setCellValueFactory(cellValue -> new SimpleDoubleProperty((cellValue.getValue().getElevation())));
+
+
+		mainTable.getColumns().addAll(nameCol, countCol, distanceCol, durationCol, paceCol, speedCol, avgBpmCol, maxBpmCol, elevationCol);
+		mainTable.setItems(tl);
+
+		//further adjustments
+		table.getSelectionModel().setSelectionMode(SelectionMode.SINGLE);
+
+	//	mainTable = table;
+		mainTable.refresh();
+
+		//mainTable = table;
+
+		/*
+		// add event for rows
+		table.setRowFactory( tv -> {
+			TableRow<Track> row = new TableRow<>();
+			row.setOnMouseClicked(event -> {
+				Track rowData = row.getItem();
+				showSideTable(sideTable, FXCollections.observableArrayList((model.getTrackPoints(rowData))));
+			});
+			return row ;});
+
+		FilteredList<AbstractTrack> filteredData = new FilteredList<>((ObservableList<AbstractTrack>) tl, b -> true);
+		keywordTextField.textProperty().addListener((observable, oldValue, newValue) -> {
+			filteredData.setPredicate(AbstractTrack -> {
+				if(newValue.isEmpty() || newValue.isBlank() || newValue == null){
+					return true;
+				}
+				String searchKeyword = newValue.toLowerCase();
+				if(AbstractTrack.getName().toLowerCase().indexOf(searchKeyword) > -1) {
+					return true;
+				} else
+					return false;
+			});
+		});
+
+		SortedList<AbstractTrack> sortedData = new SortedList<>(filteredData);
+		sortedData.comparatorProperty().bind(table.comparatorProperty());
+		table.setItems(sortedData);
+
+		trackList = (ObservableList<AbstractTrack>) tl;
+
+*/
+	}
 
 
 	//TODO: UserGuide Methode Implementieren
@@ -275,6 +482,7 @@ public class TrackManagerController implements Initializable, ErrorPopUpControll
 		//clear table
 		table.getItems().clear();
 		table.getColumns().clear();
+
 
 		//Create columns
 		TableColumn<AbstractTrack, String> nameCol = new TableColumn<>("Name");
@@ -330,6 +538,7 @@ public class TrackManagerController implements Initializable, ErrorPopUpControll
 			});
 			return row ;});
 
+
 		FilteredList<AbstractTrack> filteredData = new FilteredList<>((ObservableList<AbstractTrack>) tl, b -> true);
 		keywordTextField.textProperty().addListener((observable, oldValue, newValue) -> {
 			filteredData.setPredicate(AbstractTrack -> {
@@ -345,10 +554,12 @@ public class TrackManagerController implements Initializable, ErrorPopUpControll
 		});
 
 		SortedList<AbstractTrack> sortedData = new SortedList<>(filteredData);
+
+
 		sortedData.comparatorProperty().bind(table.comparatorProperty());
 		table.setItems(sortedData);
 
-		trackList = (ObservableList<AbstractTrack>) tl;
+		//trackList = (ObservableList<AbstractTrack>) tl;
 
 
 	}
@@ -428,11 +639,12 @@ public class TrackManagerController implements Initializable, ErrorPopUpControll
 	public void initialize(URL arg0, ResourceBundle arg1) {
 		chooseDirectory();
 		setUpLists();
+		backUp = trackList;
+		groupAll();
 		setUpMenuTrack();
 		showTrackTable(mainTable, trackList);
 
 		initializeHandlers();
-
 	}
 
 	public void initializeHandlers()
@@ -441,20 +653,24 @@ public class TrackManagerController implements Initializable, ErrorPopUpControll
 		deshalb werden handlers so angelegt, statt in fxml zu definieren
 		 */
 
-		tgGraph.selectedToggleProperty().addListener(new ChangeListener<Toggle>(){
-			public void changed(ObservableValue<? extends Toggle> ov, Toggle old_toggle, Toggle new_toggle) {
-				if (tgGraph.getSelectedToggle() != null) {
-					RadioMenuItem selectedItem = (RadioMenuItem) tgGraph.getSelectedToggle();
-					String method = "get" +selectedItem.getText();
-					try {
-						createBarChart(selectedItem.getText(), method);
-					} catch (NoSuchMethodException e) {
-						e.printStackTrace();
-					} catch (InvocationTargetException e) {
-						e.printStackTrace();
-					} catch (IllegalAccessException e) {
-						e.printStackTrace();
-					}}}});
+		tgGraph.selectedToggleProperty().addListener((ov, old_toggle, new_toggle) -> {
+			if (tgGraph.getSelectedToggle() != null) {
+				RadioMenuItem selectedItem = (RadioMenuItem) tgGraph.getSelectedToggle();
+				String method = "get" + selectedItem.getText();
+				try {
+					createBarChart(selectedItem.getText(), method);
+				} catch (NoSuchMethodException | IllegalAccessException | InvocationTargetException e) {
+					e.printStackTrace();
+				}
+			}
+		});
+
+
+		tgView.selectedToggleProperty().addListener((ov, old_toggle, new_toggle) -> {
+			if (tgView.getSelectedToggle() != null) {
+				RadioMenuItem selectedItem = (RadioMenuItem) tgView.getSelectedToggle();
+				String method = "get" +selectedItem.getText();
+				}});
 
 
 

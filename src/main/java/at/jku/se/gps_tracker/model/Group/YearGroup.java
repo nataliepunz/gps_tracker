@@ -16,9 +16,7 @@ public class YearGroup extends GroupTrack {
         return tracksYear;
     }
 
-    public void setTracksYear(Map<Year, List<Track>> tracksYear) {
-        this.tracksYear = tracksYear;
-    }
+
 
 
     @Override

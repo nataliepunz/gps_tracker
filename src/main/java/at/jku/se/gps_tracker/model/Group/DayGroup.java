@@ -10,14 +10,10 @@ public class DayGroup extends GroupTrack {
 
     private LocalDate date;
 
-    private Map<LocalDate, List<Track>> tracksDay;
-
-    public Map<LocalDate, List<Track>> getTracksDay() {
-        return tracksDay;
-    }
-
-    public void setTracksDay(Map<LocalDate, List<Track>> tracks) {
-        this.tracksDay = tracks;
+    public DayGroup(LocalDate date) {
+        super();
+        this.date = date;
+        setName();
     }
 
     public LocalDate getDate() {
@@ -26,6 +22,10 @@ public class DayGroup extends GroupTrack {
 
     public void setDate(LocalDate date) {
         this.date = date;
+    }
+
+    public void setName(){
+        super.setName(date.toString());
     }
 
     @Override
