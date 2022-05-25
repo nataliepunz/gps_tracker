@@ -1,7 +1,7 @@
 package at.jku.se.gps_tracker.data;
 
 import java.io.File;
-import java.io.IOException;
+import java.io.FileNotFoundException;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;
@@ -126,7 +126,7 @@ public class TracksDB {
 		if(new File(trackFileString).exists()) {
 			try {
 				return parser.getTrackPoints(trackFileString);
-			} catch (XMLStreamException | IOException e) {
+			} catch (XMLStreamException | FileNotFoundException e) {
 				
 			}
 			return new ArrayList<>();
@@ -177,7 +177,7 @@ public class TracksDB {
 		for(String track : driveTracks) {
 			try {
 				t = parser.getTrack(getTrackPath(directoryFolder,track));
-			} catch (XMLStreamException | IOException e) {
+			} catch (XMLStreamException | FileNotFoundException e) {
 				t=null;
 			}
 			if(t!=null) {

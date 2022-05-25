@@ -3,14 +3,12 @@ package at.jku.se.gps_tracker;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import java.io.File;
 import java.net.URISyntaxException;
+import java.nio.file.Paths;
 import java.util.List;
 
 import at.jku.se.gps_tracker.model.DataModel;
@@ -69,6 +67,16 @@ class DataModelUnusualTest {
 		assertEquals(0,directories.size());
 	}
 	
+	@Test
+	void adjustDirectoryFoldersTest() {
+		model.adjustDirectoryFolders();
+	}
+	
+	@Test
+	void emptyDirectoryTest() throws URISyntaxException {
+		model.setDirectory(Paths.get(getClass().getClassLoader().getResource("DataModelandTracksDB/Filter2/help_for_testing.txt").toURI()).toFile().getParentFile().getAbsolutePath());
+		assertEquals(0, model.getDirectoryFolders().size());
+	}
 	
 	
 }

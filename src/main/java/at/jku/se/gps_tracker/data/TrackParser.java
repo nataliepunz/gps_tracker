@@ -61,7 +61,7 @@ public class TrackParser {
 		inputFactory.setProperty(XMLInputFactory.SUPPORT_DTD, false);
 	}
 			
-	public Track getTrack(String file) throws XMLStreamException, IOException{
+	public Track getTrack(String file) throws XMLStreamException, FileNotFoundException{
 		Track track = null;
 		cleanUp();
 		setUpTrackParser(file);
@@ -85,7 +85,7 @@ public class TrackParser {
 		}
 	}
 	
-	public List<TrackPoint> getTrackPoints(String file) throws XMLStreamException, IOException{
+	public List<TrackPoint> getTrackPoints(String file) throws XMLStreamException, FileNotFoundException{
 		return this.getTrack(file).getTrackPoints();
 	}
 	

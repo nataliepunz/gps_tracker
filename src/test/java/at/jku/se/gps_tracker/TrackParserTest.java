@@ -5,6 +5,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import org.junit.jupiter.api.Test;
 
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.net.URISyntaxException;
 import java.nio.file.Paths;
@@ -18,12 +19,6 @@ import javax.xml.stream.XMLStreamException;
 import at.jku.se.gps_tracker.data.TrackParser;
 import at.jku.se.gps_tracker.model.Track;
 import at.jku.se.gps_tracker.model.TrackPoint;
-
-/**
- * missing are the Exception Tests (empty, wrong tags, file not found)
- * @author Ozan
- *
- */
 
 public class TrackParserTest {
 
@@ -241,7 +236,7 @@ public class TrackParserTest {
 	}
 		
 	@Test
-	void correctTCXTrackTest() throws URISyntaxException, XMLStreamException, IOException {
+	void correctTCXTrackTest() throws URISyntaxException, XMLStreamException, FileNotFoundException {
 		Track track = tParser.getTrack(Paths.get(getClass().getClassLoader().getResource("TCXTracks/River_regular.tcx").toURI()).toFile().getAbsolutePath());
 		assertTrue(track!=null);
 		assertEquals("River", track.getName());
@@ -260,7 +255,7 @@ public class TrackParserTest {
 	}
 	
 	@Test
-	void twoNameTagTCXTrackTest() throws URISyntaxException, XMLStreamException, IOException {
+	void twoNameTagTCXTrackTest() throws URISyntaxException, XMLStreamException, FileNotFoundException {
 		Track track = tParser.getTrack(Paths.get(getClass().getClassLoader().getResource("TCXTracks/River_two_trackNames.tcx").toURI()).toFile().getAbsolutePath());
 		assertTrue(track!=null);
 		assertEquals("River_first_tag", track.getName());
@@ -279,7 +274,7 @@ public class TrackParserTest {
 	}
 	
 	@Test
-	void noNameTagTCXTrackTest() throws URISyntaxException, XMLStreamException, IOException {
+	void noNameTagTCXTrackTest() throws URISyntaxException, XMLStreamException, FileNotFoundException {
 		Track track = tParser.getTrack(Paths.get(getClass().getClassLoader().getResource("TCXTracks/River_no_trackName.tcx").toURI()).toFile().getAbsolutePath());
 		assertTrue(track!=null);
 		assertEquals(Duration.ofSeconds((long) 233.9200000+ (long) 100.6000000), track.getDuration());
@@ -297,7 +292,7 @@ public class TrackParserTest {
 	}
 	
 	@Test
-	void noBPMTagsTCXTrackTest() throws URISyntaxException, XMLStreamException, IOException {
+	void noBPMTagsTCXTrackTest() throws URISyntaxException, XMLStreamException, FileNotFoundException {
 		Track track = tParser.getTrack(Paths.get(getClass().getClassLoader().getResource("TCXTracks/River_no_BPM.tcx").toURI()).toFile().getAbsolutePath());
 		assertTrue(track!=null);
 		assertEquals(Duration.ofSeconds((long) 233.9200000+ (long) 100.6000000), track.getDuration());
@@ -315,87 +310,17 @@ public class TrackParserTest {
 	}
 	
 	@Test
-	void noDistanceMetersTagsTCXTrackTest() throws URISyntaxException, XMLStreamException, IOException {
+	void noDistanceMetersTagsTCXTrackTest() throws URISyntaxException, XMLStreamException, FileNotFoundException {
 		assertThrows(XMLStreamException.class, () -> tParser.getTrack(Paths.get(getClass().getClassLoader().getResource("TCXTracks/River_no_distance_meters_Lap_Element.tcx").toURI()).toFile().getAbsolutePath()));
 	}
 	
 	@Test
-	void checkEqualValuesFullTCXTrackTest() throws URISyntaxException, XMLStreamException, IOException {
-		Track track = tParser.getTrack(Paths.get(getClass().getClassLoader().getResource("TCXTracks/River_full.tcx").toURI()).toFile().getAbsolutePath());
-		assertTrue(track!=null);
-		double distanceSumTrackPoint = 0;
-		Duration durationSumTrackPoint = Duration.ofSeconds(0);
-		double elevationSumTrackPoint = 0;
-		for(TrackPoint t : track.getTrackPoints()) {
-			distanceSumTrackPoint+= t.getDistance();
-			durationSumTrackPoint = durationSumTrackPoint.plus(t.getDuration());
-			elevationSumTrackPoint += t.getElevation();
-		}
-		System.out.println("TCX River");
-		System.out.println(track.getDistance());
-		System.out.println(distanceSumTrackPoint);
-		System.out.println(track.getDuration());
-		System.out.println(durationSumTrackPoint);
-		System.out.println(track.getElevation());
-		System.out.println(elevationSumTrackPoint);
-		System.out.println();
-		
-		track = tParser.getTrack(Paths.get(getClass().getClassLoader().getResource("TCXTracks/Greece_full.tcx").toURI()).toFile().getAbsolutePath());
-		assertTrue(track!=null);
-		distanceSumTrackPoint = 0;
-		durationSumTrackPoint = Duration.ofSeconds(0);
-		elevationSumTrackPoint = 0;
-		for(TrackPoint t : track.getTrackPoints()) {
-			distanceSumTrackPoint+= t.getDistance();
-			durationSumTrackPoint = durationSumTrackPoint.plus(t.getDuration());
-			elevationSumTrackPoint += t.getElevation();
-		}
-		System.out.println("TCX Greece");
-		System.out.println(track.getDistance());
-		System.out.println(distanceSumTrackPoint);
-		System.out.println(track.getDuration());
-		System.out.println(durationSumTrackPoint);
-		System.out.println(track.getElevation());
-		System.out.println(elevationSumTrackPoint);
-		System.out.println();
-		
-		track = tParser.getTrack(Paths.get(getClass().getClassLoader().getResource("TCXTracks/Sabino_full.tcx").toURI()).toFile().getAbsolutePath());
-		assertTrue(track!=null);
-		distanceSumTrackPoint = 0;
-		durationSumTrackPoint = Duration.ofSeconds(0);
-		elevationSumTrackPoint = 0;
-		for(TrackPoint t : track.getTrackPoints()) {
-			distanceSumTrackPoint+= t.getDistance();
-			durationSumTrackPoint = durationSumTrackPoint.plus(t.getDuration());
-			elevationSumTrackPoint += t.getElevation();
-		}
-		System.out.println("TCX Sabino");
-		System.out.println(track.getDistance());
-		System.out.println(distanceSumTrackPoint);
-		System.out.println(track.getDuration());
-		System.out.println(durationSumTrackPoint);
-		System.out.println(track.getElevation());
-		System.out.println(elevationSumTrackPoint);
-		System.out.println();
-		
-		track = tParser.getTrack(Paths.get(getClass().getClassLoader().getResource("TCXTracks/Montrael_full.tcx").toURI()).toFile().getAbsolutePath());
-		assertTrue(track!=null);
-		distanceSumTrackPoint = 0;
-		durationSumTrackPoint = Duration.ofSeconds(0);
-		elevationSumTrackPoint = 0;
-		for(TrackPoint t : track.getTrackPoints()) {
-			distanceSumTrackPoint+= t.getDistance();
-			durationSumTrackPoint = durationSumTrackPoint.plus(t.getDuration());
-			elevationSumTrackPoint += t.getElevation();
-		}
-		System.out.println("TCX Montrael");
-		System.out.println(track.getDistance());
-		System.out.println(distanceSumTrackPoint);
-		System.out.println(track.getDuration());
-		System.out.println(durationSumTrackPoint);
-		System.out.println(track.getElevation());
-		System.out.println(elevationSumTrackPoint);
-		System.out.println();
-
+	void foundNoFileTest() {
+		assertThrows(FileNotFoundException.class, () -> tParser.getTrack("UNAVAILABLE FILE TEST"));
+	}
+	
+	@Test
+	void getTrackPointsTest() throws FileNotFoundException, XMLStreamException, URISyntaxException {
+		assertEquals(2, tParser.getTrackPoints(Paths.get(getClass().getClassLoader().getResource("GPXTracks/Koglerau_regular.gpx").toURI()).toFile().getAbsolutePath()).size());
 	}
 }
