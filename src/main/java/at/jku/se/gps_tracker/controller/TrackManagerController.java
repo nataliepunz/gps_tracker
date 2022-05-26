@@ -2,10 +2,7 @@ package at.jku.se.gps_tracker.controller;
 
 import at.jku.se.gps_tracker.model.AbstractTrack;
 import at.jku.se.gps_tracker.model.DataModel;
-import at.jku.se.gps_tracker.model.Group.DayGroup;
-import at.jku.se.gps_tracker.model.Group.GroupTrack;
-import at.jku.se.gps_tracker.model.Group.MonthGroup;
-import at.jku.se.gps_tracker.model.Group.WeekGroup;
+import at.jku.se.gps_tracker.model.Group.*;
 import at.jku.se.gps_tracker.model.Track;
 import javafx.beans.property.SimpleDoubleProperty;
 import javafx.beans.property.SimpleIntegerProperty;
@@ -53,6 +50,7 @@ public class TrackManagerController implements Initializable, ErrorPopUpControll
 	private ObservableList<GroupTrack> weeks = FXCollections.observableArrayList();
 	private ObservableList<MonthGroup> months = FXCollections.observableArrayList();
 	private ObservableList<DayGroup> days = FXCollections.observableArrayList();
+	private ObservableList<YearGroup> years = FXCollections.observableArrayList();
 
 
 	private void groupAll() {
@@ -60,6 +58,7 @@ public class TrackManagerController implements Initializable, ErrorPopUpControll
 		groupWeek();
 		groupMonth();
 		groupDay();
+		groupYear();
 	}
 
 
@@ -149,6 +148,36 @@ public class TrackManagerController implements Initializable, ErrorPopUpControll
 			if (added==false)
 				days.add(new DayGroup(day));
 			days.get(days.size()-1).add(track);
+		}
+	}
+
+	private void groupYear() {
+
+		ObservableList<Track> tracks = FXCollections.observableArrayList();
+
+		for (AbstractTrack at : backUp) {
+			tracks.add((Track) at);
+		}
+		YearGroup temp = null;
+		for (Track track: tracks)
+		{
+
+			int year = track.getDate().getYear();
+			LocalDate day = track.getDate();
+			boolean added = false;
+			for (YearGroup dg: years)
+			{
+				if (dg.getYear() == year )
+				{
+					dg.add(track);
+					added = true;
+					break;
+				}
+			}
+
+			if (added==false)
+				years.add(new YearGroup(year));
+				years.get(years.size()-1).add(track);
 		}
 	}
 
@@ -368,34 +397,13 @@ public class TrackManagerController implements Initializable, ErrorPopUpControll
 
 	}
 
-	/* Action Handler für die View MenuItems
-	 * TODO Methoden sinnvoll implementieren */
-	@FXML
-	private void viewDay(ActionEvent event){
-		showWeekTable(days);
-	}
 
-	@FXML
-	private void viewMonth(ActionEvent event){
-
-		showWeekTable(months);
-	}
-
-	@FXML
-	private void viewWeek(ActionEvent event){
-
-		showWeekTable(weeks);
-	}
-	private void showWeekTable(ObservableList<?> tl) {
-
-
+	private void showGroupTable(ObservableList<?> tl) {
 
 		mainTable.getColumns().clear();
-	//	mainTable.getItems().clear();
-		trackList.clear();
+		trackList.clear(); // weil sortedlist kann nicht gelöscht werden
 
-
-		TableView<GroupTrack> table= new TableView<>();
+		//TableView<GroupTrack> table= new TableView<>();
 
 		//Create columns
 		TableColumn<AbstractTrack, String> nameCol = new TableColumn<>("Name");
@@ -431,44 +439,8 @@ public class TrackManagerController implements Initializable, ErrorPopUpControll
 		mainTable.setItems(tl);
 
 		//further adjustments
-		table.getSelectionModel().setSelectionMode(SelectionMode.SINGLE);
-
-	//	mainTable = table;
+		mainTable.getSelectionModel().setSelectionMode(SelectionMode.SINGLE);
 		mainTable.refresh();
-
-		//mainTable = table;
-
-		/*
-		// add event for rows
-		table.setRowFactory( tv -> {
-			TableRow<Track> row = new TableRow<>();
-			row.setOnMouseClicked(event -> {
-				Track rowData = row.getItem();
-				showSideTable(sideTable, FXCollections.observableArrayList((model.getTrackPoints(rowData))));
-			});
-			return row ;});
-
-		FilteredList<AbstractTrack> filteredData = new FilteredList<>((ObservableList<AbstractTrack>) tl, b -> true);
-		keywordTextField.textProperty().addListener((observable, oldValue, newValue) -> {
-			filteredData.setPredicate(AbstractTrack -> {
-				if(newValue.isEmpty() || newValue.isBlank() || newValue == null){
-					return true;
-				}
-				String searchKeyword = newValue.toLowerCase();
-				if(AbstractTrack.getName().toLowerCase().indexOf(searchKeyword) > -1) {
-					return true;
-				} else
-					return false;
-			});
-		});
-
-		SortedList<AbstractTrack> sortedData = new SortedList<>(filteredData);
-		sortedData.comparatorProperty().bind(table.comparatorProperty());
-		table.setItems(sortedData);
-
-		trackList = (ObservableList<AbstractTrack>) tl;
-
-*/
 	}
 
 
@@ -669,7 +641,27 @@ public class TrackManagerController implements Initializable, ErrorPopUpControll
 		tgView.selectedToggleProperty().addListener((ov, old_toggle, new_toggle) -> {
 			if (tgView.getSelectedToggle() != null) {
 				RadioMenuItem selectedItem = (RadioMenuItem) tgView.getSelectedToggle();
-				String method = "get" +selectedItem.getText();
+
+				if (selectedItem.getText().equals("Week"))
+				{
+					showGroupTable(weeks);
+				}
+
+				else if (selectedItem.getText().equals("Day"))
+				{
+					showGroupTable(days);
+				}
+
+				else if (selectedItem.getText().equals("Month"))
+				{
+					showGroupTable(months);
+				}
+
+
+				else if (selectedItem.getText().equals("Year"))
+				{
+					showGroupTable(years);
+				}
 				}});
 
 
