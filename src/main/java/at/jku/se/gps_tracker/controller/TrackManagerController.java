@@ -83,9 +83,9 @@ public class TrackManagerController implements Initializable, ErrorPopUpControll
 				}
 			}
 
-			if (added==false)
+			if (added==false){
 				weeks.add(new WeekGroup(week, year));
-				weeks.get(weeks.size()-1).add(track);
+				weeks.get(weeks.size()-1).add(track);}
 			}
 		}
 
@@ -112,9 +112,9 @@ public class TrackManagerController implements Initializable, ErrorPopUpControll
 				}
 			}
 
-			if (added==false)
+			if (added==false){
 				months.add(new MonthGroup(month, year));
-			    months.get(months.size()-1).add(track);
+			    months.get(months.size()-1).add(track);}
 		}
 
 		Comparator<MonthGroup> comparator = Comparator.comparingInt(MonthGroup::getMonth);
@@ -148,9 +148,9 @@ public class TrackManagerController implements Initializable, ErrorPopUpControll
 				}
 			}
 
-			if (added==false)
+			if (added==false){
 				days.add(new DayGroup(day));
-			days.get(days.size()-1).add(track);
+			days.get(days.size()-1).add(track);}
 		}
 	}
 
@@ -178,9 +178,9 @@ public class TrackManagerController implements Initializable, ErrorPopUpControll
 				}
 			}
 
-			if (added==false)
+			if (added==false){
 				years.add(new YearGroup(year));
-				years.get(years.size()-1).add(track);
+				years.get(years.size()-1).add(track);}
 		}
 	}
 
@@ -582,22 +582,81 @@ public class TrackManagerController implements Initializable, ErrorPopUpControll
 
 
 	@FXML BarChart chart;
-	private void createBarChart(String name, String methodName) throws NoSuchMethodException, InvocationTargetException, IllegalAccessException {
+
+
+	private void createBarChart(String name, String methodName, ObservableList<?> list ) throws NoSuchMethodException, InvocationTargetException, IllegalAccessException {
 
 		Method method = new Track().getClass().getMethod(methodName);
 
 		chart.setTitle(name);
 		chart.getXAxis().setLabel("Track Name");
-		chart.getYAxis().setLabel("Value");
+		System.out.println(methodName);
+
+
+		switch (methodName) {
+			case "getDistance":
+				chart.getYAxis().setLabel("Distance");
+				break;
+			case "getElevation":
+				chart.getYAxis().setLabel("Elevation");
+				break;
+			case "getDuration":
+				chart.getYAxis().setLabel("Duration");
+				break;
+			case "getHeartbeat":
+				chart.getYAxis().setLabel("HeartBeat");
+				break;
+			case "getSpeed":
+				chart.getYAxis().setLabel("getSpeed");
+				break;
+			default:
+				chart.getYAxis().setLabel("");
+		}
 
 		chart.getData().clear();
 		chart.layout();
 		XYChart.Series xy = new XYChart.Series();
 		xy.setName(name);
-		for (AbstractTrack at: trackList)
-		{
-			xy.getData().add(new XYChart.Data(at.getName(), method.invoke(at)));
+
+
+		if (list == trackList) {
+			for (AbstractTrack at : trackList) {
+				xy.getData().add(new XYChart.Data(at.getName(), method.invoke(at)));
+			}
 		}
+
+		else if (list == weeks)
+		{
+			chart.getXAxis().setLabel("Wochen");
+
+			for (GroupTrack gt: weeks)
+				xy.getData().add(new XYChart.Data(gt.getName(), method.invoke(gt)));
+		}
+
+		else if (list == days)
+		{
+			chart.getXAxis().setLabel("Tage");
+
+			for (GroupTrack gt: days)
+				xy.getData().add(new XYChart.Data(gt.getName(), method.invoke(gt)));
+		}
+
+		else if (list == months)
+		{
+			chart.getXAxis().setLabel("Monate");
+
+			for (GroupTrack gt: months)
+				xy.getData().add(new XYChart.Data(gt.getName(), method.invoke(gt)));
+		}
+
+		else if (list == years)
+		{
+			chart.getXAxis().setLabel("Jahre");
+
+			for (GroupTrack gt: years)
+				xy.getData().add(new XYChart.Data(gt.getName(), method.invoke(gt)));
+		}
+
 		chart.setData(FXCollections.observableArrayList(xy));
 
 	}
@@ -605,7 +664,7 @@ public class TrackManagerController implements Initializable, ErrorPopUpControll
 	/* aktualiesiert chart nach änderung der kategorie */
 	private void changeChart() throws InvocationTargetException, NoSuchMethodException, IllegalAccessException {
 		RadioMenuItem rmi = (RadioMenuItem)	tgGraph.getSelectedToggle();
-		createBarChart(rmi.getText(), "get"+rmi.getText());
+		createBarChart(rmi.getText(), "get"+rmi.getText(), trackList);
 	}
 
 
@@ -630,12 +689,66 @@ public class TrackManagerController implements Initializable, ErrorPopUpControll
 		tgGraph.selectedToggleProperty().addListener((ov, old_toggle, new_toggle) -> {
 			if (tgGraph.getSelectedToggle() != null) {
 				RadioMenuItem selectedItem = (RadioMenuItem) tgGraph.getSelectedToggle();
+				RadioMenuItem rmi = (RadioMenuItem) tgView.getSelectedToggle();
+
 				String method = "get" + selectedItem.getText();
+
+				if (rmi!=null)
+				{
+					if (rmi.getText().equals("Week")) {
+						try {
+							createBarChart(selectedItem.getText(), method, weeks);
+						} catch (NoSuchMethodException e) {
+							e.printStackTrace();
+						} catch (InvocationTargetException e) {
+							e.printStackTrace();
+						} catch (IllegalAccessException e) {
+							e.printStackTrace();
+						}
+					}
+
+					else if (rmi.getText().equals("Month")) {
+						try {
+							createBarChart(selectedItem.getText(), method, months);
+						} catch (NoSuchMethodException e) {
+							e.printStackTrace();
+						} catch (InvocationTargetException e) {
+							e.printStackTrace();
+						} catch (IllegalAccessException e) {
+							e.printStackTrace();
+						}
+					}
+
+					else if (rmi.getText().equals("Day")) {
+						try {
+							createBarChart(selectedItem.getText(), method, days);
+						} catch (NoSuchMethodException e) {
+							e.printStackTrace();
+						} catch (InvocationTargetException e) {
+							e.printStackTrace();
+						} catch (IllegalAccessException e) {
+							e.printStackTrace();
+						}
+					}
+
+					else if (rmi.getText().equals("Year")) {
+						try {
+							createBarChart(selectedItem.getText(), method, years);
+						} catch (NoSuchMethodException e) {
+							e.printStackTrace();
+						} catch (InvocationTargetException e) {
+							e.printStackTrace();
+						} catch (IllegalAccessException e) {
+							e.printStackTrace();
+						}
+					}
+				}
+				else {
 				try {
-					createBarChart(selectedItem.getText(), method);
+					createBarChart(selectedItem.getText(), method, trackList);
 				} catch (NoSuchMethodException | IllegalAccessException | InvocationTargetException e) {
 					e.printStackTrace();
-				}
+				}}
 			}
 		});
 
@@ -643,26 +756,74 @@ public class TrackManagerController implements Initializable, ErrorPopUpControll
 		tgView.selectedToggleProperty().addListener((ov, old_toggle, new_toggle) -> {
 			if (tgView.getSelectedToggle() != null) {
 				RadioMenuItem selectedItem = (RadioMenuItem) tgView.getSelectedToggle();
+				RadioMenuItem rmi = (RadioMenuItem) tgGraph.getSelectedToggle();
+				String method = null;
+				if (rmi!= null)
+				{ method = "get" + rmi.getText();}
 
 				if (selectedItem.getText().equals("Week"))
 				{
 					showGroupTable(weeks);
+
+					if (rmi!= null){
+					try {
+						createBarChart(selectedItem.getText(), method, weeks);
+					} catch (NoSuchMethodException e) {
+						e.printStackTrace();
+					} catch (InvocationTargetException e) {
+						e.printStackTrace();
+					} catch (IllegalAccessException e) {
+						e.printStackTrace();
+					}}
 				}
 
 				else if (selectedItem.getText().equals("Day"))
 				{
 					showGroupTable(days);
+
+					if (rmi!= null){
+					try {
+						createBarChart(selectedItem.getText(), method, days);
+					} catch (NoSuchMethodException e) {
+						e.printStackTrace();
+					} catch (InvocationTargetException e) {
+						e.printStackTrace();
+					} catch (IllegalAccessException e) {
+						e.printStackTrace();
+					}}
 				}
 
 				else if (selectedItem.getText().equals("Month"))
 				{
 					showGroupTable(months);
+
+					if (rmi!= null){
+					try {
+						createBarChart(selectedItem.getText(), method, months);
+					} catch (NoSuchMethodException e) {
+						e.printStackTrace();
+					} catch (InvocationTargetException e) {
+						e.printStackTrace();
+					} catch (IllegalAccessException e) {
+						e.printStackTrace();
+					}}
 				}
 
 
 				else if (selectedItem.getText().equals("Year"))
 				{
 					showGroupTable(years);
+
+					if (rmi!= null){
+					try {
+						createBarChart(selectedItem.getText(), method, years);
+					} catch (NoSuchMethodException e) {
+						e.printStackTrace();
+					} catch (InvocationTargetException e) {
+						e.printStackTrace();
+					} catch (IllegalAccessException e) {
+						e.printStackTrace();
+					}}
 				}
 				}});
 

@@ -14,6 +14,9 @@ public abstract class AbstractTrack {
 	private int averageBPM;
 	private int maximumBPM;
 	private double elevation;
+	protected double speed;
+	protected Duration pace;
+
 	
 	protected AbstractTrack() {
 
@@ -75,6 +78,15 @@ public abstract class AbstractTrack {
 	public void setMaximumBPM(int maximumBPM) {
 		this.maximumBPM = maximumBPM;
 	}
+
+	public void setSpeed(){
+		this.speed = calculateSpeed();
+	}
+
+	public void setPace() {
+		pace = calculatePace();
+	}
+
 
 	public Double getElevation() {
 		return doubleFormatter(elevation);

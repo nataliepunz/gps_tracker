@@ -62,6 +62,8 @@ public abstract class GroupTrack extends AbstractTrack {
             super.setMaximumBPM(track.getMaximumBPM());
             super.setDuration(track.getDurationNormal());
             super.setElevation(track.getElevation());
+            setSpeed(track.getSpeed());
+            setPace(track.getPace());
         }
         else {
             super.distance += track.getDistance();
@@ -69,9 +71,21 @@ public abstract class GroupTrack extends AbstractTrack {
             super.setMaximumBPM(newMaximumBPM(track.getMaximumBPM()));
             super.setDuration(super.getDurationNormal().plus(track.getDurationNormal()));
             super.setElevation(newElevation(track.getElevation()));
+            setSpeed(newSpeed(track.getSpeed()));
+            setPace(Duration.ofMinutes(newPace(track.getPace())));
         }
     }
 
+
+    public void setSpeed(double speed)
+    {
+        super.speed = speed;
+    }
+
+    public void setPace(Duration pace)
+    {
+        super.pace = pace;
+    }
     public int getYear() {
        return year;
     }
@@ -88,12 +102,28 @@ public abstract class GroupTrack extends AbstractTrack {
         return dur;
     }
 
+    public double newSpeed (Double speed) {
+        double temp = speed;
+        for (Track t: tracks) {
+            temp += t.getSpeed();
+        }
+        return temp / tracks.size();
+    }
+
     public double newElevation (double elevation) {
         double temp = elevation;
         for (Track t: tracks) {
             temp += t.getElevation();
         }
         return temp / tracks.size();
+    }
+
+    public long newPace (Duration pace) {
+        Duration temp = pace;
+        for (Track t: tracks) {
+            temp.plus(t.getPace());
+        }
+        return temp.toMinutes() / tracks.size();
     }
 
     public int newAverageBPM (int averageBPM) {
