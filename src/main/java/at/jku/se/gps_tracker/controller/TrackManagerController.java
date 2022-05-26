@@ -33,10 +33,7 @@ import java.net.URL;
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.time.temporal.WeekFields;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Locale;
-import java.util.ResourceBundle;
+import java.util.*;
 
 public class TrackManagerController implements Initializable, ErrorPopUpController {
 	//TODO : Optische Korrekturen
@@ -119,7 +116,13 @@ public class TrackManagerController implements Initializable, ErrorPopUpControll
 				months.add(new MonthGroup(month, year));
 			    months.get(months.size()-1).add(track);
 		}
+
+		Comparator<MonthGroup> comparator = Comparator.comparingInt(MonthGroup::getMonth);
+		FXCollections.sort(months, comparator);
 	}
+
+
+
 
 	private void groupDay() {
 
@@ -434,6 +437,11 @@ public class TrackManagerController implements Initializable, ErrorPopUpControll
 
 		//further adjustments
 		mainTable.getSelectionModel().setSelectionMode(SelectionMode.SINGLE);
+
+
+		if (tl != months) //months cannot be sorted just by string name, added comparator above
+		{mainTable.getSortOrder().add(nameCol);
+		mainTable.sort();}
 		mainTable.refresh();
 	}
 

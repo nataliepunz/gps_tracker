@@ -39,7 +39,15 @@ public class WeekGroup extends GroupTrack {
 
     public void setName() {
         SimpleDateFormat sdf = new SimpleDateFormat("dd.MM");
-        super.setName("w" + week + " (" + sdf.format(getFirstDayOfWeek(week).getTime()) + " - " + sdf.format(getLastDayOfWeek(week).getTime()) + "."+ getYear() + ")");
+
+        String weekStr = Integer.toString(week);
+
+        if (week <10)
+        {
+            weekStr = String.format("%02d", week);;
+        }
+
+        super.setName("W: " + weekStr + " (" + sdf.format(getFirstDayOfWeek(week).getTime()) + " - " + sdf.format(getLastDayOfWeek(week).getTime()) + "."+ getYear() + ")");
     }
 
     @Override
