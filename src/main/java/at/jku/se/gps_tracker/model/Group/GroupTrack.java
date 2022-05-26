@@ -11,7 +11,7 @@ import java.util.List;
 public abstract class GroupTrack extends AbstractTrack {
 
 
-    protected int year;
+    protected static int year;
     private List<Track> tracks = new ArrayList<>();
     private int count = tracks.size();
     private String name;

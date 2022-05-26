@@ -1,13 +1,8 @@
 package at.jku.se.gps_tracker.model.Group;
 
-import at.jku.se.gps_tracker.model.Track;
-
 import java.time.Month;
-import java.time.Year;
 import java.time.format.TextStyle;
-import java.util.List;
 import java.util.Locale;
-import java.util.Map;
 
 public class MonthGroup extends GroupTrack {
 
@@ -21,10 +16,6 @@ public class MonthGroup extends GroupTrack {
         setName();
     }
 
-    public void setMonth(int month) {
-        this.month = month;
-    }
-
     public int getMonth() {
         return month;
     }
@@ -34,7 +25,6 @@ public class MonthGroup extends GroupTrack {
         String monthName =  Month.of(month).getDisplayName(TextStyle.FULL_STANDALONE ,Locale.GERMANY);
         super.setName(monthName + " " + super.getYear());
     }
-
 
     @Override
     public String toString() {

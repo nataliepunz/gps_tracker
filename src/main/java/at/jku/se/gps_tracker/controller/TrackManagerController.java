@@ -74,11 +74,11 @@ public class TrackManagerController implements Initializable, ErrorPopUpControll
 		for (Track track: tracks)
 		{
 			int week = track.getDate().get(WeekFields.of(Locale.GERMANY).weekOfWeekBasedYear());
-
+			int year = track.getDate().getYear();
 			boolean added = false;
 			for (GroupTrack wg: weeks)
 			{
-				if (wg.getWeek() == week)
+				if (wg.getWeek() == week && wg.getYear() == year)
 				{
 					wg.add(track);
 					added = true;
@@ -87,7 +87,7 @@ public class TrackManagerController implements Initializable, ErrorPopUpControll
 			}
 
 			if (added==false)
-				weeks.add(new WeekGroup(week));
+				weeks.add(new WeekGroup(week, year));
 				weeks.get(weeks.size()-1).add(track);
 			}
 		}
@@ -257,12 +257,6 @@ public class TrackManagerController implements Initializable, ErrorPopUpControll
 			}
 		});
 	}
-
-	/**
-	 * set up Menu File
-	 *
-	 */
-
 
 	@FXML
 	private void setDirectory(ActionEvent event) {
