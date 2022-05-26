@@ -4,7 +4,9 @@ import at.jku.se.gps_tracker.model.Track;
 
 import java.time.Month;
 import java.time.Year;
+import java.time.format.TextStyle;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 
 public class MonthGroup extends GroupTrack {
@@ -16,7 +18,7 @@ public class MonthGroup extends GroupTrack {
         super();
         this.month = month;
         super.year = year;
-        setName(month, year);
+        setName();
     }
 
     public void setMonth(int month) {
@@ -28,8 +30,9 @@ public class MonthGroup extends GroupTrack {
     }
 
 
-    public void setName(int month, int year){
-        super.setName(month + " " + super.getYear());
+    public void setName(){
+        String monthName =  Month.of(month).getDisplayName(TextStyle.FULL_STANDALONE ,Locale.GERMANY);
+        super.setName(monthName + " " + super.getYear());
     }
 
 
