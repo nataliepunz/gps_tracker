@@ -1,7 +1,7 @@
 package at.jku.se.gps_tracker.app;
 
-import at.jku.se.gps_tracker.model.DataModel;
 import at.jku.se.gps_tracker.controller.TrackManagerController;
+import at.jku.se.gps_tracker.model.DataModel;
 import javafx.application.Application;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;

@@ -1,6 +1,4 @@
-package at.jku.se.gps_tracker.model.Group;
-
-import at.jku.se.gps_tracker.model.Track;
+package at.jku.se.gps_tracker.Group;
 
 
 public class YearGroup extends GroupTrack {

@@ -1,4 +1,4 @@
-package at.jku.se.gps_tracker.model.Group;
+package at.jku.se.gps_tracker.Group;
 
 import at.jku.se.gps_tracker.model.AbstractTrack;
 import at.jku.se.gps_tracker.model.Track;

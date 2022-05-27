@@ -1,8 +1,9 @@
 	package at.jku.se.gps_tracker.controller;
 
+		import at.jku.se.gps_tracker.Group.*;
 		import at.jku.se.gps_tracker.model.AbstractTrack;
 		import at.jku.se.gps_tracker.model.DataModel;
-		import at.jku.se.gps_tracker.model.Group.*;
+
 		import at.jku.se.gps_tracker.model.Track;
 		import javafx.application.Platform;
 		import javafx.beans.property.*;

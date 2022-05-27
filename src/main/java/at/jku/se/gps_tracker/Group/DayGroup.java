@@ -1,10 +1,6 @@
-package at.jku.se.gps_tracker.model.Group;
-
-import at.jku.se.gps_tracker.model.Track;
-
+package at.jku.se.gps_tracker.Group;
 import java.time.LocalDate;
-import java.util.List;
-import java.util.Map;
+
 
 public class DayGroup extends GroupTrack {
 
