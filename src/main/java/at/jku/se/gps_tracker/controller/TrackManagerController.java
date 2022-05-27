@@ -45,10 +45,10 @@ public class TrackManagerController implements Initializable, ErrorPopUpControll
 	private ObservableList<String> categories;
 	final private ToggleGroup tgMenuTrack;
 
-	private ObservableList<GroupTrack> weeks = FXCollections.observableArrayList();
-	private ObservableList<MonthGroup> months = FXCollections.observableArrayList();
-	private ObservableList<DayGroup> days = FXCollections.observableArrayList();
-	private ObservableList<YearGroup> years = FXCollections.observableArrayList();
+	final private ObservableList<GroupTrack> weeks = FXCollections.observableArrayList();
+	final private ObservableList<MonthGroup> months = FXCollections.observableArrayList();
+	final private ObservableList<DayGroup> days = FXCollections.observableArrayList();
+	final private ObservableList<YearGroup> years = FXCollections.observableArrayList();
 
 
 	@FXML
@@ -111,11 +111,7 @@ public class TrackManagerController implements Initializable, ErrorPopUpControll
 				RadioMenuItem selectedItem = (RadioMenuItem) tgMenuTrack.getSelectedToggle();
 				try {
 					changeCategory(selectedItem.getText());
-				} catch (InvocationTargetException e) {
-					e.printStackTrace();
-				} catch (NoSuchMethodException e) {
-					e.printStackTrace();
-				} catch (IllegalAccessException e) {
+				} catch (InvocationTargetException | IllegalAccessException | NoSuchMethodException e) {
 					e.printStackTrace();
 				}
 			}
@@ -340,18 +336,13 @@ public class TrackManagerController implements Initializable, ErrorPopUpControll
 			return row ;});
 
 		FilteredList<AbstractTrack> filteredData = new FilteredList<>((ObservableList<AbstractTrack>) tl, b -> true);
-		keywordTextField.textProperty().addListener((observable, oldValue, newValue) -> {
-			filteredData.setPredicate(AbstractTrack -> {
-				if(newValue.isEmpty() || newValue.isBlank() || newValue == null){
-					return true;
-				}
-				String searchKeyword = newValue.toLowerCase();
-				if(AbstractTrack.getName().toLowerCase().indexOf(searchKeyword) > -1) {
-					return true;
-				} else
-					return false;
-			});
-		});
+		keywordTextField.textProperty().addListener((observable, oldValue, newValue) -> filteredData.setPredicate(AbstractTrack -> {
+			if(newValue.isEmpty() || newValue.isBlank() || newValue == null){
+				return true;
+			}
+			String searchKeyword = newValue.toLowerCase();
+			return AbstractTrack.getName().toLowerCase().indexOf(searchKeyword) > -1;
+		}));
 
 		SortedList<AbstractTrack> sortedData = new SortedList<>(filteredData);
 		sortedData.comparatorProperty().bind(table.comparatorProperty());
@@ -463,28 +454,17 @@ public class TrackManagerController implements Initializable, ErrorPopUpControll
 
 		System.out.println(methodName);
 
-		Method method = new Track().getClass().getMethod(methodName);
+		Method method = Track.class.getMethod(methodName);
 		chart.setTitle(name);
 		chart.getXAxis().setLabel("Track Name");
 
 		switch (methodName) {
-			case "getDistance":
-				chart.getYAxis().setLabel("Distance");
-				break;
-			case "getElevation":
-				chart.getYAxis().setLabel("Elevation");
-				break;
-			case "getDuration":
-				chart.getYAxis().setLabel("Duration");
-				break;
-			case "getHeartbeat":
-				chart.getYAxis().setLabel("HeartBeat");
-				break;
-			case "getSpeed":
-				chart.getYAxis().setLabel("getSpeed");
-				break;
-			default:
-				chart.getYAxis().setLabel("");
+			case "getDistance" -> chart.getYAxis().setLabel("Distance");
+			case "getElevation" -> chart.getYAxis().setLabel("Elevation");
+			case "getDurationMinutes" -> chart.getYAxis().setLabel("Duration");
+			case "getHeartbeat" -> chart.getYAxis().setLabel("HeartBeat");
+			case "getSpeed" -> chart.getYAxis().setLabel("getSpeed");
+			default -> chart.getYAxis().setLabel("");
 		}
 
 		chart.getData().clear();
