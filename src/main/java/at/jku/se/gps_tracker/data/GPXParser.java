@@ -3,8 +3,9 @@ package at.jku.se.gps_tracker.data;
 import java.io.File;
 import java.time.Duration;
 import java.time.Instant;
-import java.util.ArrayList;
-import java.util.List;
+import java.time.LocalDate;
+import java.time.LocalTime;
+import java.time.ZoneId;
 
 import javax.xml.stream.XMLStreamException;
 import javax.xml.stream.XMLStreamReader;
@@ -15,48 +16,50 @@ import at.jku.se.gps_tracker.model.Track;
 import at.jku.se.gps_tracker.model.TrackPoint;
 
 class GPXParser extends TrackParser{
-		
-	GPXParser(){
-		// per Track
-		trackPointsList = new ArrayList<>();
-		trackTimeDate = null;
-		totalDistance = 0;
-		totalElevation = 0;
-		totalDuration = Duration.ofSeconds(0);
-				
-		// for TrackPoints themselves
-		trackPointNr = 1;
-		
-		//data about previous trackPoint
-		prevTrackPointTime = null;
-		prevTrackPointElevation = 0;
-		prevTrackPointElevationSet = false;
-		prevTrackPointLatitude = 0;
-		prevTrackPointLongtitude = 0;
-		prevTrackPointCoordinatesSet = false;	
-	}
-	
-	List<TrackPoint> readGPXTrackPoints(XMLStreamReader streamReader) throws XMLStreamException {
-		readTrack(streamReader);
-		return trackPointsList;
-	}
-	
-	Track readGPXTrack(String file, XMLStreamReader streamReader) throws XMLStreamException {
+
+	static Track readGPXTrack(String file, XMLStreamReader streamReader) throws XMLStreamException {
+		resetFields();
 		readTrack(streamReader);
 		return createGPXTrack(file);
 	}
-	
-	private void readTrack(XMLStreamReader streamReader) throws XMLStreamException {
+
+	private static void readTrack(XMLStreamReader streamReader) throws XMLStreamException {
 		while (streamReader.hasNext()) {
-			if (streamReader.isStartElement() && streamReader.getLocalName().equals("trkpt")) {
-				manageGPXTrackPointElement(streamReader);
+			if (streamReader.isStartElement() && streamReader.getLocalName().equals("trk")) {
+				manageGPXTracks(streamReader);
 			}
 			streamReader.next();
 		}
 		streamReader.close();
 	}
-	
-	private void manageGPXTrackPointElement(XMLStreamReader streamReader) throws NumberFormatException, XMLStreamException {
+
+	private static void manageGPXTracks(XMLStreamReader streamReader) throws XMLStreamException {
+		while (streamReader.hasNext()) {
+			streamReader.next();
+			if (streamReader.isStartElement()) {
+				switch(streamReader.getLocalName()) {
+					case "name" :{
+						if(trackName==null) {
+							trackName = streamReader.getElementText();
+						}
+						break;
+					}
+					case "trkpt" :{
+						manageGPXTrackPointElement(streamReader);
+						break;
+					}
+					default :{
+						break;
+					}
+				}
+			}
+			if(streamReader.isEndElement() && "trk".equals(streamReader.getLocalName())) {
+				break;
+			}
+		}
+	}
+
+	private static void manageGPXTrackPointElement(XMLStreamReader streamReader) throws XMLStreamException {
 		trackPointElevation = 0;
 		trackPointElevationChange = 0;
 		trackPointElevationSet = false;
@@ -85,7 +88,7 @@ class GPXParser extends TrackParser{
 					}
 				}
 			}
-			
+
 			if(streamReader.isEndElement() && "trkpt".equals(streamReader.getLocalName())) {
 				createGPXTrackPoint();
 				break;
@@ -93,20 +96,20 @@ class GPXParser extends TrackParser{
 		}
 	}
 
-	private void calculateGPXElevation(XMLStreamReader streamReader) throws NumberFormatException, XMLStreamException {
+	private static void calculateGPXElevation(XMLStreamReader streamReader) throws XMLStreamException {
 		trackPointElevation = Double.parseDouble(streamReader.getElementText());
 		trackPointElevationSet = true;
 		if(!prevTrackPointElevationSet) {
 			prevTrackPointElevation = trackPointElevation;
-			prevTrackPointElevationSet=true;
+			prevTrackPointElevationSet = true;
 		}
 		if(trackPointElevation>prevTrackPointElevation) {
 			trackPointElevationChange = trackPointElevation - prevTrackPointElevation;
 			totalElevation += trackPointElevationChange;
 		}
 	}
-	
-	private void calculateGPXTime(XMLStreamReader streamReader) throws XMLStreamException {
+
+	private static void calculateGPXTime(XMLStreamReader streamReader) throws XMLStreamException {
 		trackPointTimePoint = Instant.parse(streamReader.getElementText());
 		if(trackTimeDate==null) {
 			trackTimeDate = trackPointTimePoint;
@@ -118,8 +121,8 @@ class GPXParser extends TrackParser{
 		totalDuration = totalDuration.plus(trackPointDuration);
 		prevTrackPointTime = trackPointTimePoint;
 	}
-	
-	private void createGPXTrackPoint() {
+
+	private static void createGPXTrackPoint() {
 		if(!trackPointElevationSet){
 			trackPointElevation = prevTrackPointElevation;
 		}
@@ -133,16 +136,19 @@ class GPXParser extends TrackParser{
 			prevTrackPointElevation = trackPointElevation;
 		}
 	}
-	
-	private Track createGPXTrack(String file) {
+
+	private static Track createGPXTrack(String file) {
 		if(trackTimeDate==null) {
 			trackTimeDate = Instant.now();
 		}
-		return new Track.TrackBuilder(new File(file).getParentFile().getName(),FilenameUtils.getName(file), trackTimeDate)
-					.distance(totalDistance)
-					.duration(totalDuration)
-					.elevation(totalElevation)
-					.trackPoints(trackPointsList)
-					.build();
-	}	
+		if(trackName==null) {
+			trackName=FilenameUtils.getName(file);
+		}
+		return new Track.TrackBuilder(new File(file).getParentFile().getName(),FilenameUtils.getName(file),trackName, LocalDate.ofInstant(trackTimeDate, ZoneId.systemDefault()), LocalTime.parse(LocalTime.ofInstant(trackTimeDate, ZoneId.systemDefault()).format(dtf)))
+				.distance(totalDistance)
+				.duration(totalDuration)
+				.elevation(totalElevation)
+				.trackPoints(trackPointsList)
+				.build();
+	}
 }

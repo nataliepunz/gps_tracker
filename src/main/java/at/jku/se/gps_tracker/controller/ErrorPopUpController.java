@@ -1,5 +1,4 @@
 package at.jku.se.gps_tracker.controller;
-
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.image.Image;
@@ -11,11 +10,11 @@ public interface ErrorPopUpController {
 	default void showErrorPopUp(String textToBeDisplayed) {
 		getErrorStage(textToBeDisplayed).showAndWait();
 	}
-	
+
 	default void showErrorPopUpNoWait(String textToBeDisplayed) {
 		getErrorStage(textToBeDisplayed).show();
 	}
-	
+
 	private Stage getErrorStage(String textToBeDisplayed) {
 		Text text = new Text(textToBeDisplayed);
 		Button button = new Button("Ok, close");

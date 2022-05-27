@@ -4,7 +4,6 @@ import at.jku.se.gps_tracker.model.AbstractTrack;
 import at.jku.se.gps_tracker.model.Track;
 
 import java.time.Duration;
-import java.time.Year;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -13,20 +12,18 @@ public abstract class GroupTrack extends AbstractTrack {
 
     protected static int year;
     private List<Track> tracks = new ArrayList<>();
-    private int count = tracks.size();
+    private int count;
     private String name;
+
+    private double speed;
+    private Duration pace;
+
 
     public List<Track> getTracks() {
         return tracks;
     }
 
-    public void setTracks(List<Track> tracks) {
-        this.tracks = tracks;
-    }
-
     public Boolean compatible(Track track){
-
-        //TODO: methode implementieren
         return true;
     }
 
@@ -58,48 +55,41 @@ public abstract class GroupTrack extends AbstractTrack {
         if (tracks.size() <2)
         {
             super.distance += track.getDistance();
-            super.setAverageBPM((track.getAverageBPM()));
-            super.setMaximumBPM(track.getMaximumBPM());
-            super.setDuration(track.getDurationNormal());
-            super.setElevation(track.getElevation());
-            setSpeed(track.getSpeed());
-            setPace(track.getPace());
+            super.averageBPM = track.getAverageBPM();
+            super.maximumBPM = track.getMaximumBPM();
+            super.duration = track.getDuration();
+            super.elevation = track.getElevation();
+            speed = track.getSpeed();
+            pace = track.getPace();
         }
         else {
             super.distance += track.getDistance();
-            super.setAverageBPM(newAverageBPM(track.getAverageBPM()));
-            super.setMaximumBPM(newMaximumBPM(track.getMaximumBPM()));
-            super.setDuration(super.getDurationNormal().plus(track.getDurationNormal()));
-            super.setElevation(newElevation(track.getElevation()));
-            setSpeed(newSpeed(track.getSpeed()));
-            setPace(Duration.ofMinutes(newPace(track.getPace())));
+            super.averageBPM = newAverageBPM(track.getAverageBPM());
+            super.maximumBPM = newMaximumBPM(track.getMaximumBPM());
+            super.duration = super.getDuration().plus(track.getDuration());
+            super.elevation = newElevation(track.getElevation());
+            speed = newSpeed(track.getSpeed());
+            pace = Duration.ofMinutes(newPace(track.getPace()));
         }
     }
 
 
     public void setSpeed(double speed)
     {
-        super.speed = speed;
+        this.speed = speed;
     }
 
     public void setPace(Duration pace)
     {
-        super.pace = pace;
+        this.pace = pace;
     }
     public int getYear() {
        return year;
     }
-    @Override
+
+
     public void setDistance(Double distance) {
         super.distance += distance;
-    }
-
-    public Duration newDuration (Duration duration) {
-
-            Duration dur =  super.getDurationNormal();
-            dur.plus(duration);
-
-        return dur;
     }
 
     public double newSpeed (Double speed) {
@@ -145,10 +135,5 @@ public abstract class GroupTrack extends AbstractTrack {
     public int getCount(){
         return count;
     }
-
-
-
-
-
 
 }

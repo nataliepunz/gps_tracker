@@ -11,6 +11,7 @@
       <VBox alignment="CENTER" prefHeight="318.0" prefWidth="600.0" BorderPane.alignment="CENTER">
          <children>
             <Label text="Choose Directory to load files from!" />
+            <Label text="Caution! If there are a lot of files loading may take a while!" />
             <Button fx:id="buttonChoseDirectory" mnemonicParsing="false" onAction="#chooseDirectory" text="Choose Directory" />
          </children>
       </VBox>

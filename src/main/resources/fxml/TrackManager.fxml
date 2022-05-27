@@ -25,11 +25,14 @@
                     <menus>
                         <Menu mnemonicParsing="false" text="File">
            					 <items>
-           				 	      <MenuItem mnemonicParsing="false" onAction="#updateModel" text="Update" />
+           				 	      <MenuItem mnemonicParsing="false" onAction="#updateModel" text="Update Tracks in current Directory Folder" />
+           				 	      <MenuItem mnemonicParsing="false" onAction="#updateDirectoryFolders" text="Update Directory Folders" />
             				      <MenuItem mnemonicParsing="false" onAction="#setDirectory" text="Change Directory" />
             					  <MenuItem mnemonicParsing="false" onAction="#closeApplication" text="Close" />
       					     </items>
           				</Menu>
+          				<Menu fx:id="mEdit" mnemonicParsing="false" text="Edit">
+                        </Menu>
                         <Menu fx:id="mTracks" mnemonicParsing="false" text="Tracks">
                         </Menu>
                         <Menu fx:id="mSegment" mnemonicParsing="false" text="Segment">

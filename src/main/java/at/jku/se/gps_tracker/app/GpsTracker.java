@@ -15,16 +15,16 @@ public class GpsTracker extends Application {
 	}
 
 	@Override
-	public void start(Stage primaryStage) throws Exception {		
-		DataModel model = new DataModel();
-		FXMLLoader loader = new FXMLLoader(getClass().getResource("/fxml/TrackManager.fxml"));
-		TrackManagerController start = new TrackManagerController(model);
-		 
-		loader.setController(start);
-		 
-		Parent root = loader.load();
-		 
+	public void start(Stage primaryStage) throws Exception {
 		primaryStage.setTitle("TrackStar");
+		FXMLLoader loader = new FXMLLoader(getClass().getResource("/fxml/TrackManager.fxml"));
+		TrackManagerController start = new TrackManagerController(new DataModel(primaryStage));
+
+		loader.setController(start);
+
+		Parent root = loader.load();
+
+
 		primaryStage.getIcons().add(new Image(getClass().getResourceAsStream("/icon/icon.png")));
 		primaryStage.setScene(new Scene(root,800,600));
 		primaryStage.show();
