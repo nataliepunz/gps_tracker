@@ -14,6 +14,7 @@ public class WeekGroup extends GroupTrack {
         super();
         this.week = week;
         super.year = year;
+        super.xAxis = week;
         setName();
         super.group = "Week";
     }
@@ -61,5 +62,7 @@ public class WeekGroup extends GroupTrack {
                 "week=" + week +
                 '}';
     }
+
+
 
 }

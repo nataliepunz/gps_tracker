@@ -9,6 +9,7 @@ public class YearGroup extends GroupTrack {
         super.year = year;
         setName();
         super.group = "Year";
+        super.xAxis = year;
     }
 
     public void setName() {
@@ -20,6 +21,7 @@ public class YearGroup extends GroupTrack {
                 "year=" + year +
                 '}';
     }
+
 
 
 }

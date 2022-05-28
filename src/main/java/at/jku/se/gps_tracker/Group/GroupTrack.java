@@ -11,10 +11,12 @@ import java.util.List;
 public abstract class GroupTrack extends AbstractTrack {
 
 
-    protected static int year;
+    protected int year;
     private List<Track> tracks = new ArrayList<>();
     private int count;
     private String name;
+
+   protected int xAxis;
     String group;
 
     private double speed;
@@ -42,6 +44,8 @@ public abstract class GroupTrack extends AbstractTrack {
     public String getName() {
         return name;
     }
+
+
 
     public Boolean contains(Track track){
         return tracks.contains(track);
@@ -149,5 +153,9 @@ public abstract class GroupTrack extends AbstractTrack {
 
     public int getMonth() {
         return 0;
+    }
+
+    public int getxAxis() {
+        return xAxis;
     }
 }

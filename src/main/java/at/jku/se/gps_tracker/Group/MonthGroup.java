@@ -12,6 +12,7 @@ public class MonthGroup extends GroupTrack {
     {
         super();
         this.month = month;
+        super.xAxis = month;
         super.year = year;
         setName();
         super.group = "Month";
@@ -34,4 +35,6 @@ public class MonthGroup extends GroupTrack {
                 "month=" + month +
                 '}';
     }
+
+
 }

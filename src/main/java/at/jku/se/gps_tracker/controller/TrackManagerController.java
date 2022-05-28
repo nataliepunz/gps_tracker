@@ -1,6 +1,7 @@
 	package at.jku.se.gps_tracker.controller;
 
 		import at.jku.se.gps_tracker.Group.*;
+		import at.jku.se.gps_tracker.MultipleAxesLineChart;
 		import at.jku.se.gps_tracker.model.AbstractTrack;
 		import at.jku.se.gps_tracker.model.DataModel;
 
@@ -13,12 +14,15 @@
 		import javafx.collections.transformation.FilteredList;
 		import javafx.collections.transformation.SortedList;
 		import javafx.event.ActionEvent;
+		import javafx.event.EventHandler;
 		import javafx.fxml.FXML;
 		import javafx.fxml.FXMLLoader;
 		import javafx.fxml.Initializable;
 		import javafx.scene.Parent;
 		import javafx.scene.Scene;
 		import javafx.scene.chart.BarChart;
+		import javafx.scene.chart.NumberAxis;
+		import javafx.scene.chart.PieChart;
 		import javafx.scene.chart.XYChart;
 		import javafx.scene.control.*;
 		import javafx.scene.control.cell.PropertyValueFactory;
@@ -32,17 +36,18 @@
 		import java.time.LocalDate;
 		import java.time.LocalTime;
 		import java.time.temporal.WeekFields;
-		import java.util.Comparator;
-		import java.util.Locale;
-		import java.util.ResourceBundle;
+		import java.util.*;
 
-public class TrackManagerController implements Initializable, ErrorPopUpController {
+	public class TrackManagerController implements Initializable, ErrorPopUpController {
 	//TODO : Optische Korrekturen
 	private DataModel model;
 	private ObservableList<AbstractTrack> trackList;
 	private ObservableList<AbstractTrack> backUp;
 	private ObservableList<String> categories;
 	final private ToggleGroup tgMenuTrack;
+
+	String year1;
+	String year2;
 
 	private ObservableList<GroupTrack> group = FXCollections.observableArrayList();
 
@@ -53,8 +58,12 @@ public class TrackManagerController implements Initializable, ErrorPopUpControll
 	@FXML
 	private ToggleGroup tgView;
 
+
 	@FXML
 	private MenuBar menubar;
+
+	@FXML
+	private Menu mYears;
 
 	public TrackManagerController(DataModel model) {
 		this.model=model;
@@ -192,201 +201,313 @@ public class TrackManagerController implements Initializable, ErrorPopUpControll
 		}
 	}
 
-	//je nach Index entsprechend holen! (erster Eintrag ausgewählt --> hier erste (bzw 0 auswählen!)
-	private void changeCategory(String category) throws InvocationTargetException, NoSuchMethodException, IllegalAccessException { //index als parameter hinzugefügt - nuray
-		model.adjustDirectoryFolder(category);
-		model.updateModel();
-		changeChart(); //aktualisiert chart
-	}
-
-
 	@FXML
-	private TableView<AbstractTrack> mainTable;
-
+	private CheckMenuItem cmiYearly;
 	@FXML
-	private TableView<AbstractTrack> sideTable;
+	private SeparatorMenuItem sep;
 
-	@FXML
-	private TextField keywordTextField;
-
+	private void setUpYearsItems() {
 
 
-	/* Action Handler für die Segment MenuItems
-	 * TODO Methoden sinnvoll implementieren */
-	@FXML
-	private void segment1m(ActionEvent event){
+		RadioMenuItem selected = (RadioMenuItem) tgMenuTrack.getSelectedToggle();
+		setTrackListAll();
+		groupYear();
+		// mYears.getItems().clear();
+		CheckMenuItem temp = null;
+		List<Integer> items = new ArrayList<>();
 
-	}
+		for (GroupTrack at : group) {
+			temp = null;
 
-	@FXML
-	private void segment10m(ActionEvent event){
+			if (!items.contains(at.getYear())) {
+				items.add(at.getYear());
+				temp = new CheckMenuItem(String.valueOf(at.getYear()));
 
-	}
-
-	@FXML
-	private void segment100m(ActionEvent event){
-
-	}
-
-	@FXML
-	private void segment400m(ActionEvent event){
-
-	}
-
-	@FXML
-	private void segment500m(ActionEvent event){
-
-	}
-	@FXML
-	private void segment1000m(ActionEvent event){
-
-	}
-
-	@FXML
-	private void segment5000m(ActionEvent event){
-
-	}
-
-	@FXML
-	private void segment10000m(ActionEvent event){
-
-	}
-	@FXML
-	private void segmentQuarterMarathon(ActionEvent event){
-
-	}
-
-	@FXML
-	private void segmentHalfMarathon(ActionEvent event){
-
-	}
-
-	@FXML
-	private void segmentTrackPoints(ActionEvent event){
-
-	}
-
-
-
-
-
-	//TODO: UserGuide Methode Implementieren
-	@FXML
-	private void openUserGuide(ActionEvent event){
-	}
-/* Tabellen */
-
-
-	private void showTrackTable(TableView<AbstractTrack> table, ObservableList<AbstractTrack> tl) {
-		//clear table
-		table.getItems().clear();
-		table.getColumns().clear();
-
-		//Create columns
-		TableColumn<AbstractTrack, String> nameCol = new TableColumn<>("Name");
-		nameCol.setCellValueFactory(new PropertyValueFactory<>("name"));
-
-		TableColumn<AbstractTrack, LocalDate> dateCol = new TableColumn<>("Date");
-		dateCol.setCellValueFactory(new PropertyValueFactory<>("date"));
-
-		TableColumn<AbstractTrack, LocalTime> startCol = new TableColumn<>("Start");
-		startCol.setCellValueFactory(new PropertyValueFactory<>("startTime"));
-
-		TableColumn<AbstractTrack, Number> distanceCol = new TableColumn<>("Distance");
-		distanceCol.setCellValueFactory(cellValue -> cellValue.getValue().getDistanceProperty());
-
-		TableColumn<AbstractTrack, String> durationCol= new TableColumn<>("Duration");
-		durationCol.setCellValueFactory(cellValue -> cellValue.getValue().getDurationProperty());
-
-		TableColumn<AbstractTrack, String> paceCol = new TableColumn<>("Pace");
-		paceCol.setCellValueFactory(cellValue -> cellValue.getValue().getPaceProperty());
-
-		TableColumn<AbstractTrack, Number> speedCol = new TableColumn<>("Speed");
-		speedCol.setCellValueFactory(cellValue -> cellValue.getValue().getSpeedProperty());
-
-		TableColumn<AbstractTrack, Number> avgBpmCol = new TableColumn<>("Average bpm");
-		avgBpmCol.setCellValueFactory(new PropertyValueFactory<>("averageBPM"));
-
-		TableColumn<AbstractTrack, Number> maxBpmCol = new TableColumn<>("Max bpm");
-		maxBpmCol.setCellValueFactory(new PropertyValueFactory<>("maximumBPM"));
-
-		TableColumn<AbstractTrack, Number> elevationCol = new TableColumn<>("Elevation");
-		elevationCol.setCellValueFactory(cellValue -> cellValue.getValue().getElevationProperty());
-
-		table.getColumns().addAll(nameCol, dateCol, startCol, distanceCol, durationCol, paceCol, speedCol, avgBpmCol, maxBpmCol, elevationCol);
-		table.setItems(tl);
-
-		/* further adjustments */
-		table.getSelectionModel().setSelectionMode(SelectionMode.SINGLE);
-		table.refresh();
-
-		mainTable = table;
-
-		// add event for rows
-		table.setRowFactory( tv -> {
-			TableRow<AbstractTrack> row = new TableRow<>();
-			row.setOnMouseClicked(event -> {
-				AbstractTrack rowData = row.getItem();
-				showSideTable(sideTable, FXCollections.observableArrayList((model.getTrackPoints((Track) rowData))));
-			});
-			return row ;});
-
-		FilteredList<AbstractTrack> filteredData = new FilteredList<>(tl, b -> true);
-		keywordTextField.textProperty().addListener((observable, oldValue, newValue) -> filteredData.setPredicate(AbstractTrack -> {
-			if(newValue.isEmpty() || newValue.isBlank() || newValue == null){
-				return true;
 			}
-			String searchKeyword = newValue.toLowerCase();
-			return AbstractTrack.getName().toLowerCase().contains(searchKeyword);
-		}));
+			if (temp!=null)
+			mYears.getItems().add(temp);
+		}
 
-		SortedList<AbstractTrack> sortedData = new SortedList<>(filteredData);
-		sortedData.comparatorProperty().bind(table.comparatorProperty());
-		table.setItems(sortedData);
+;		for (MenuItem cmi : mYears.getItems()) {
+			if  (cmi != sep && cmi != cmiYearly )
+			{
+			CheckMenuItem ci = (CheckMenuItem) cmi;
 
-		trackList = tl;
+			ci.setOnAction(e -> {
+				if (ci.isSelected()) {
+					if (year1 == null)
+						year1 = ci.getText();
+
+					else if (year2 == null)
+						year2 = ci.getText();
+				} else {
+					year1 = null;
+				}
+			});
+		}
+
+			}
+
+		selected.setSelected(true);
 	}
+		//je nach Index entsprechend holen! (erster Eintrag ausgewählt --> hier erste (bzw 0 auswählen!)
+		private void changeCategory (String category) throws
+		InvocationTargetException, NoSuchMethodException, IllegalAccessException
+		{ //index als parameter hinzugefügt - nuray
+			model.adjustDirectoryFolder(category);
+			model.updateModel();
+			changeChart();//aktualisiert charts
+		}
 
-	private void showSideTable(TableView<AbstractTrack> table, ObservableList<AbstractTrack> tp ){
 
-		table.getItems().clear();
-		table.getColumns().clear();
-		//Create columns
+		@FXML
+		private TableView<AbstractTrack> mainTable;
+
+		@FXML
+		private TableView<AbstractTrack> sideTable;
+
+		@FXML
+		private TextField keywordTextField;
+
+		@FXML
+		private CheckMenuItem cmi2020;
+		@FXML
+		private CheckMenuItem cmi2021;
 
 
-		TableColumn<AbstractTrack, String> nameCol = new TableColumn<>("Nr");
-		nameCol.setCellValueFactory(new PropertyValueFactory<>("name"));
+		/* Action Handler für die Segment MenuItems
+		 * TODO Methoden sinnvoll implementieren */
+		@FXML
+		private void segment1m (ActionEvent event){
 
-		TableColumn<AbstractTrack, Number> distanceCol = new TableColumn<>("Distance");
-		distanceCol.setCellValueFactory(cellValue -> cellValue.getValue().getDistanceProperty());
+		}
 
-		TableColumn<AbstractTrack, String> durationCol= new TableColumn<>("Duration");
-		durationCol.setCellValueFactory(cellValue -> cellValue.getValue().getDurationProperty());
+		private void setTrackListAll()
+		{
+			RadioMenuItem allTracks = null;
+			for (Toggle mi: tgMenuTrack.getToggles())
+			{
+				allTracks =  (RadioMenuItem) mi;
+				if (allTracks.getText() == DataModel.ALL_TRACK_KEYWORD)
+					allTracks = (RadioMenuItem) mi;
+				allTracks.setSelected(true);
+				break;
+			}
+		}
+		@FXML
+		private void eventYearly (ActionEvent event) {
+			if (cmiYearly.isSelected()) {
+				RadioMenuItem graph = (RadioMenuItem) tgGraph.getSelectedToggle();
+				RadioMenuItem view = (RadioMenuItem) tgView.getSelectedToggle();
 
-		TableColumn<AbstractTrack, String> paceCol = new TableColumn<>("Pace");
-		paceCol.setCellValueFactory(cellValue -> cellValue.getValue().getPaceProperty());
 
-		TableColumn<AbstractTrack, Number> speedCol = new TableColumn<>("Speed");
-		speedCol.setCellValueFactory(cellValue -> cellValue.getValue().getSpeedProperty());
+				if (year1 == null || year2 == null) {
+					Alert alert = new Alert(Alert.AlertType.ERROR);
+					alert.setTitle("Error");
+					alert.setHeaderText("No view or graph item selected");
+					alert.setContentText("You have to select 2 years");
 
-		TableColumn<AbstractTrack, Number> avgBpmCol = new TableColumn<>("Average bpm");
-		avgBpmCol.setCellValueFactory(new PropertyValueFactory<>("averageBPM"));
+					alert.showAndWait();
+				} else if (graph == null || view == null) {
+					Alert alert = new Alert(Alert.AlertType.ERROR);
+					alert.setTitle("Error");
+					alert.setHeaderText("No view or graph item selected");
+					alert.setContentText("Please select both!");
 
-		TableColumn<AbstractTrack, Number> maxBpmCol = new TableColumn<>("Max bpm");
-		maxBpmCol.setCellValueFactory(new PropertyValueFactory<>("maximumBPM"));
+					alert.showAndWait();
 
-		TableColumn<AbstractTrack, Number> elevationCol = new TableColumn<>("Elevation");
-		elevationCol.setCellValueFactory(cellValue -> cellValue.getValue().getElevationProperty());
+				} else {
+					setTrackListAll();
+					switch (view.getText()) {
+						case "Week" -> groupWeek();
+						case "Month" -> groupMonth();
+						case "Day" -> groupDay();
+						default -> groupYear();
+					}
+					view.setSelected(true);
+					//graph.setSelected(true);
+					String method = null;
+					if (graph != null) {
+						method = "get" + graph.getText();
+						try {
+							createBarChart("Comparison", method, group, Integer.parseInt(year1), Integer.parseInt(year2));
+						} catch (NoSuchMethodException | InvocationTargetException | IllegalAccessException ex) {
+							ex.printStackTrace();
+						}
+					}
+				}
+			}
+		}
 
-		table.getColumns().addAll(nameCol, distanceCol, durationCol, paceCol, speedCol, avgBpmCol, maxBpmCol, elevationCol);
-		table.setItems( tp);
 
-		//further adjustments
-		table.getSelectionModel().setSelectionMode(SelectionMode.SINGLE);
-		table.refresh();
 
-		sideTable = table;
-	}
+		@FXML
+		private void segment10m (ActionEvent event){
+
+		}
+
+		@FXML
+		private void segment100m (ActionEvent event){
+
+		}
+
+		@FXML
+		private void segment400m (ActionEvent event){
+
+		}
+
+		@FXML
+		private void segment500m (ActionEvent event){
+
+		}
+		@FXML
+		private void segment1000m (ActionEvent event){
+
+		}
+
+		@FXML
+		private void segment5000m (ActionEvent event){
+
+		}
+
+		@FXML
+		private void segment10000m (ActionEvent event){
+
+		}
+		@FXML
+		private void segmentQuarterMarathon (ActionEvent event){
+
+		}
+
+		@FXML
+		private void segmentHalfMarathon (ActionEvent event){
+
+		}
+
+		@FXML
+		private void segmentTrackPoints (ActionEvent event){
+
+		}
+
+
+		//TODO: UserGuide Methode Implementieren
+		@FXML
+		private void openUserGuide (ActionEvent event){
+		}
+		/* Tabellen */
+
+
+		private void showTrackTable (TableView < AbstractTrack > table, ObservableList < AbstractTrack > tl){
+			//clear table
+			table.getItems().clear();
+			table.getColumns().clear();
+
+			//Create columns
+			TableColumn<AbstractTrack, String> nameCol = new TableColumn<>("Name");
+			nameCol.setCellValueFactory(new PropertyValueFactory<>("name"));
+
+			TableColumn<AbstractTrack, LocalDate> dateCol = new TableColumn<>("Date");
+			dateCol.setCellValueFactory(new PropertyValueFactory<>("date"));
+
+			TableColumn<AbstractTrack, LocalTime> startCol = new TableColumn<>("Start");
+			startCol.setCellValueFactory(new PropertyValueFactory<>("startTime"));
+
+			TableColumn<AbstractTrack, Number> distanceCol = new TableColumn<>("Distance");
+			distanceCol.setCellValueFactory(cellValue -> cellValue.getValue().getDistanceProperty());
+
+			TableColumn<AbstractTrack, String> durationCol = new TableColumn<>("Duration");
+			durationCol.setCellValueFactory(cellValue -> cellValue.getValue().getDurationProperty());
+
+			TableColumn<AbstractTrack, String> paceCol = new TableColumn<>("Pace");
+			paceCol.setCellValueFactory(cellValue -> cellValue.getValue().getPaceProperty());
+
+			TableColumn<AbstractTrack, Number> speedCol = new TableColumn<>("Speed");
+			speedCol.setCellValueFactory(cellValue -> cellValue.getValue().getSpeedProperty());
+
+			TableColumn<AbstractTrack, Number> avgBpmCol = new TableColumn<>("Average bpm");
+			avgBpmCol.setCellValueFactory(new PropertyValueFactory<>("averageBPM"));
+
+			TableColumn<AbstractTrack, Number> maxBpmCol = new TableColumn<>("Max bpm");
+			maxBpmCol.setCellValueFactory(new PropertyValueFactory<>("maximumBPM"));
+
+			TableColumn<AbstractTrack, Number> elevationCol = new TableColumn<>("Elevation");
+			elevationCol.setCellValueFactory(cellValue -> cellValue.getValue().getElevationProperty());
+
+			table.getColumns().addAll(nameCol, dateCol, startCol, distanceCol, durationCol, paceCol, speedCol, avgBpmCol, maxBpmCol, elevationCol);
+			table.setItems(tl);
+
+			/* further adjustments */
+			table.getSelectionModel().setSelectionMode(SelectionMode.SINGLE);
+			table.refresh();
+
+			mainTable = table;
+
+			// add event for rows
+			table.setRowFactory(tv -> {
+				TableRow<AbstractTrack> row = new TableRow<>();
+				row.setOnMouseClicked(event -> {
+					AbstractTrack rowData = row.getItem();
+					showSideTable(sideTable, FXCollections.observableArrayList((model.getTrackPoints((Track) rowData))));
+				});
+				return row;
+			});
+
+			FilteredList<AbstractTrack> filteredData = new FilteredList<>(tl, b -> true);
+			keywordTextField.textProperty().addListener((observable, oldValue, newValue) -> filteredData.setPredicate(AbstractTrack -> {
+				if (newValue.isEmpty() || newValue.isBlank() || newValue == null) {
+					return true;
+				}
+				String searchKeyword = newValue.toLowerCase();
+				return AbstractTrack.getName().toLowerCase().contains(searchKeyword);
+			}));
+
+			SortedList<AbstractTrack> sortedData = new SortedList<>(filteredData);
+			sortedData.comparatorProperty().bind(table.comparatorProperty());
+			table.setItems(sortedData);
+
+			trackList = tl;
+		}
+
+		private void showSideTable (TableView < AbstractTrack > table, ObservableList < AbstractTrack > tp ){
+
+			table.getItems().clear();
+			table.getColumns().clear();
+			//Create columns
+
+
+			TableColumn<AbstractTrack, String> nameCol = new TableColumn<>("Nr");
+			nameCol.setCellValueFactory(new PropertyValueFactory<>("name"));
+
+			TableColumn<AbstractTrack, Number> distanceCol = new TableColumn<>("Distance");
+			distanceCol.setCellValueFactory(cellValue -> cellValue.getValue().getDistanceProperty());
+
+			TableColumn<AbstractTrack, String> durationCol = new TableColumn<>("Duration");
+			durationCol.setCellValueFactory(cellValue -> cellValue.getValue().getDurationProperty());
+
+			TableColumn<AbstractTrack, String> paceCol = new TableColumn<>("Pace");
+			paceCol.setCellValueFactory(cellValue -> cellValue.getValue().getPaceProperty());
+
+			TableColumn<AbstractTrack, Number> speedCol = new TableColumn<>("Speed");
+			speedCol.setCellValueFactory(cellValue -> cellValue.getValue().getSpeedProperty());
+
+			TableColumn<AbstractTrack, Number> avgBpmCol = new TableColumn<>("Average bpm");
+			avgBpmCol.setCellValueFactory(new PropertyValueFactory<>("averageBPM"));
+
+			TableColumn<AbstractTrack, Number> maxBpmCol = new TableColumn<>("Max bpm");
+			maxBpmCol.setCellValueFactory(new PropertyValueFactory<>("maximumBPM"));
+
+			TableColumn<AbstractTrack, Number> elevationCol = new TableColumn<>("Elevation");
+			elevationCol.setCellValueFactory(cellValue -> cellValue.getValue().getElevationProperty());
+
+			table.getColumns().addAll(nameCol, distanceCol, durationCol, paceCol, speedCol, avgBpmCol, maxBpmCol, elevationCol);
+			table.setItems(tp);
+
+			//further adjustments
+			table.getSelectionModel().setSelectionMode(SelectionMode.SINGLE);
+			table.refresh();
+
+			sideTable = table;
+		}
 
 	private void showGroupTable(ObservableList<AbstractTrack> tl) {
 
@@ -437,9 +558,8 @@ public class TrackManagerController implements Initializable, ErrorPopUpControll
 		mainTable.refresh();
 	}
 
-
 	@FXML BarChart chart;
-	private void createBarChart(String name, String methodName, ObservableList<?> list ) throws NoSuchMethodException, InvocationTargetException, IllegalAccessException {
+	private void createBarChart(String name, String methodName, ObservableList<AbstractTrack> list ) throws NoSuchMethodException, InvocationTargetException, IllegalAccessException {
 
 
 		if (methodName.equals("getDuration"))
@@ -477,7 +597,7 @@ public class TrackManagerController implements Initializable, ErrorPopUpControll
 			}
 		}
 
-		if (list == group)
+		if (list == turnIntoAbstractTrack((group)))
 		{
 
 			switch (group.get(0).getName()) {
@@ -663,6 +783,7 @@ Gruppierungsmethoden
 		model.updateModel();
 		showTrackTable(mainTable, trackList);
 		backUp = trackList;
+		setUpYearsItems();
 		initializeHandlers();
 
 
@@ -679,15 +800,38 @@ Gruppierungsmethoden
 				RadioMenuItem selectedItem = (RadioMenuItem) tgGraph.getSelectedToggle();
 				RadioMenuItem rmi = (RadioMenuItem) tgView.getSelectedToggle();
 
+
 				String method = "get" + selectedItem.getText();
 
 				if (rmi!=null)
 				{
+					if (cmiYearly.isSelected()){
+						if (year1 != null && year2 != null)
+						{
+							setTrackListAll();
+					rmi.fire();
 					try {
-						createBarChart(selectedItem.getText(), method, group);
+						createBarChart(selectedItem.getText(), method, group, Integer.parseInt(year1), Integer.parseInt(year2));
 					} catch (NoSuchMethodException | IllegalAccessException | InvocationTargetException e) {
 						e.printStackTrace();
+					}}}
+					else {
+
+						try {
+							createBarChart("Comparison", method,turnIntoAbstractTrack(group) );
+						} catch (NoSuchMethodException | IllegalAccessException | InvocationTargetException e) {
+							e.printStackTrace();}}
+
+
+				}
+
+				else {
+					try {
+						createBarChart(selectedItem.getText(), method, trackList);
+					} catch (NoSuchMethodException | InvocationTargetException | IllegalAccessException e) {
+						e.printStackTrace();
 					}
+
 				}
 
 
@@ -699,9 +843,13 @@ Gruppierungsmethoden
 			if (tgView.getSelectedToggle() != null) {
 				RadioMenuItem selectedItem = (RadioMenuItem) tgView.getSelectedToggle();
 				RadioMenuItem rmi = (RadioMenuItem) tgGraph.getSelectedToggle();
+
 				String method;
 
 				group.clear();
+				if (cmiYearly.isSelected() && year1!= null & year2!= null) {
+					setTrackListAll();
+				}
 				switch (selectedItem.getText())
 					{
 						case "Week" -> groupWeek();
@@ -715,22 +863,81 @@ Gruppierungsmethoden
 				showGroupTable(turnIntoAbstractTrack(group));
 				if (rmi!= null)
 				{ method = "get" + rmi.getText();
-					try {
-						createBarChart(selectedItem.getText(), method, group);
-					} catch (NoSuchMethodException | InvocationTargetException | IllegalAccessException e) {
-						e.printStackTrace();
+					if (cmiYearly.isSelected() && year1!= null & year2!= null) {
+
+						try {
+							createBarChart(selectedItem.getText(), method, group, Integer.parseInt(year1), Integer.parseInt(year2));
+						} catch (NoSuchMethodException | InvocationTargetException | IllegalAccessException e) {
+							e.printStackTrace();
+						}
 					}
-				}
+					else {
+
+					try {
+						createBarChart("Comparison", method, turnIntoAbstractTrack(group));
+					} catch (NoSuchMethodException | IllegalAccessException | InvocationTargetException e) {
+						e.printStackTrace();
+				}}
+			}}});
+
+		}
 
 
 
 
+	private void createBarChart(String name, String methodName, ObservableList<GroupTrack> list, int year1,int year2 ) throws NoSuchMethodException, InvocationTargetException, IllegalAccessException {
+
+
+		if (methodName.equals("getDuration"))
+		{
+			methodName = "getDurationMinutes";
+		}
+		if (methodName.equals("getHeartbeat"))
+		{
+			methodName = "getAverageBPM";
+		}
+
+
+		Method method = Track.class.getMethod(methodName);
+		chart.setTitle("Comparison");
+		chart.getXAxis().setLabel("Years");
+
+		switch (methodName) {
+			case "getDistance" -> chart.getYAxis().setLabel("Distance");
+			case "getElevation" -> chart.getYAxis().setLabel("Elevation");
+			case "getDurationMinutes" -> chart.getYAxis().setLabel("Duration");
+			case "getAverageBPM" -> chart.getYAxis().setLabel("HeartBeat");
+			case "getSpeed" -> chart.getYAxis().setLabel("Speed");
+			default -> chart.getYAxis().setLabel("");
+		}
+
+		chart.getData().clear();
+		chart.layout();
+		XYChart.Series series1 = new XYChart.Series();
+		XYChart.Series series2 = new XYChart.Series();
+		series1.setName(""+year1);
+		series2.setName(""+year2);
 
 
 
-			}});
+			switch (group.get(0).getName()) {
+				case "Woche" -> chart.getXAxis().setLabel("Wochen");
+				case "Monat" -> chart.getXAxis().setLabel("Monate");
+				case "Tag" -> chart.getXAxis().setLabel("Tage");
+				case "Jahr" -> chart.getXAxis().setLabel("Jahre");
+				default -> chart.getYAxis().setLabel("");
+			}
 
+		for (GroupTrack gt: list)
 
+			if (gt.getYear() == year1)
+			{
+				series1.getData().add(new XYChart.Data(String.valueOf(gt.getxAxis()), method.invoke(gt)));}
+		    else if  (gt.getYear() == year2)
+			{
+				series2.getData().add(new XYChart.Data(String.valueOf(gt.getxAxis()), method.invoke(gt)));}
+
+			chart.getData().addAll(series1, series2);
 
 	}
 
