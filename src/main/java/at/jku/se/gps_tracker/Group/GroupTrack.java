@@ -4,6 +4,7 @@ import at.jku.se.gps_tracker.model.AbstractTrack;
 import at.jku.se.gps_tracker.model.Track;
 
 import java.time.Duration;
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -14,6 +15,7 @@ public abstract class GroupTrack extends AbstractTrack {
     private List<Track> tracks = new ArrayList<>();
     private int count;
     private String name;
+    String group;
 
     private double speed;
     private Duration pace;
@@ -132,8 +134,20 @@ public abstract class GroupTrack extends AbstractTrack {
         return max;
     }
 
+    public String getGroup() {
+        return group;
+    }
+
+    @Override
     public int getCount(){
         return count;
     }
 
+    public LocalDate getDate() {
+        return null;
+    }
+
+    public int getMonth() {
+        return 0;
+    }
 }

@@ -15,6 +15,7 @@ public class WeekGroup extends GroupTrack {
         this.week = week;
         super.year = year;
         setName();
+        super.group = "Week";
     }
     public Calendar getFirstDayOfWeek(int week) {
 

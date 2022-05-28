@@ -8,6 +8,7 @@ public class YearGroup extends GroupTrack {
         super();
         super.year = year;
         setName();
+        super.group = "Year";
     }
 
     public void setName() {

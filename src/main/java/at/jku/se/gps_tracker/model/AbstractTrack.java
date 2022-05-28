@@ -124,4 +124,8 @@ public abstract class AbstractTrack {
 				absSeconds % 60);
 		return seconds < 0 ? "-" + positive : positive;
 	}
+
+	public int getCount() {
+		return 0;
+	}
 }

@@ -14,8 +14,10 @@ public class MonthGroup extends GroupTrack {
         this.month = month;
         super.year = year;
         setName();
+        super.group = "Month";
     }
 
+    @Override
     public int getMonth() {
         return month;
     }

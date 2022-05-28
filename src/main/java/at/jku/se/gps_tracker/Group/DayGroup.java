@@ -6,12 +6,15 @@ public class DayGroup extends GroupTrack {
 
     private LocalDate date;
 
+
     public DayGroup(LocalDate date) {
         super();
         this.date = date;
         setName();
+        super.group = "Day";
     }
 
+    @Override
     public LocalDate getDate() {
         return date;
     }

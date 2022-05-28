@@ -49,6 +49,7 @@ public class TrackManagerController implements Initializable, ErrorPopUpControll
 	final private ObservableList<MonthGroup> months = FXCollections.observableArrayList();
 	final private ObservableList<DayGroup> days = FXCollections.observableArrayList();
 	final private ObservableList<YearGroup> years = FXCollections.observableArrayList();
+	private ObservableList<GroupTrack> group = FXCollections.observableArrayList();
 
 
 	@FXML
@@ -205,7 +206,7 @@ public class TrackManagerController implements Initializable, ErrorPopUpControll
 
 
 	@FXML
-	private TableView mainTable;
+	private TableView<AbstractTrack> mainTable;
 
 	@FXML
 	private TableView<AbstractTrack> sideTable;
@@ -281,7 +282,7 @@ public class TrackManagerController implements Initializable, ErrorPopUpControll
 /* Tabellen */
 
 
-	private void showTrackTable(TableView table, List<?> tl) {
+	private void showTrackTable(TableView<AbstractTrack> table, ObservableList<AbstractTrack> tl) {
 		//clear table
 		table.getItems().clear();
 		table.getColumns().clear();
@@ -328,10 +329,10 @@ public class TrackManagerController implements Initializable, ErrorPopUpControll
 
 		// add event for rows
 		table.setRowFactory( tv -> {
-			TableRow<Track> row = new TableRow<>();
+			TableRow<AbstractTrack> row = new TableRow<>();
 			row.setOnMouseClicked(event -> {
-				Track rowData = row.getItem();
-				showSideTable(sideTable, FXCollections.observableArrayList((model.getTrackPoints(rowData))));
+				AbstractTrack rowData = row.getItem();
+				showSideTable(sideTable, FXCollections.observableArrayList((model.getTrackPoints((Track) rowData))));
 			});
 			return row ;});
 
@@ -392,19 +393,16 @@ public class TrackManagerController implements Initializable, ErrorPopUpControll
 		sideTable = table;
 	}
 
-	private void showGroupTable(ObservableList<?> tl) {
+	private void showGroupTable(ObservableList<AbstractTrack> tl) {
 
 		mainTable.getColumns().clear();
-		trackList.clear(); // weil sortedlist kann nicht gelöscht werden
-
-		//TableView<GroupTrack> table= new TableView<>();
 
 		//Create columns
 		TableColumn<AbstractTrack, String> nameCol = new TableColumn<>("Name");
 
 		nameCol.setCellValueFactory(cellValue -> new SimpleStringProperty(cellValue.getValue().getName()));
 
-		TableColumn<GroupTrack, Number> countCol = new TableColumn<>("Count");
+		TableColumn<AbstractTrack, Number> countCol = new TableColumn<>("Count");
 		countCol.setCellValueFactory(cellValue -> new SimpleDoubleProperty(cellValue.getValue().getCount()));
 
 		TableColumn<AbstractTrack, Number> distanceCol = new TableColumn<>("Distance");
@@ -435,8 +433,10 @@ public class TrackManagerController implements Initializable, ErrorPopUpControll
 		//further adjustments
 		mainTable.getSelectionModel().setSelectionMode(SelectionMode.SINGLE);
 
+		ObservableList<GroupTrack> temp = FXCollections.observableArrayList();
+		temp.add((GroupTrack) tl.get(0));
 
-		if (tl != months) //months cannot be sorted just by string name, added comparator above
+		if (temp.get(0).getGroup().equals("Month")) //months cannot be sorted just by string name, added comparator above
 		{mainTable.getSortOrder().add(nameCol);
 			mainTable.sort();}
 		mainTable.refresh();
@@ -451,8 +451,13 @@ public class TrackManagerController implements Initializable, ErrorPopUpControll
 		{
 			methodName = "getDurationMinutes";
 		}
+		if (methodName.equals("getHeartbeat"))
+		{
+			methodName = "getAverageBPM";
+		}
 
-		System.out.println(methodName);
+
+
 
 		Method method = Track.class.getMethod(methodName);
 		chart.setTitle(name);
@@ -462,8 +467,8 @@ public class TrackManagerController implements Initializable, ErrorPopUpControll
 			case "getDistance" -> chart.getYAxis().setLabel("Distance");
 			case "getElevation" -> chart.getYAxis().setLabel("Elevation");
 			case "getDurationMinutes" -> chart.getYAxis().setLabel("Duration");
-			case "getHeartbeat" -> chart.getYAxis().setLabel("HeartBeat");
-			case "getSpeed" -> chart.getYAxis().setLabel("getSpeed");
+			case "getAverageBPM" -> chart.getYAxis().setLabel("HeartBeat");
+			case "getSpeed" -> chart.getYAxis().setLabel("Speed");
 			default -> chart.getYAxis().setLabel("");
 		}
 
@@ -477,39 +482,22 @@ public class TrackManagerController implements Initializable, ErrorPopUpControll
 			}
 		}
 
-		else if (list == weeks)
+		if (list == group)
 		{
-			chart.getXAxis().setLabel("Wochen");
 
-			for (GroupTrack gt: weeks)
-				xy.getData().add(new XYChart.Data(gt.getName(), method.invoke(gt)));
+			switch (group.get(0).getName()) {
+				case "Woche" -> chart.getXAxis().setLabel("Wochen");
+				case "Monat" -> chart.getXAxis().setLabel("Monate");
+				case "Tag" -> chart.getXAxis().setLabel("Tage");
+				case "Jahr" -> chart.getXAxis().setLabel("Jahre");
+				default -> chart.getYAxis().setLabel("");
+			}
 		}
 
-		else if (list == days)
-		{
-			chart.getXAxis().setLabel("Tage");
-			for (GroupTrack gt: days)
 
+			for (GroupTrack gt: group)
 				xy.getData().add(new XYChart.Data(gt.getName(), method.invoke(gt)));
-		}
-
-		else if (list == months)
-		{
-			chart.getXAxis().setLabel("Monate");
-
-			for (GroupTrack gt: months)
-				xy.getData().add(new XYChart.Data(gt.getName(), method.invoke(gt)));
-		}
-
-		else if (list == years)
-		{
-			chart.getXAxis().setLabel("Jahre");
-
-			for (GroupTrack gt: years)
-				xy.getData().add(new XYChart.Data(gt.getName(), method.invoke(gt)));
-		}
-
-		chart.setData(FXCollections.observableArrayList(xy));
+				chart.setData(FXCollections.observableArrayList(xy));
 
 	}
 
@@ -527,8 +515,16 @@ public class TrackManagerController implements Initializable, ErrorPopUpControll
 Gruppierungsmethoden
 * */
 
+	private void grouping(){
+
+
+
+
+	}
 	private void groupWeek() {
 
+
+		group = FXCollections.observableArrayList();
 		ObservableList<Track> tracks = FXCollections.observableArrayList();
 
 		for (AbstractTrack at : backUp) {
@@ -539,7 +535,7 @@ Gruppierungsmethoden
 			int week = track.getDate().get(WeekFields.of(Locale.GERMANY).weekOfWeekBasedYear());
 			int year = track.getDate().getYear();
 			boolean added = false;
-			for (GroupTrack wg: weeks)
+			for (GroupTrack wg: group)
 			{
 				if (wg.getWeek() == week && wg.getYear() == year)
 				{
@@ -548,27 +544,31 @@ Gruppierungsmethoden
 					break;
 				}
 			}
-
 			if (!added){
-				weeks.add(new WeekGroup(week, year));
-				weeks.get(weeks.size()-1).add(track);}
+				group.add( new WeekGroup(week, year));
+				group.get(group.size()-1).add(track);}
 		}
 	}
 
 	private void groupMonth() {
 
+
+		group = FXCollections.observableArrayList();
 		ObservableList<Track> tracks = FXCollections.observableArrayList();
+
 
 		for (AbstractTrack at : backUp) {
 			tracks.add((Track) at);
+
 		}
 
 		for (Track track: tracks)
 		{
+
 			int month = track.getDate().getMonthValue();
 			int year = track.getDate().getYear();
 			boolean added = false;
-			for (MonthGroup mg: months)
+			for (GroupTrack mg: group)
 			{
 				if (mg.getMonth() == month && mg.getYear() == year)
 				{
@@ -579,12 +579,14 @@ Gruppierungsmethoden
 			}
 
 			if (!added){
-				months.add(new MonthGroup(month, year));
-				months.get(months.size()-1).add(track);}
+				group.add(new MonthGroup(month, year));
+				group.get(group.size()-1).add(track);}
 		}
 
-		Comparator<MonthGroup> comparator = Comparator.comparingInt(MonthGroup::getMonth);
-		FXCollections.sort(months, comparator);
+
+
+		Comparator<GroupTrack> comparator = Comparator.comparingInt(GroupTrack::getMonth);
+		FXCollections.sort(group, comparator);
 	}
 
 
@@ -592,6 +594,7 @@ Gruppierungsmethoden
 
 	private void groupDay() {
 
+		group = FXCollections.observableArrayList();
 		ObservableList<Track> tracks = FXCollections.observableArrayList();
 
 		for (AbstractTrack at : backUp) {
@@ -602,7 +605,7 @@ Gruppierungsmethoden
 
 			LocalDate day = track.getDate();
 			boolean added = false;
-			for (DayGroup dg: days)
+			for (GroupTrack dg: group)
 			{
 				if (dg.getDate() == day )
 				{
@@ -613,13 +616,14 @@ Gruppierungsmethoden
 			}
 
 			if (!added){
-				days.add(new DayGroup(day));
-				days.get(days.size()-1).add(track);}
+				group.add(new DayGroup(day));
+				group.get(group.size()-1).add(track);}
 		}
 	}
 
 	private void groupYear() {
 
+		group = FXCollections.observableArrayList();
 		ObservableList<Track> tracks = FXCollections.observableArrayList();
 
 		for (AbstractTrack at : backUp) {
@@ -632,7 +636,7 @@ Gruppierungsmethoden
 			int year = track.getDate().getYear();
 
 			boolean added = false;
-			for (YearGroup dg: years)
+			for (GroupTrack dg: group)
 			{
 				if (dg.getYear() == year )
 				{
@@ -643,19 +647,26 @@ Gruppierungsmethoden
 			}
 
 			if (!added){
-				years.add(new YearGroup(year));
-				years.get(years.size()-1).add(track);}
+				group.add(new YearGroup(year));
+				group.get(group.size()-1).add(track);}
 		}
 	}
 
+	private ObservableList<AbstractTrack> turnIntoAbstractTrack(ObservableList<GroupTrack> list)
+	{
 
-	private void groupAll() {
+		ObservableList<AbstractTrack> result = FXCollections.observableArrayList();
+		for (GroupTrack l: list)
+		{
+			result.add(l);
+		}
 
-		groupWeek();
-		groupMonth();
-		groupDay();
-		groupYear();
+		return result;
+
 	}
+
+
+
 
 	@Override
 	public void initialize(URL arg0, ResourceBundle arg1) {
@@ -665,8 +676,8 @@ Gruppierungsmethoden
 		model.updateModel();
 		showTrackTable(mainTable, trackList);
 		backUp = trackList;
-		groupAll();
 		initializeHandlers();
+
 
 	}
 
@@ -685,44 +696,18 @@ Gruppierungsmethoden
 
 				if (rmi!=null)
 				{
-					if (rmi.getText().equals("Week")) {
-						try {
-							createBarChart(selectedItem.getText(), method, weeks);
-						} catch (NoSuchMethodException | InvocationTargetException | IllegalAccessException e) {
-							e.printStackTrace();
-						}
-					}
-
-					else if (rmi.getText().equals("Month")) {
-						try {
-							createBarChart(selectedItem.getText(), method, months);
-						} catch (NoSuchMethodException | InvocationTargetException | IllegalAccessException e) {
-							e.printStackTrace();
-						}
-					}
-
-					else if (rmi.getText().equals("Day")) {
-						try {
-							createBarChart(selectedItem.getText(), method, days);
-						} catch (NoSuchMethodException | IllegalAccessException | InvocationTargetException e) {
-							e.printStackTrace();
-						}
-					}
-
-					else if (rmi.getText().equals("Year")) {
-						try {
-							createBarChart(selectedItem.getText(), method, years);
-						} catch (NoSuchMethodException | IllegalAccessException | InvocationTargetException e) {
-							e.printStackTrace();
-						}
+					try {
+						createBarChart(selectedItem.getText(), method, group);
+					} catch (NoSuchMethodException e) {
+						e.printStackTrace();
+					} catch (InvocationTargetException e) {
+						e.printStackTrace();
+					} catch (IllegalAccessException e) {
+						e.printStackTrace();
 					}
 				}
-				else {
-					try {
-						createBarChart(selectedItem.getText(), method, trackList);
-					} catch (NoSuchMethodException | IllegalAccessException | InvocationTargetException e) {
-						e.printStackTrace();
-					}}
+
+
 			}
 		});
 
@@ -732,61 +717,38 @@ Gruppierungsmethoden
 				RadioMenuItem selectedItem = (RadioMenuItem) tgView.getSelectedToggle();
 				RadioMenuItem rmi = (RadioMenuItem) tgGraph.getSelectedToggle();
 				String method = null;
+
+				group.clear();
+				switch (selectedItem.getText())
+					{
+						case "Week" -> groupWeek();
+						case "Day" -> groupDay();
+						case "Year" -> groupYear();
+						default -> groupMonth();
+					}
+
+
+
+				showGroupTable(turnIntoAbstractTrack(group));
 				if (rmi!= null)
-				{ method = "get" + rmi.getText();}
-
-				if (selectedItem.getText().equals("Week"))
-				{
-					showGroupTable(weeks);
-
-					if (rmi!= null){
-						try {
-							createBarChart(selectedItem.getText(), method, weeks);
-						} catch (NoSuchMethodException | IllegalAccessException | InvocationTargetException e) {
-							e.printStackTrace();
-						}
-					}
-				}
-
-				else if (selectedItem.getText().equals("Day"))
-				{
-					showGroupTable(days);
-
-					if (rmi!= null){
-						try {
-							createBarChart(selectedItem.getText(), method, days);
-						} catch (NoSuchMethodException | IllegalAccessException | InvocationTargetException e) {
-							e.printStackTrace();
-						}
-					}
-				}
-
-				else if (selectedItem.getText().equals("Month"))
-				{
-					showGroupTable(months);
-
-					if (rmi!= null){
-						try {
-							createBarChart(selectedItem.getText(), method, months);
-						} catch (NoSuchMethodException | IllegalAccessException | InvocationTargetException e) {
-							e.printStackTrace();
-						}
+				{ method = "get" + rmi.getText();
+					try {
+						createBarChart(selectedItem.getText(), method, group);
+					} catch (NoSuchMethodException e) {
+						e.printStackTrace();
+					} catch (InvocationTargetException e) {
+						e.printStackTrace();
+					} catch (IllegalAccessException e) {
+						e.printStackTrace();
 					}
 				}
 
 
-				else if (selectedItem.getText().equals("Year"))
-				{
-					showGroupTable(years);
 
-					if (rmi!= null){
-						try {
-							createBarChart(selectedItem.getText(), method, years);
-						} catch (NoSuchMethodException | IllegalAccessException | InvocationTargetException e) {
-							e.printStackTrace();
-						}
-					}
-				}
+
+
+
+
 			}});
 
 
