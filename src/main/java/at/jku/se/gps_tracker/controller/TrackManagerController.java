@@ -33,7 +33,6 @@
 		import java.time.LocalTime;
 		import java.time.temporal.WeekFields;
 		import java.util.Comparator;
-		import java.util.List;
 		import java.util.Locale;
 		import java.util.ResourceBundle;
 
@@ -45,10 +44,6 @@ public class TrackManagerController implements Initializable, ErrorPopUpControll
 	private ObservableList<String> categories;
 	final private ToggleGroup tgMenuTrack;
 
-	final private ObservableList<GroupTrack> weeks = FXCollections.observableArrayList();
-	final private ObservableList<MonthGroup> months = FXCollections.observableArrayList();
-	final private ObservableList<DayGroup> days = FXCollections.observableArrayList();
-	final private ObservableList<YearGroup> years = FXCollections.observableArrayList();
 	private ObservableList<GroupTrack> group = FXCollections.observableArrayList();
 
 
@@ -154,7 +149,7 @@ public class TrackManagerController implements Initializable, ErrorPopUpControll
 			Stage popup = new Stage();
 			StartViewController c = new StartViewController(model, popup);
 			fxmlLoader.setController(c);
-			Parent parent = (Parent) fxmlLoader.load();
+			Parent parent = fxmlLoader.load();
 			Scene popupScene = new Scene(parent);
 			popup.setTitle("TrackStar - Choose Directory");
 			popup.getIcons().add(new Image(getClass().getResourceAsStream("/icon/folder.jpg")));
@@ -319,9 +314,9 @@ public class TrackManagerController implements Initializable, ErrorPopUpControll
 		elevationCol.setCellValueFactory(cellValue -> cellValue.getValue().getElevationProperty());
 
 		table.getColumns().addAll(nameCol, dateCol, startCol, distanceCol, durationCol, paceCol, speedCol, avgBpmCol, maxBpmCol, elevationCol);
-		table.setItems((ObservableList<AbstractTrack>) tl);
+		table.setItems(tl);
 
-		//further adjustments
+		/* further adjustments */
 		table.getSelectionModel().setSelectionMode(SelectionMode.SINGLE);
 		table.refresh();
 
@@ -336,23 +331,23 @@ public class TrackManagerController implements Initializable, ErrorPopUpControll
 			});
 			return row ;});
 
-		FilteredList<AbstractTrack> filteredData = new FilteredList<>((ObservableList<AbstractTrack>) tl, b -> true);
+		FilteredList<AbstractTrack> filteredData = new FilteredList<>(tl, b -> true);
 		keywordTextField.textProperty().addListener((observable, oldValue, newValue) -> filteredData.setPredicate(AbstractTrack -> {
 			if(newValue.isEmpty() || newValue.isBlank() || newValue == null){
 				return true;
 			}
 			String searchKeyword = newValue.toLowerCase();
-			return AbstractTrack.getName().toLowerCase().indexOf(searchKeyword) > -1;
+			return AbstractTrack.getName().toLowerCase().contains(searchKeyword);
 		}));
 
 		SortedList<AbstractTrack> sortedData = new SortedList<>(filteredData);
 		sortedData.comparatorProperty().bind(table.comparatorProperty());
 		table.setItems(sortedData);
 
-		trackList = (ObservableList<AbstractTrack>) tl;
+		trackList = tl;
 	}
 
-	private void showSideTable(TableView table, List<?> tp ){
+	private void showSideTable(TableView<AbstractTrack> table, ObservableList<AbstractTrack> tp ){
 
 		table.getItems().clear();
 		table.getColumns().clear();
@@ -384,7 +379,7 @@ public class TrackManagerController implements Initializable, ErrorPopUpControll
 		elevationCol.setCellValueFactory(cellValue -> cellValue.getValue().getElevationProperty());
 
 		table.getColumns().addAll(nameCol, distanceCol, durationCol, paceCol, speedCol, avgBpmCol, maxBpmCol, elevationCol);
-		table.setItems((ObservableList<AbstractTrack>) tp);
+		table.setItems( tp);
 
 		//further adjustments
 		table.getSelectionModel().setSelectionMode(SelectionMode.SINGLE);
@@ -515,12 +510,7 @@ public class TrackManagerController implements Initializable, ErrorPopUpControll
 Gruppierungsmethoden
 * */
 
-	private void grouping(){
 
-
-
-
-	}
 	private void groupWeek() {
 
 
@@ -656,10 +646,7 @@ Gruppierungsmethoden
 	{
 
 		ObservableList<AbstractTrack> result = FXCollections.observableArrayList();
-		for (GroupTrack l: list)
-		{
-			result.add(l);
-		}
+		result.addAll(list);
 
 		return result;
 
@@ -698,11 +685,7 @@ Gruppierungsmethoden
 				{
 					try {
 						createBarChart(selectedItem.getText(), method, group);
-					} catch (NoSuchMethodException e) {
-						e.printStackTrace();
-					} catch (InvocationTargetException e) {
-						e.printStackTrace();
-					} catch (IllegalAccessException e) {
+					} catch (NoSuchMethodException | IllegalAccessException | InvocationTargetException e) {
 						e.printStackTrace();
 					}
 				}
@@ -716,7 +699,7 @@ Gruppierungsmethoden
 			if (tgView.getSelectedToggle() != null) {
 				RadioMenuItem selectedItem = (RadioMenuItem) tgView.getSelectedToggle();
 				RadioMenuItem rmi = (RadioMenuItem) tgGraph.getSelectedToggle();
-				String method = null;
+				String method;
 
 				group.clear();
 				switch (selectedItem.getText())
@@ -734,11 +717,7 @@ Gruppierungsmethoden
 				{ method = "get" + rmi.getText();
 					try {
 						createBarChart(selectedItem.getText(), method, group);
-					} catch (NoSuchMethodException e) {
-						e.printStackTrace();
-					} catch (InvocationTargetException e) {
-						e.printStackTrace();
-					} catch (IllegalAccessException e) {
+					} catch (NoSuchMethodException | InvocationTargetException | IllegalAccessException e) {
 						e.printStackTrace();
 					}
 				}
