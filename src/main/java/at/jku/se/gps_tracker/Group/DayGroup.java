@@ -19,9 +19,6 @@ public class DayGroup extends GroupTrack {
         return date;
     }
 
-    public void setDate(LocalDate date) {
-        this.date = date;
-    }
 
     public void setName(){
         super.setName(date.toString());

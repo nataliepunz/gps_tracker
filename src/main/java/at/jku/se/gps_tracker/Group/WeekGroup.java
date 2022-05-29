@@ -6,7 +6,7 @@ import java.util.Calendar;
 
 public class WeekGroup extends GroupTrack {
 
-    private int week;
+    protected int week;
 
 
     public WeekGroup(int week, int year)
@@ -21,9 +21,8 @@ public class WeekGroup extends GroupTrack {
     public Calendar getFirstDayOfWeek(int week) {
 
         int year = super.getYear();
-        int day = 1; //monday = first day
         Calendar calendar = Calendar.getInstance();
-        calendar.setWeekDate(year, week, 1);
+        calendar.setWeekDate(year, week, Calendar.MONDAY);
 
         return calendar;
 
@@ -43,9 +42,7 @@ public class WeekGroup extends GroupTrack {
         String weekStr = Integer.toString(week);
 
         if (week <10)
-        {
-            weekStr = String.format("%02d", week);;
-        }
+        {weekStr = String.format("%02d", week);}
 
         super.setName("W: " + weekStr + " (" + sdf.format(getFirstDayOfWeek(week).getTime()) + " - " + sdf.format(getLastDayOfWeek(week).getTime()) + "."+ getYear() + ")");
     }

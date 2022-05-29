@@ -6,7 +6,7 @@ import java.util.Locale;
 
 public class MonthGroup extends GroupTrack {
 
-    private int month;
+    protected int month;
 
     public MonthGroup(int month, int year)
     {

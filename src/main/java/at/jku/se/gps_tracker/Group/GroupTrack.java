@@ -12,24 +12,15 @@ public abstract class GroupTrack extends AbstractTrack {
 
 
     protected int year;
-    private List<Track> tracks = new ArrayList<>();
+    protected List<AbstractTrack> tracks = new ArrayList<>();
     private int count;
     private String name;
+    protected double speed;
+    protected Duration pace;
 
-   protected int xAxis;
-    String group;
+    protected int xAxis; //dient für die vergleichsfunktionalität
+    String group; // dient für die group funktionalität
 
-    private double speed;
-    private Duration pace;
-
-
-    public List<Track> getTracks() {
-        return tracks;
-    }
-
-    public Boolean compatible(Track track){
-        return true;
-    }
 
     public int getWeek()
     {
@@ -45,19 +36,10 @@ public abstract class GroupTrack extends AbstractTrack {
         return name;
     }
 
-
-
-    public Boolean contains(Track track){
-        return tracks.contains(track);
-    }
-
-    public void remove(Track track){
-        tracks.remove(track);
-    }
-
     public void add(Track track){
         tracks.add(track);
         count = tracks.size();
+
         if (tracks.size() <2)
         {
             super.distance += track.getDistance();
@@ -65,8 +47,8 @@ public abstract class GroupTrack extends AbstractTrack {
             super.maximumBPM = track.getMaximumBPM();
             super.duration = track.getDuration();
             super.elevation = track.getElevation();
-            speed = track.getSpeed();
-            pace = track.getPace();
+            this.speed = track.getSpeed();
+            this.pace = Duration.ofMinutes(track.getPace().toMinutes());
         }
         else {
             super.distance += track.getDistance();
@@ -74,21 +56,11 @@ public abstract class GroupTrack extends AbstractTrack {
             super.maximumBPM = newMaximumBPM(track.getMaximumBPM());
             super.duration = super.getDuration().plus(track.getDuration());
             super.elevation = newElevation(track.getElevation());
-            speed = newSpeed(track.getSpeed());
-            pace = Duration.ofMinutes(newPace(track.getPace()));
+            this.speed = newSpeed(track.getSpeed());
+            this.pace = Duration.ofMinutes(newPace(track.getPace()));
         }
     }
 
-
-    public void setSpeed(double speed)
-    {
-        this.speed = speed;
-    }
-
-    public void setPace(Duration pace)
-    {
-        this.pace = pace;
-    }
     public int getYear() {
        return year;
     }
@@ -100,7 +72,7 @@ public abstract class GroupTrack extends AbstractTrack {
 
     public double newSpeed (Double speed) {
         double temp = speed;
-        for (Track t: tracks) {
+        for (AbstractTrack t: tracks) {
             temp += t.getSpeed();
         }
         return temp / tracks.size();
@@ -108,7 +80,7 @@ public abstract class GroupTrack extends AbstractTrack {
 
     public double newElevation (double elevation) {
         double temp = elevation;
-        for (Track t: tracks) {
+        for (AbstractTrack t: tracks) {
             temp += t.getElevation();
         }
         return temp / tracks.size();
@@ -116,22 +88,22 @@ public abstract class GroupTrack extends AbstractTrack {
 
     public long newPace (Duration pace) {
         Duration temp = pace;
-        for (Track t: tracks) {
-            temp.plus(t.getPace());
+        for (AbstractTrack t: tracks) {
+            temp = temp.plus(t.getPace());
         }
         return temp.toMinutes() / tracks.size();
     }
 
     public int newAverageBPM (int averageBPM) {
         int avg = averageBPM;
-        for (Track t: tracks) {
+        for (AbstractTrack t: tracks) {
             avg += t.getAverageBPM();
         }
         return avg / tracks.size();
     }
     public int newMaximumBPM (int maxBPM) {
-        int max = 0;
-        for (Track t: tracks) {
+        int max = maxBPM;
+        for (AbstractTrack t: tracks) {
             if (t.getMaximumBPM() > max )
                 max = t.getMaximumBPM();
         }
