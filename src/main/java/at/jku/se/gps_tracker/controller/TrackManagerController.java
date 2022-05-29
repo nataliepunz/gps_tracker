@@ -194,6 +194,7 @@ public class TrackManagerController implements Initializable,
     }
 
     /* erstellt dynamisch abhängig von der trackliste die items für jahresvergleich */
+    @SuppressWarnings("null")
     private void setUpYearsItems() {
 
         RadioMenuItem selected = (RadioMenuItem) tgMenuTrack.getSelectedToggle(); //letzte selektion wird gespeichert, damit man sie wiederherstellt
@@ -219,10 +220,8 @@ public class TrackManagerController implements Initializable,
         for (MenuItem cmi: mYears.getItems()) {
             if (cmi != sep && cmi != cmiYearly) { //es sollen nur actionhandler für dynamische items initialisiert werden
                 CheckMenuItem ci = (CheckMenuItem) cmi;
-
                 ci.setOnAction(e ->{
                 if (ci.isSelected()) {
-
                     if (year1 != null && year2 != null) {
                         Alert alert = new Alert(Alert.AlertType.WARNING);
                         alert.setTitle("WARNING");
@@ -235,26 +234,29 @@ public class TrackManagerController implements Initializable,
                             if (findSelected.isSelected()) {
                                 findSelected.setSelected(false);
                                 year1 = ci.getText(); //setzen des neuen items
-                                break;
-                            }
+                                break;}
+
+                            }}
+                     else {
+                        if (year1 == null) // setzt die jahr1 für vergleich
+                        {
+                            year1 = ci.getText();
                         }
 
-                    } else {
-                        if (year1 == null) // setzt die jahr1 für vergleich
-                            year1 = ci.getText();
-
-                        else if (year2 == null) //settz jahr2 für vergliech
-                            year2 = ci.getText();
-
-                        else //falls 2 bereits ausgewhält
-                            year1 = ci.getText();
+                        else //noinspection ConstantConditions
+                            if (year2 == null) // setzt die jahr1 für vergleich
+                        {
+                            year2= ci.getText();
+                        }
                     }
-                } else { //bei deselektion
-                    year1 = null;
                 }
-				});
-            }
+                else { //bei deselektion
+                    if (year1!= null)
+                    year1 = null;
+                    else year2 = null;}
 
+                });
+            }
         }
 
         selected.setSelected(true); //ursprüngliche selektikon
@@ -916,7 +918,7 @@ public class TrackManagerController implements Initializable,
             String method;
 
             group.clear();
-            if (year1 != null & year2 != null) {
+            if (year1 != null && year2 != null) {
                 setTrackListAll();
             }
             //Gruppiert Elemente je nachdem, was ausgewählt wurde
