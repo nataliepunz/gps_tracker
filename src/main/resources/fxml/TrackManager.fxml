@@ -3,6 +3,7 @@
 <?import javafx.scene.chart.BarChart?>
 <?import javafx.scene.chart.CategoryAxis?>
 <?import javafx.scene.chart.NumberAxis?>
+<?import javafx.scene.control.CheckMenuItem?>
 <?import javafx.scene.control.Menu?>
 <?import javafx.scene.control.MenuBar?>
 <?import javafx.scene.control.MenuItem?>
@@ -17,7 +18,7 @@
 <?import javafx.scene.layout.GridPane?>
 <?import javafx.scene.layout.RowConstraints?>
 
-<AnchorPane prefHeight="630.0" prefWidth="800.0" xmlns="http://javafx.com/javafx/15.0.1" xmlns:fx="http://javafx.com/fxml/1">
+<AnchorPane prefHeight="630.0" prefWidth="800.0" xmlns="http://javafx.com/javafx/18" xmlns:fx="http://javafx.com/fxml/1">
     <children>
         <BorderPane fx:id="borderpane" prefHeight="630.0" prefWidth="1300.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
             <top>
@@ -56,12 +57,12 @@
                             <RadioMenuItem fx:id="miTrackPoints" mnemonicParsing="false" onAction="#segmentTrackPoints" text="Track Points" toggleGroup="$tgSegment" />
                         </Menu>
                         <Menu fx:id="mGraph" mnemonicParsing="false" text="Graph">
-                            <RadioMenuItem fx:id="miDistance" mnemonicParsing="false"  text="Distance">
+                            <RadioMenuItem fx:id="miDistance" mnemonicParsing="false" text="Distance">
                                 <toggleGroup>
                                     <ToggleGroup fx:id="tgGraph" />
                                 </toggleGroup>
                             </RadioMenuItem>
-                            <RadioMenuItem fx:id="miDuration" mnemonicParsing="false"  text="Duration" toggleGroup="$tgGraph" />
+                            <RadioMenuItem fx:id="miDuration" mnemonicParsing="false" text="Duration" toggleGroup="$tgGraph" />
                             <RadioMenuItem fx:id="miElevation" mnemonicParsing="false" text="Elevation" toggleGroup="$tgGraph" />
                             <RadioMenuItem fx:id="miSpeed" mnemonicParsing="false" text="Speed" toggleGroup="$tgGraph" />
                             <RadioMenuItem fx:id="miHeartbeat" mnemonicParsing="false" text="Heartbeat" toggleGroup="$tgGraph" />
@@ -70,16 +71,23 @@
                         </Menu>
                         <Menu fx:id="mView" mnemonicParsing="false" text="View">
 
-                            <RadioMenuItem fx:id="miView" mnemonicParsing="false" onAction="#viewDay" text="Day">
+                            <RadioMenuItem fx:id="miView" mnemonicParsing="false" text="Day">
                                 <toggleGroup>
                                     <ToggleGroup fx:id="tgView" />
                                 </toggleGroup>
                             </RadioMenuItem>
-                            <RadioMenuItem fx:id="miWeek" mnemonicParsing="false" onAction="#viewWeek" text="Week" toggleGroup="$tgView" />
-                            <RadioMenuItem fx:id="miMonth" mnemonicParsing="false" onAction="#viewMonth" text="Month" toggleGroup="$tgView" />
-
+                            <RadioMenuItem fx:id="miWeek" mnemonicParsing="false" text="Week" toggleGroup="$tgView" />
+                            <RadioMenuItem fx:id="miMonth" mnemonicParsing="false" text="Month" toggleGroup="$tgView" />
+                            <RadioMenuItem fx:id="miYear" mnemonicParsing="false" text="Year" toggleGroup="$tgView" />
 
                         </Menu>
+                        <Menu fx:id="mYears" mnemonicParsing="false" text="Years">
+                     <items>
+                        <CheckMenuItem fx:id="cmiYearly" mnemonicParsing="false" onAction="#eventYearly" text="Yearly Comparison" />
+                        <SeparatorMenuItem fx:id="sep" mnemonicParsing="false" />
+                     </items>
+                        </Menu>
+
                         <Menu fx:id="mHelp" mnemonicParsing="false" text="Help">
 
                             <MenuItem fx:id="miUserGuide" mnemonicParsing="false" onAction="#openUserGuide" text="Open User Guide" />

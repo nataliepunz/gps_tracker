@@ -16,13 +16,13 @@ import at.jku.se.gps_tracker.model.Track;
 import at.jku.se.gps_tracker.model.TrackPoint;
 
 class GPXParser extends TrackParser{
-				
+
 	static Track readGPXTrack(String file, XMLStreamReader streamReader) throws XMLStreamException {
 		resetFields();
 		readTrack(streamReader);
 		return createGPXTrack(file);
 	}
-	
+
 	private static void readTrack(XMLStreamReader streamReader) throws XMLStreamException {
 		while (streamReader.hasNext()) {
 			if (streamReader.isStartElement() && streamReader.getLocalName().equals("trk")) {
@@ -32,7 +32,7 @@ class GPXParser extends TrackParser{
 		}
 		streamReader.close();
 	}
-	
+
 	private static void manageGPXTracks(XMLStreamReader streamReader) throws XMLStreamException {
 		while (streamReader.hasNext()) {
 			streamReader.next();
@@ -58,7 +58,7 @@ class GPXParser extends TrackParser{
 			}
 		}
 	}
-	
+
 	private static void manageGPXTrackPointElement(XMLStreamReader streamReader) throws XMLStreamException {
 		trackPointElevation = 0;
 		trackPointElevationChange = 0;
@@ -88,7 +88,7 @@ class GPXParser extends TrackParser{
 					}
 				}
 			}
-			
+
 			if(streamReader.isEndElement() && "trkpt".equals(streamReader.getLocalName())) {
 				createGPXTrackPoint();
 				break;
@@ -108,7 +108,7 @@ class GPXParser extends TrackParser{
 			totalElevation += trackPointElevationChange;
 		}
 	}
-	
+
 	private static void calculateGPXTime(XMLStreamReader streamReader) throws XMLStreamException {
 		trackPointTimePoint = Instant.parse(streamReader.getElementText());
 		if(trackTimeDate==null) {
@@ -121,7 +121,7 @@ class GPXParser extends TrackParser{
 		totalDuration = totalDuration.plus(trackPointDuration);
 		prevTrackPointTime = trackPointTimePoint;
 	}
-	
+
 	private static void createGPXTrackPoint() {
 		if(!trackPointElevationSet){
 			trackPointElevation = prevTrackPointElevation;
@@ -136,7 +136,7 @@ class GPXParser extends TrackParser{
 			prevTrackPointElevation = trackPointElevation;
 		}
 	}
-	
+
 	private static Track createGPXTrack(String file) {
 		if(trackTimeDate==null) {
 			trackTimeDate = Instant.now();
@@ -145,10 +145,10 @@ class GPXParser extends TrackParser{
 			trackName=FilenameUtils.getName(file);
 		}
 		return new Track.TrackBuilder(new File(file).getParentFile().getName(),FilenameUtils.getName(file),trackName, LocalDate.ofInstant(trackTimeDate, ZoneId.systemDefault()), LocalTime.parse(LocalTime.ofInstant(trackTimeDate, ZoneId.systemDefault()).format(dtf)))
-					.distance(totalDistance)
-					.duration(totalDuration)
-					.elevation(totalElevation)
-					.trackPoints(trackPointsList)
-					.build();
-	}	
+				.distance(totalDistance)
+				.duration(totalDuration)
+				.elevation(totalElevation)
+				.trackPoints(trackPointsList)
+				.build();
+	}
 }

@@ -4,14 +4,14 @@ import javafx.beans.property.*;
 import java.time.Duration;
 
 public abstract class AbstractTrack {
-		
+
 	private final String name;
-	private final double distance;
-	private final Duration duration;
-	private final int averageBPM;
-	private final int maximumBPM;
-	private final double elevation;
-	
+	protected double distance;
+	protected  Duration duration;
+	protected int averageBPM;
+	protected  int maximumBPM;
+	protected double elevation;
+
 	protected AbstractTrack() {
 		this.name = null;
 		this.distance = 0;
@@ -41,10 +41,13 @@ public abstract class AbstractTrack {
 	public double getDistance() {
 		return distance;
 	}
-	
+
 	public Duration getDuration() {
 		return duration;
 	}
+
+	public long getDurationMinutes(){
+	return this.duration.toMinutes();}
 
 	public Duration getPace() {
 		return calculatePace();
@@ -65,11 +68,11 @@ public abstract class AbstractTrack {
 	public double getElevation() {
 		return elevation;
 	}
-		
+
 	public SimpleDoubleProperty getDistanceProperty() {
 		return new SimpleDoubleProperty(doubleFormatter(distance));
 	}
-	
+
 	public SimpleStringProperty getDurationProperty() {
 		return new SimpleStringProperty(formatDuration(duration));
 	}
@@ -77,20 +80,20 @@ public abstract class AbstractTrack {
 	public SimpleStringProperty getPaceProperty() {
 		return new SimpleStringProperty(formatDuration(calculatePace()));
 	}
-	
+
 	public SimpleDoubleProperty getSpeedProperty() {
 		return new SimpleDoubleProperty(doubleFormatter(calculateSpeed()));
 	}
-	
+
 	public SimpleDoubleProperty getElevationProperty() {
 		return new SimpleDoubleProperty(doubleFormatter(elevation));
 	}
-	
+
 	//zum Runden auf zwei Dezimalstellen
 	private static double doubleFormatter(double number) {
 		return (double) Math.round(number * 100) / 100;
 	}
-	
+
 	private Duration calculatePace() {
 		if(distance==0 || duration.getSeconds()==0) {
 			return Duration.ofSeconds(0);
@@ -101,7 +104,7 @@ public abstract class AbstractTrack {
 			return pace;
 		}
 	}
-	
+
 	private double calculateSpeed() {
 		if(distance==0 || duration.getSeconds()==0) {
 			return 0;
@@ -109,7 +112,7 @@ public abstract class AbstractTrack {
 			return ((distance/duration.getSeconds()) * 3.6);
 		}
 	}
-	
+
 	//Quelle: https://stackoverflow.com/a/266846/5750106
 	private static String formatDuration(Duration duration) {
 		long seconds = duration.getSeconds();
@@ -120,5 +123,9 @@ public abstract class AbstractTrack {
 				(absSeconds % 3600) / 60,
 				absSeconds % 60);
 		return seconds < 0 ? "-" + positive : positive;
+	}
+
+	public int getCount() {
+		return 0;
 	}
 }

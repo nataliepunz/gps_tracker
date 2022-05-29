@@ -13,12 +13,12 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class DataModel implements ErrorPopUpController {
-	
+
 	public static final String ALL_TRACK_KEYWORD = "All/Tracks";
 	private static final String DATABASE_NAME = "track.db";
 	private static final String[] EXTENSIONS = new String[] { "gpx", "tcx" };
 	private static final String APPLICATION_TITEL = "TrackStar";
-		
+
 	private ObservableList<Track> trackList;
 	private String directory;
 	private ObservableList<String> directoryFolders;
@@ -40,12 +40,12 @@ public class DataModel implements ErrorPopUpController {
 		this.directory = directory;
 		adjustDirectoryFolders();
 	}
-	
+
 	public void adjustDirectoryFolders() {
 		setDirectoryFolders();
 		changeModel();
 	}
-	
+
 	private void setDirectoryFolders() {
 		if(directory==null) {
 			return;
@@ -54,7 +54,7 @@ public class DataModel implements ErrorPopUpController {
 		directoryFolders.clear();
 		directoryFolders.addAll(new File(directory).list((dir, name) -> new File(dir, name).isDirectory()));
 	}
-	
+
 	public void changeModel() {
 		if(!directoryFolders.isEmpty()){
 			establishDBConnection();
@@ -66,13 +66,13 @@ public class DataModel implements ErrorPopUpController {
 			trackList.clear();
 		}
 	}
-			
+
 	private void establishDBConnection() {
 		if(!directory.equals(conn.getDirectory())){
 			conn.establishConnection(directory, DATABASE_NAME);
 		}
 	}
-	
+
 	public void adjustDirectoryFolder(String directoryFolder) {
 		setDirectoryFolder(directoryFolder);
 		updateTrackListFromDB();
@@ -102,7 +102,7 @@ public class DataModel implements ErrorPopUpController {
 			}
 		}
 	}
-	
+
 	public void updateModel() {
 		long start = System.nanoTime();
 		if(checkConnection()) {
@@ -114,7 +114,7 @@ public class DataModel implements ErrorPopUpController {
 		}
 		System.out.println("Zeit fürs Einlesen von "+ trackList.size() +" GPS-Dateien: "+(double) (System.nanoTime()-start)/1000000);
 	}
-	
+
 	private void updateModelAllTracks() {
 		for(String directoryFolderFromLoop : directoryFolders) {
 			if (!new File(FilenameUtils.concat(directory,directoryFolderFromLoop)).exists()) {
@@ -124,7 +124,7 @@ public class DataModel implements ErrorPopUpController {
 			trackList.addAll(conn.toBeAddedTracks(directoryFolderFromLoop));
 		}
 	}
-		
+
 	private void updateModelOneFolder() {
 		if(!checkDirectoryExistence()) {
 			return;
@@ -132,19 +132,19 @@ public class DataModel implements ErrorPopUpController {
 		trackList.removeAll(removeTracks(conn.toBeRemovedTracks(directoryFolder)));
 		trackList.addAll(conn.toBeAddedTracks(directoryFolder));
 	}
-	
+
 	private List<Track> removeTracks(List<List<String>> trackDetails) {
 		List<Track> toBeRemovedTracks = new ArrayList<>();
 		for(List<String> trackDetail : trackDetails) {
 			toBeRemovedTracks.add(trackList.stream()
-				.filter(t -> t.getFileName().equals(trackDetail.get(0)) && t.getParentDirectory().equals(trackDetail.get(1)))
-				.findAny()
-				.orElse(null)
+					.filter(t -> t.getFileName().equals(trackDetail.get(0)) && t.getParentDirectory().equals(trackDetail.get(1)))
+					.findAny()
+					.orElse(null)
 			);
-		}		
+		}
 		return toBeRemovedTracks;
 	}
-	
+
 	private boolean checkDirectoryExistence() {
 		if(directoryFolder==null || directory==null) {
 			showErrorPopUpNoWait("Ensure that a valid directory has been choosen! Otherwise update the directory!");
@@ -162,25 +162,25 @@ public class DataModel implements ErrorPopUpController {
 	public ObservableList<Track> getTrackList(){
 		return trackList;
 	}
-	
+
 	public ObservableList<String> getDirectoryFolders() {
 		return directoryFolders;
 	}
-	
+
 	public String getDirectoryFolder() {
 		return directoryFolder;
 	}
-	
+
 	public void closeConnection() {
 		if(checkConnection()) {
 			conn.closeConnection();
 		}
 	}
-	
+
 	private boolean checkConnection() {
 		return this.conn.checkConnection(this.directory);
 	}
-	
+
 	public List<TrackPoint> getTrackPoints(Track track){
 		if(track==null) {
 			return new ArrayList<>();

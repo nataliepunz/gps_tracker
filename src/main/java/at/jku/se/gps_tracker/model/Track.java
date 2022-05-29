@@ -12,7 +12,7 @@ public class Track extends AbstractTrack {
 	private final String fileName;
 	private final String parentDirectory;
 	private List<TrackPoint> trackPoints;
-	
+
 	private Track(TrackBuilder trackBuilder) {
 		super(trackBuilder.name,trackBuilder.distance,trackBuilder.duration,trackBuilder.averageBPM,trackBuilder.maximumBPM,trackBuilder.elevation);
 		this.fileName=trackBuilder.fileName;
@@ -21,7 +21,7 @@ public class Track extends AbstractTrack {
 		this.parentDirectory=trackBuilder.parentDirectory;
 		this.trackPoints = trackBuilder.trackPoints;
 	}
-	
+
 	public Track() {
 		this.date = null;
 		this.startTime = null;
@@ -52,7 +52,7 @@ public class Track extends AbstractTrack {
 	public void setTrackPoints(List<TrackPoint> trackpoints) {
 		this.trackPoints=trackpoints;
 	}
-	
+
 	public static class TrackBuilder{
 		private String name;
 		private String fileName;
@@ -65,7 +65,7 @@ public class Track extends AbstractTrack {
 		private int maximumBPM;
 		private double elevation;
 		private List<TrackPoint> trackPoints;
-		
+
 		public TrackBuilder (String parentDirectory, String fileName, String name, LocalDate trackDate, LocalTime trackTime) {
 			this.name=name;
 			this.fileName=fileName;
@@ -73,42 +73,41 @@ public class Track extends AbstractTrack {
 			this.trackDate=trackDate;
 			this.trackTime=trackTime;
 		}
-		
+
 		public TrackBuilder distance(double distance) {
 			this.distance=distance;
 			return this;
 		}
-		
+
 		public TrackBuilder duration(Duration duration) {
 			this.duration=duration;
 			return this;
 		}
-		
+
 		public TrackBuilder averageBPM(int averageBPM) {
 			this.averageBPM=averageBPM;
 			return this;
 		}
-		
+
 		public TrackBuilder maximumBPM(int maximumBPM) {
 			this.maximumBPM=maximumBPM;
 			return this;
 		}
-		
+
 		public TrackBuilder elevation(double elevation) {
 			this.elevation=elevation;
 			return this;
 		}
-		
+
 		public TrackBuilder trackPoints(List<TrackPoint> trackPoints) {
 			this.trackPoints=trackPoints;
 			return this;
 		}
-		
+
 		public Track build() {
 			return new Track(this);
 		}
-		
-	}
-	
-}
 
+	}
+
+}
