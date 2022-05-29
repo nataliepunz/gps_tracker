@@ -28,6 +28,7 @@ import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.image.Image;
 import javafx.stage.Stage;
 
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
@@ -40,6 +41,12 @@ import java.util.ResourceBundle;
 
 import javax.xml.stream.XMLStreamException;
 
+import org.apache.commons.io.FilenameUtils;
+/**
+ * main controller for handling user input and visualizing information
+ * @author Ozan, Nuray, Natalie
+ *
+ */
 public class TrackManagerController implements Initializable, ErrorPopUpController {
 	//TODO : Optische Korrekturen
 	private DataModel model;
@@ -59,17 +66,21 @@ public class TrackManagerController implements Initializable, ErrorPopUpControll
 		tgMenuTrack = new ToggleGroup();
 	}
 	
-	/** set up the lists and add listeners
-	 * 
-	 * 
+	/**
+	 * executed at start of the application
+	 * sets the necessary lists up by loading them in from the datamodel and adding a listener to keep them in sync throughout the runtime
+	 * @author Ozan 
 	 */
-
 	private void setUpLists() {
 		setTrackList();
 		setCategories();
-		setUpMenuItems();
+		setUpTrackMenuItems();
 	}
-
+	
+	/**
+	 * sets the tracklist up based on read tracks
+	 * @author Ozan
+	 */
 	private void setTrackList() {
 		trackList = FXCollections.observableArrayList(model.getTrackList());
 		model.getTrackList().addListener((ListChangeListener<? super Track>) c -> {
@@ -84,6 +95,12 @@ public class TrackManagerController implements Initializable, ErrorPopUpControll
 		});
 	}
 	
+	/**
+	 * sets the categories based on the directory folders inside the choosen folder
+	 * also calls the setUpMenuItems method to re-setUp the RadioMenuItems for the filter choices after changes in the directory
+	 * @author Ozan
+	 * 
+	 */
 	private void setCategories() {
 		categories = FXCollections.observableArrayList(model.getDirectoryFolders());
 		model.getDirectoryFolders().addListener((ListChangeListener<? super String>) c -> {
@@ -95,10 +112,15 @@ public class TrackManagerController implements Initializable, ErrorPopUpControll
 					categories.removeAll(c.getRemoved());
 				}
 			}
-			setUpMenuItems();
+			setUpTrackMenuItems();
 		});
 	}
 	
+	/**
+	 * adds a listener to the toggelgroup to get the choosen filter option and calls changeCategory to set the new filter category
+	 * -- the exception handling is done because of nuray non-excpetion handling in her method
+	 * @author Ozan
+	 */
 	private void setUpMenuTrack() {
 		tgMenuTrack.selectedToggleProperty().addListener(listener -> {
 			if (tgMenuTrack.getSelectedToggle() != null) {
@@ -117,35 +139,118 @@ public class TrackManagerController implements Initializable, ErrorPopUpControll
 	}
 	
 	/**
-	 * set up Menu File
-	 * @throws IOException 
-	 * @throws XMLStreamException 
-	 * 
+	 * set up the Menu File in the application 
+	 * @author Ozan
 	 */
 	
+	/**
+	 * calls chooseDirectory to set the new directory in the datamodel
+	 * then calls the method syncTracks to read any new tracks in or delete none exisiting tracks
+	 * -- sideTable method call by nuray
+	 * @author Ozan
+	 * @param event JAVA-FX necessity
+	 */
 	@FXML
 	private void setDirectory(ActionEvent event) {
 		chooseDirectory();
-		model.updateModel();
+		syncTracks();
 		sideTable.getItems().clear(); //setzt sidetable zurück da sie sonst die letzte instanz anzeigt
 	}
 	
+	/**
+	 * calls the setDirectoryFolders method in the datamodel to update the subfolders
+	 * calls changeModel in datamodel to read in the tracks for the new directory folder 
+	 * @author Ozan
+	 * @param event JAVA-FX necessity
+	 */
 	@FXML
 	private void updateDirectoryFolders(ActionEvent event) {
-		model.adjustDirectoryFolders();
+		model.setDirectoryFolders();
+		model.changeModel();
 	}
 	
+	/**
+	 * synchronises the current folder and the database entries
+	 * @author Ozan
+	 * @param event JAVA-FX necessity
+	 */
 	@FXML
 	private void updateModel(ActionEvent event) {
-		model.updateModel();
+		syncTracks();
 	}
 
+	/**
+	 * closes the connection to the database and closes the application
+	 * @author Ozan
+	 * @param event JAVA-FX necessity
+	 */
 	@FXML
 	private void closeApplication(ActionEvent event) {
 		model.closeConnection();
 		Platform.exit();
 	}
 	
+	/**
+	 * synchronises the current folder and the database entries
+	 * either by calling every subfolder if all tracks are reqeuested or only the selected subfolder
+	 * @author Ozan
+	 */
+	private void syncTracks() {
+		if(DataModel.ALL_TRACK_KEYWORD.equals(model.getDirectoryFolder())) {
+			for(String folder : model.getDirectoryFolders()) {
+				syncTracks(folder);
+			}
+		} else {
+			syncTracks(model.getDirectoryFolder());
+		}		
+	}
+	
+	/**
+	 * implements the syncTracks method
+	 * reads the difference between folder - database (to add) or database - folder (to delete)
+	 * calls the add or remove method in datamodel accordingly
+	 * @author Ozan
+	 * @param directoryFolder
+	 */
+	private void syncTracks(String directoryFolder) {
+		List<String> toAddTracks;
+		List<String> toDeleteTracks;
+		try {
+			toAddTracks = model.getDifferenceDriveAndDB(true, directoryFolder);
+			toDeleteTracks = model.getDifferenceDriveAndDB(false, directoryFolder);
+		} catch (FileNotFoundException e1) {
+			showErrorPopUpNoWait("ERROR! NOT POSSIBLE TO ACCESS DIRECTORY FOLDER "+directoryFolder+". REMEMBER TO UPDATE AFTER EVERY FOLDER STRUCTURE CHANGE!");
+				if(!DataModel.ALL_TRACK_KEYWORD.equals(model.getDirectoryFolder())){
+					model.setDirectoryFolders();
+					model.changeModel();
+					model.updateTrackListFromDB();
+					syncTracks();
+			}
+			return;
+		} catch (NullPointerException e2) {
+			showErrorPopUpNoWait("ERROR NOT VALID SETUP!");
+			return;
+		}
+		
+		for(String s : toAddTracks) {
+			try {
+				model.addTrack(s);
+			} catch (FileNotFoundException e) {
+				showErrorPopUpNoWait("ERROR! FILE "+ FilenameUtils.getName(s) +" COULD NOT BE FOUND!");
+			} catch (XMLStreamException e) {
+				showErrorPopUpNoWait("ERROR! FILE "+ FilenameUtils.getName(s) +" COULD NOT BE PARSED!");
+			}
+		}
+		
+		for(String s : toDeleteTracks) {
+			model.removeTrack(s, directoryFolder);
+		}
+	}
+	
+	/**
+	 * loads in a new View/Window for choosing the desired directory
+	 * @author Ozan
+	 */
 	private void chooseDirectory() {
 		try {
 			FXMLLoader fxmlLoader = new FXMLLoader();
@@ -169,11 +274,16 @@ public class TrackManagerController implements Initializable, ErrorPopUpControll
 	 * 
 	 * Menu Item Track set up
 	 */
-	
+		
 	@FXML
 	private Menu mTracks;
-
-	private void setUpMenuItems() {
+	
+	/**
+	 * sets the track menu items up and sets the first one (if it exists) as the default one
+	 * also includes the keyword for requesting all tracks
+	 * @author Ozan
+	 */
+	private void setUpTrackMenuItems() {
 
 		mTracks.getItems().clear();
 		tgMenuTrack.selectToggle(null);
@@ -196,11 +306,23 @@ public class TrackManagerController implements Initializable, ErrorPopUpControll
 		}
 	}
 
-	//je nach Index entsprechend holen! (erster Eintrag ausgewählt --> hier erste (bzw 0 auswählen!)
-	private void changeCategory(String category) throws InvocationTargetException, NoSuchMethodException, IllegalAccessException { //index als parameter hinzugefügt - nuray
-		model.adjustDirectoryFolder(category);
-		model.updateModel();
-		changeChart(); //aktualisiert chart
+	/**
+	 * 
+	 * changes the active subdirectory and updates the model accordingly
+	 * only if a active connection with the database exists
+	 * @param subfolder the desired
+	 * @author Ozan (except changeChart and their exceptions -> Nuray)
+	 * @throws InvocationTargetException  due to changeChart method
+	 * @throws NoSuchMethodException due to changeChart method
+	 * @throws IllegalAccessException due to changeChart method
+	 */
+	private void changeCategory(String subfolder) throws InvocationTargetException, NoSuchMethodException, IllegalAccessException { //index als parameter hinzugefügt - nuray
+		if(model.checkConnection()) {
+			model.setDirectoryFolder(subfolder);
+			model.updateTrackListFromDB();
+			syncTracks();
+			changeChart();
+		}
 	}
 
 
@@ -286,8 +408,6 @@ public class TrackManagerController implements Initializable, ErrorPopUpControll
 
 	}
 
-	
-	
 	//TODO: UserGuide Methode Implementieren
 	@FXML
 	private void openUserGuide(ActionEvent event){
@@ -369,8 +489,23 @@ public class TrackManagerController implements Initializable, ErrorPopUpControll
 		trackList = (ObservableList<Track>) tl;
 	}
 	
+	/**
+	 * returns the trackPoints of the given track
+	 * @author Ozan
+	 * @param track the track from which trackPoints should be retrieved
+	 * @return TrackPoints of the given track as List
+	 */
 	private List<TrackPoint> getTrackPointsOnClick(Track track) {
-		return model.getTrackPoints(track);
+		try {
+			return model.getTrackPoints(track);
+		} catch (FileNotFoundException e) {
+			syncTracks();
+			showErrorPopUpNoWait("TRACK NOT FOUND ANYMORE! REMEMBER TO UPDATE TRACKS AFTER EVERY CHANGE!");
+		} catch (XMLStreamException e) {
+			syncTracks();
+			showErrorPopUpNoWait("TRACK NOT CONFIRMING TO SPECIFICATION!");
+		}
+		return new ArrayList<>();
 	}
 
 	private void showSideTable(TableView table, List<?> tp ){
@@ -451,11 +586,10 @@ public class TrackManagerController implements Initializable, ErrorPopUpControll
 		setUpLists();
 		chooseDirectory();
 		setUpMenuTrack();
-		model.updateModel();
+		syncTracks();
 		showTrackTable(mainTable, trackList);
 
 		initializeHandlers();
-
 	}
 
 	public void initializeHandlers()

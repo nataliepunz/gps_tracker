@@ -308,12 +308,7 @@ public class TrackParserTest {
 		assertEquals("TCXTracks", track.getParentDirectory());
 		assertTrue(track.getTrackPoints().size()==5);
 	}
-	
-	@Test
-	void noDistanceMetersTagsTCXTrackTest() throws URISyntaxException, XMLStreamException, FileNotFoundException {
-		assertThrows(XMLStreamException.class, () -> tParser.getTrack(Paths.get(getClass().getClassLoader().getResource("TCXTracks/River_no_distance_meters_Lap_Element.tcx").toURI()).toFile().getAbsolutePath()));
-	}
-	
+		
 	@Test
 	void foundNoFileTest() {
 		assertThrows(FileNotFoundException.class, () -> tParser.getTrack("UNAVAILABLE FILE TEST"));

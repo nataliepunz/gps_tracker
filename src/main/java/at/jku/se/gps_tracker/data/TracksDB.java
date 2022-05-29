@@ -12,32 +12,56 @@ import java.time.Duration;
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
-import java.util.stream.Collectors;
 
 import javax.xml.stream.XMLStreamException;
 
-import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
 
 import at.jku.se.gps_tracker.model.Track;
 import at.jku.se.gps_tracker.model.TrackPoint;
-
+/**
+ * class to establish connection with the database file and manage tracks
+ * @author Ozan
+ *
+ */
 public class TracksDB {
 
-	private final String[] extensions;
+	/**
+	 * variable to hold the connection with the database
+	 * @author Ozan
+	 */
 	private Connection conn;
-	private String directory;
-	private TrackParser parser;
 	
-	public TracksDB(String... extensions) {
-		this.extensions=extensions;
+	/**
+	 * variable to hold the directory with which the object works with
+	 * @author Ozan
+	 */
+	private String directory;
+	
+	/**
+	 * variable to hold an object of the TrackParser; enables parsing operations
+	 * @author Ozan
+	 */
+	private final TrackParser parser;
+	
+	/**
+	 * create and assigns the TrackParser object
+	 * @author Ozan
+	 */
+	public TracksDB() {
 		parser = new TrackParser();
 	}
 	
+	/**
+	 * checks if given directory invalid
+	 * establish the connection with the database file. if there is none a new file will be created and populated with the necessary tables
+	 * @author Ozan
+	 * @param directory
+	 * @param dataBaseName
+	 */
 	public void establishConnection(String directory, String dataBaseName) {
-		if(this.directory!=null && this.directory.equals(directory)) {
+		if(directory==null || directory.equals(this.directory)) {
 			return;
 		}
 		String dataBaseLocation = FilenameUtils.concat(directory, dataBaseName);
@@ -60,6 +84,10 @@ public class TracksDB {
 		}
 	}
 	
+	/**
+	 * sets the necessary tables up for a newly created trackdatabase file
+	 * @author Ozan
+	 */
 	private void setUpTables() {		
 		try(Statement stmt = conn.createStatement()){
 			stmt.execute("CREATE TABLE tracks (name TEXT NOT NULL, fileName TEXT NOT NULL, folder TEXT NOT NULL, date TEXT NOT NULL, time TEXT NOT NULL, distance REAL NOT NULL, duration REAL NOT NULL, averageBPM INTEGER NOT NULL, maximumBPM INTEGER NOT NULL, elevation REAL NOT NULL, PRIMARY KEY(fileName,folder));");
@@ -73,7 +101,12 @@ public class TracksDB {
         }  
 	}
 	
-	private void addTrackToDataBase(Track track) {
+	/**
+	 * adds a given non-null track into the database
+	 * @author Ozan
+	 * @param track to add to database
+	 */
+	public void addTrackToDataBase(Track track) {
 		if(track==null) {
 			return;
 		}
@@ -100,64 +133,17 @@ public class TracksDB {
 		}
 	}
 	
-	public List<Track> getTracks(String directoryFolder){
-		List<Track> trackHelpList = new ArrayList<>();
-		try(PreparedStatement stmt = conn.prepareStatement("SELECT * FROM tracks WHERE folder=?")){
-			stmt.setString(1, directoryFolder);
-			ResultSet rs = stmt.executeQuery();
-			while(rs.next()) {
-				trackHelpList.add(new Track.TrackBuilder(rs.getString("folder"), rs.getString("fileName"), rs.getString("name"), LocalDate.parse(rs.getString("date")), LocalTime.parse(rs.getString("time")))
-						.distance(rs.getDouble("distance"))
-						.duration(Duration.ofSeconds((long) rs.getDouble("duration")))
-						.averageBPM(rs.getInt("averageBPM"))
-						.maximumBPM(rs.getInt("maximumBPM"))
-						.elevation(rs.getDouble("elevation"))
-						.build()
-				);
-			}
-		} catch (SQLException e) {
-			
-		}
-		return trackHelpList;
-	}
-	
-	public List<TrackPoint> getTrackPoints(Track track) {
-		String trackFileString = getTrackPath(track.getParentDirectory(),track.getFileName());
-		if(new File(trackFileString).exists()) {
-			try {
-				return parser.getTrackPoints(trackFileString);
-			} catch (XMLStreamException | FileNotFoundException e) {
-				
-			}
-			return new ArrayList<>();
-		} else {
-			return new ArrayList<>();
-		}
-	}
-	
-	private String getTrackPath(String parentDirectory, String fileName) {
-		return FilenameUtils.concat(FilenameUtils.concat(directory, parentDirectory),fileName);
-	}
-	
-	private List<String> returnTracksInFolder(String directoryFolder) {
-		List<File> tracksInFolder = (List<File>) FileUtils.listFiles(new File(directory,directoryFolder), extensions, false);
-		return tracksInFolder
-						.stream()
-						.map(f -> FilenameUtils.getName(f.getAbsolutePath()))
-						.collect(Collectors.toList());
-	}
-	
-	public List<List<String>> toBeRemovedTracks(String directoryFolder){
-		List<String> dataBaseTracks = returnDifferenceDriveAndDB(false, directoryFolder);
-		
-		List<List<String>> toBeRemovedTracksDetails = new ArrayList<>();
+	/**
+	 * removes given track from database based on its fileName and directory folder
+	 * @author Ozan
+	 * @param fileName fileName of to be removed track
+	 * @param directoryFolder in which directory folder is located
+	 */
+	public void removeTrackFromDataBase(String fileName, String directoryFolder) {
 		try(PreparedStatement stmt = conn.prepareStatement("DELETE FROM tracks WHERE fileName=? AND folder=?")){
-			for(String track : dataBaseTracks) {
-				toBeRemovedTracksDetails.add(new ArrayList<>(Arrays.asList(track, directoryFolder)));
-				stmt.setString(1, track);
-				stmt.setString(2, directoryFolder);
-				stmt.execute();
-			}
+			stmt.setString(1, fileName);
+			stmt.setString(2, directoryFolder);
+			stmt.execute();
 			conn.commit();
 		} catch (SQLException e) {
 			try {
@@ -166,31 +152,66 @@ public class TracksDB {
 				
 			}
 		}
-		return toBeRemovedTracksDetails;
-	}
-
-	public List<Track> toBeAddedTracks(String directoryFolder) {
-		List<String> driveTracks = returnDifferenceDriveAndDB(true, directoryFolder);
-		
-		List<Track> toBeAddedTracks = new ArrayList<>();
-		Track t = null;
-		for(String track : driveTracks) {
-			try {
-				t = parser.getTrack(getTrackPath(directoryFolder,track));
-			} catch (XMLStreamException | FileNotFoundException e) {
-				t=null;
-			}
-			if(t!=null) {
-				toBeAddedTracks.add(t);
-				addTrackToDataBase(t);
-			}
-		}
-		return toBeAddedTracks;
 	}
 	
-	private List<String> returnDifferenceDriveAndDB(boolean getTracksFromDrive, String directoryFolder){
-		List<String> driveTracks = returnTracksInFolder(directoryFolder);
-		
+	/**
+	 * returns the saved tracks in database based on their directoryfolder
+	 * @author Ozan
+	 * @param directoryFolder
+	 * @return tracks in given directoryFolder as List
+	 */
+	public List<Track> getTracks(String directoryFolder) {
+		List<Track> trackHelpList = new ArrayList<>();
+		try(PreparedStatement stmt = conn.prepareStatement("SELECT * FROM tracks WHERE folder=?")){
+			stmt.setString(1, directoryFolder);
+			ResultSet rs = stmt.executeQuery();
+			while(rs.next()) {
+				trackHelpList.add(new Track.TrackBuilder(rs.getString("folder"), rs.getString("fileName"), rs.getString("name"), LocalDate.parse(rs.getString("date")), LocalTime.parse(rs.getString("time")))
+					.distance(rs.getDouble("distance"))
+					.duration(Duration.ofSeconds((long) rs.getDouble("duration")))
+					.averageBPM(rs.getInt("averageBPM"))
+					.maximumBPM(rs.getInt("maximumBPM"))
+					.elevation(rs.getDouble("elevation"))
+					.build()
+					);
+			}
+		} catch (SQLException e) {
+			
+		}
+		return trackHelpList;
+	}
+	
+	/**
+	 * parses the track file and returns its trackPoints
+	 * @author Ozan
+	 * @param trackFileString filePath of track
+	 * @return TrackPoints associated track
+	 * @throws FileNotFoundException
+	 * @throws XMLStreamException
+	 */
+	public List<TrackPoint> getTrackPoints(String trackFileString) throws FileNotFoundException, XMLStreamException {
+		return parser.getTrackPoints(trackFileString);
+	}
+	
+	/**
+	 * parses and returns track given its filePath
+	 * @author Ozan
+	 * @param trackPath filePath of track
+	 * @return Track
+	 * @throws FileNotFoundException
+	 * @throws XMLStreamException
+	 */
+	public Track parseTrack(String trackPath) throws FileNotFoundException, XMLStreamException {
+		return parser.getTrack(trackPath);
+	}
+	
+	/**
+	 * returns the filenames of tracks based on their directoryFolder
+	 * @author Ozan
+	 * @param directoryFolder
+	 * @return fileNames of saved tracks in database based on directoryFolder
+	 */
+	public List<String> getTracksDBFileName(String directoryFolder){
 		List<String> dataBaseTracks = new ArrayList<>();
 		try(PreparedStatement stmt = conn.prepareStatement("SELECT fileName FROM tracks WHERE folder=?")){
 			stmt.setString(1, directoryFolder);
@@ -199,17 +220,15 @@ public class TracksDB {
 				dataBaseTracks.add(rs.getString("fileName"));
 			}
 		} catch (SQLException e) {
+			
 		}
-		
-		if(getTracksFromDrive) {
-			driveTracks.removeAll(dataBaseTracks);
-			return driveTracks;
-		} else {
-			dataBaseTracks.removeAll(driveTracks);
-			return dataBaseTracks;
-		}
+		return dataBaseTracks;
 	}
 	
+	/**
+	 * closes the connection with the databse file
+	 * @author Ozan
+	 */
 	public void closeConnection() {
 		try {
 			conn.close();
@@ -217,11 +236,13 @@ public class TracksDB {
 			
 		}
 	}
-		
-	public String getDirectory() {
-		return directory;
-	}
 	
+	/**
+	 * checks if a valid connection (not null and in sync with given Directory) is given
+	 * @author Ozan
+	 * @param modelDirectory
+	 * @return true if connection is valid
+	 */
 	public boolean checkConnection(String modelDirectory) {
 		try {
 			if(conn==null || !modelDirectory.equals(this.directory) ) {
