@@ -69,7 +69,7 @@ final class TCXParser extends TrackParser {
 	 * @author Ozan
 	 */
 	private static double prevDistance;
-	
+  
 	/**
 	 * reset the fields of the TCX Parser specific attributes but also the shared ones
 	 * @author Ozan
@@ -81,7 +81,7 @@ final class TCXParser extends TrackParser {
 		prevDistance = 0;
 		resetFields();
 	}
-	
+
 	/**
 	 * method for start of parsing process
 	 * @author Ozan
@@ -92,13 +92,13 @@ final class TCXParser extends TrackParser {
 	 */
 	static Track readTCXTrack (String file, XMLStreamReader streamReader) throws XMLStreamException {
 		resetTCXFields();
-		readTrack(streamReader);		
+		readTrack(streamReader);
 		if(averageBPMCount!=0) {
 			averageBPM = averageBPM/averageBPMCount;
 		}
 		return createTCXTrack(file);
 	}
-	
+
 	/**
 	 * parses the Activity tags and calls method to handle the content
 	 * @author Ozan
@@ -108,13 +108,13 @@ final class TCXParser extends TrackParser {
 	private static void readTrack(XMLStreamReader streamReader) throws XMLStreamException {
 		while (streamReader.hasNext()) {
 			if (streamReader.isStartElement() && streamReader.getLocalName().equals("Activity")) {
-					manageTCXActivityElement(streamReader);
-				}
+				manageTCXActivityElement(streamReader);
+			}
 			streamReader.next();
 		}
 		streamReader.close();
 	}
-	
+  
 	/**
 	 * manages the parsing of the activity element
 	 * assigns the name of the track (if present)
@@ -149,6 +149,7 @@ final class TCXParser extends TrackParser {
 			}
 		}
 	}
+  
 	/**
 	 * manages the parsing of the TCX lap elemnts
 	 * sets the trackTime as the time from first parsed lap element
@@ -183,7 +184,7 @@ final class TCXParser extends TrackParser {
 					case "MaximumHeartRateBpm":{
 						streamReader.nextTag();
 						int helpMaxBPM = Integer.parseInt(streamReader.getElementText());
-						if(helpMaxBPM>maximumBPM) maximumBPM=helpMaxBPM; 
+						if(helpMaxBPM>maximumBPM) maximumBPM=helpMaxBPM;
 						break;
 					}
 					case "Trackpoint":{
@@ -200,7 +201,7 @@ final class TCXParser extends TrackParser {
 			}
 		}
 	}
-	
+
 	/**
 	 * resets the values for the current trackPoint
 	 * calls for / calculates necessary information of trackPoint
@@ -258,7 +259,7 @@ final class TCXParser extends TrackParser {
 					}
 				}
 			}
-			
+
 			if(streamReader.isEndElement()&&"Trackpoint".equals(streamReader.getLocalName())){
 				createTCXTrackPoint();
 				break;
@@ -281,7 +282,7 @@ final class TCXParser extends TrackParser {
 		trackPointDuration = Duration.between(prevTrackPointTime, trackPointTimePoint);
 		prevTrackPointTime = trackPointTimePoint;
 	}
-	
+  
 	/**
 	 * calculates the elevation and elevation gains and assigns them accordingly
 	 * @author Ozan
@@ -300,7 +301,7 @@ final class TCXParser extends TrackParser {
 			totalElevation += trackPointElevationChange;
 		}
 	}
-	
+
 	/**
 	 * creates the trackpoint based on the parsed information
 	 * takes into account several possible configurations of files (which elements are present and which not)
@@ -350,5 +351,5 @@ final class TCXParser extends TrackParser {
 				.build();
 	}
 
-	
+
 }

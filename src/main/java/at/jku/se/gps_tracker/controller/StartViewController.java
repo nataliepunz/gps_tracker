@@ -14,10 +14,10 @@ import javafx.stage.Stage;
  *
  */
 public class StartViewController {
-	
+
 	@FXML
 	private Button buttonChoseDirectory;
-	
+
 	/**
 	 * the associated datamodel
 	 * @author Ozan
@@ -29,7 +29,7 @@ public class StartViewController {
 	 * @author Ozan
 	 */
 	private Stage stage;
-	
+
 	/**
 	 * constructor to set datamodel and parent stage
 	 * @param model associated datamodel
@@ -39,7 +39,7 @@ public class StartViewController {
 		this.model = model;
 		this.stage=stage;
 	}
-	
+
 	/**
 	 * opens the directory chooser window and sets the non-null value into the datamodel
 	 * @author Ozan
@@ -62,5 +62,5 @@ public class StartViewController {
         	model.changeModel();
         	model.updateTrackListFromDB();
         }
-	}
+	  }
 }

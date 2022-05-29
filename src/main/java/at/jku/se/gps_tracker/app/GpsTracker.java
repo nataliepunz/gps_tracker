@@ -1,7 +1,7 @@
 package at.jku.se.gps_tracker.app;
 
-import at.jku.se.gps_tracker.model.DataModel;
 import at.jku.se.gps_tracker.controller.TrackManagerController;
+import at.jku.se.gps_tracker.model.DataModel;
 import javafx.application.Application;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
@@ -30,9 +30,10 @@ public class GpsTracker extends Application {
 	 * @author Ozan
 	 */
 	@Override
-	public void start(Stage primaryStage) throws Exception {		
+	public void start(Stage primaryStage) throws Exception {
 		primaryStage.setTitle("TrackStar");
 		FXMLLoader loader = new FXMLLoader(getClass().getResource("/fxml/TrackManager.fxml"));
+
 		TrackManagerController start = new TrackManagerController(new DataModel());
 				 
 		loader.setController(start);

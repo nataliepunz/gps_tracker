@@ -55,7 +55,7 @@ public class Track extends AbstractTrack {
 		this.parentDirectory=trackBuilder.parentDirectory;
 		this.trackPoints = trackBuilder.trackPoints;
 	}
-	
+
 	/**
 	 * returns empty track object
 	 * @author Nuray
@@ -191,7 +191,7 @@ public class Track extends AbstractTrack {
 		 * @author Ozan
 		 */
 		private List<TrackPoint> trackPoints;
-		
+
 		/**
 		 * constructor to create a TrackBuilder object, the parameter are the minimum necessary information for a valid track
 		 * @author Ozan
@@ -208,7 +208,7 @@ public class Track extends AbstractTrack {
 			this.trackDate=trackDate;
 			this.trackTime=trackTime;
 		}
-		
+
 		/**
 		 * add distance of Track to TrackBuilder
 		 * @author Ozan
@@ -219,7 +219,7 @@ public class Track extends AbstractTrack {
 			this.distance=distance;
 			return this;
 		}
-		
+	
 		/**
 		 * add duration of Track to TrackBuilder
 		 * @author Ozan
@@ -230,7 +230,7 @@ public class Track extends AbstractTrack {
 			this.duration=duration;
 			return this;
 		}
-		
+
 		/**
 		 * add averageBPM of Track to TrackBuilder
 		 * @author Ozan
@@ -241,7 +241,7 @@ public class Track extends AbstractTrack {
 			this.averageBPM=averageBPM;
 			return this;
 		}
-		
+
 		/**
 		 * add maximumBPM of Track to TrackBuilder
 		 * @author Ozan
@@ -252,7 +252,7 @@ public class Track extends AbstractTrack {
 			this.maximumBPM=maximumBPM;
 			return this;
 		}
-		
+
 		/**
 		 * add elevation gains of Track to TrackBuilder
 		 * @author Ozan
@@ -263,7 +263,7 @@ public class Track extends AbstractTrack {
 			this.elevation=elevation;
 			return this;
 		}
-		
+    
 		/**
 		 * add trackPoints associated to Track to TrackBuilder
 		 * @author Ozan
@@ -274,7 +274,7 @@ public class Track extends AbstractTrack {
 			this.trackPoints=trackPoints;
 			return this;
 		}
-		
+    
 		/**
 		 * "build" the Track out of information in TrackBuilder
 		 * @author Ozan		
@@ -283,8 +283,7 @@ public class Track extends AbstractTrack {
 		public Track build() {
 			return new Track(this);
 		}
-		
-	}
-	
-}
 
+	}
+
+}

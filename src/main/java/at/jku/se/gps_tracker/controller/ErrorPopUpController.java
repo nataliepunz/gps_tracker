@@ -1,5 +1,4 @@
 package at.jku.se.gps_tracker.controller;
-
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.image.Image;

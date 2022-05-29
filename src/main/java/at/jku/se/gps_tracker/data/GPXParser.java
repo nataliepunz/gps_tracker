@@ -16,6 +16,7 @@ import org.apache.commons.io.FilenameUtils;
 
 import at.jku.se.gps_tracker.model.Track;
 import at.jku.se.gps_tracker.model.TrackPoint;
+
 /**
  * class to parse GPX files
  * @author Ozan
@@ -35,7 +36,7 @@ final class GPXParser extends TrackParser{
 		readTrack(streamReader);
 		return createGPXTrack(file);
 	}
-	
+
 	/**
 	 * finds trk Tags and reads underlying tags
 	 * @author Ozan
@@ -51,7 +52,7 @@ final class GPXParser extends TrackParser{
 		}
 		streamReader.close();
 	}
-	
+  
 	/**
 	 * differentiates between name tag or trkpt (trackpoint) tag
 	 * breaks the loop when end tag of track is found
@@ -84,7 +85,7 @@ final class GPXParser extends TrackParser{
 			}
 		}
 	}
-	
+
 	/**
 	 * parses the TrackPoint elements and calls for creation a TrackPoint object at the end
 	 * checks if elevation or a time is also included and calls apporpiate methods
@@ -122,7 +123,7 @@ final class GPXParser extends TrackParser{
 					}
 				}
 			}
-			
+
 			if(streamReader.isEndElement() && "trkpt".equals(streamReader.getLocalName())) {
 				createGPXTrackPoint();
 				break;
@@ -148,7 +149,7 @@ final class GPXParser extends TrackParser{
 			totalElevation += trackPointElevationChange;
 		}
 	}
-	
+
 	/**
 	 * calculates the duration between this trackpoint and the previous one
 	 * @author Ozan
@@ -167,7 +168,7 @@ final class GPXParser extends TrackParser{
 		totalDuration = totalDuration.plus(trackPointDuration);
 		prevTrackPointTime = trackPointTimePoint;
 	}
-	
+
 	/**
 	 * creates the trackpoint based on the parsed information
 	 * @author Ozan
@@ -186,7 +187,7 @@ final class GPXParser extends TrackParser{
 			prevTrackPointElevation = trackPointElevation;
 		}
 	}
-	
+
 	/**
 	 * creates the Track based on the parsed information
 	 * if no time has been parsed set today as day
@@ -207,5 +208,5 @@ final class GPXParser extends TrackParser{
 					.elevation(totalElevation)
 					.trackPoints(trackPointsList)
 					.build();
-	}	
+	  }	
 }
