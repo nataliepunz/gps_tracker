@@ -249,6 +249,7 @@ public class TrackManagerController implements Initializable,
                     year1 = null;
                     else year2 = null;}
 
+
                 });
             }
         }
@@ -303,10 +304,11 @@ public class TrackManagerController implements Initializable,
 
     //Event Handler für Years -> Yearly Comparison
     @FXML
-    private void eventYearly(ActionEvent event) {
+    private void eventYearly(ActionEvent event) throws InvocationTargetException, NoSuchMethodException, IllegalAccessException {
+        RadioMenuItem graph = (RadioMenuItem) tgGraph.getSelectedToggle();
+        RadioMenuItem view = (RadioMenuItem) tgView.getSelectedToggle();
         if (cmiYearly.isSelected()) {
-            RadioMenuItem graph = (RadioMenuItem) tgGraph.getSelectedToggle();
-            RadioMenuItem view = (RadioMenuItem) tgView.getSelectedToggle();
+
 
 
             if (year1 == null || year2 == null) { //falls jahre noch nicht ausgewählt wurden
@@ -349,6 +351,10 @@ public class TrackManagerController implements Initializable,
                     ex.printStackTrace();
                 }
             }
+        }
+        else {
+           changeChart();
+
         }
     }
 
@@ -897,7 +903,7 @@ public class TrackManagerController implements Initializable,
             String method;
 
             group.clear();
-            if (year1 != null && year2 != null) {
+            if (year1 != null && year2 != null && cmiYearly.isSelected()) {
                 setTrackListAll();
             }
             //Gruppiert Elemente je nachdem, was ausgewählt wurde
