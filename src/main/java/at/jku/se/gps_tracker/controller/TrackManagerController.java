@@ -75,20 +75,20 @@ public class TrackManagerController implements Initializable,
      */
     
     /**
-	   * executed at start of the application
-	   * sets the necessary lists up by loading them in from the datamodel and adding a listener to keep them in sync throughout the runtime
-	   * @author Ozan 
-	  */
+     * executed at start of the application
+     * sets the necessary lists up by loading them in from the datamodel and adding a listener to keep them in sync throughout the runtime
+     * @author Ozan 
+     */
     private void setUpLists() {
         setTrackList();
         setCategories();
         setUpTrackMenuItems();
     }
      
-     /**
-	    * sets the tracklist up based on read tracks
-	    * @author Ozan
-	    */
+    /**
+     * sets the tracklist up based on read tracks
+     * @author Ozan
+     */
     private void setTrackList() {
         trackList = FXCollections.observableArrayList(model.getTrackList());
         model.getTrackList().addListener((ListChangeListener < ?super Track > ) c ->{
@@ -104,11 +104,11 @@ public class TrackManagerController implements Initializable,
     }
      
     /**
-	   * sets the categories based on the directory folders inside the choosen folder
-	  * also calls the setUpTrackMenuItems method to re-setUp the RadioMenuItems for the filter choices after changes in the directory
-	  * @author Ozan
-	  * 
-	  */
+     * sets the categories based on the directory folders inside the choosen folder
+     * also calls the setUpTrackMenuItems method to re-setUp the RadioMenuItems for the filter choices after changes in the directory
+     * @author Ozan
+     * 
+     */
     private void setCategories() {
         categories = FXCollections.observableArrayList(model.getDirectoryFolders());
         model.getDirectoryFolders().addListener((ListChangeListener < ?super String > ) c ->{
@@ -125,10 +125,10 @@ public class TrackManagerController implements Initializable,
     }
     
     /**
-	   * adds a listener to the toggelgroup to get the choosen filter option and calls changeCategory to set the new filter category
-	    * -- the exception handling is done because of nuray non-excpetion handling in her method
-	   * @author Ozan
-	  */
+     * adds a listener to the toggelgroup to get the choosen filter option and calls changeCategory to set the new filter category
+	 * -- the exception handling is done because of nuray non-excpetion handling in her method
+	 * @author Ozan
+	 */
     private void setUpMenuTrack() {
         tgMenuTrack.selectedToggleProperty().addListener(listener -> {
         if (tgMenuTrack.getSelectedToggle() != null) {
@@ -147,20 +147,20 @@ public class TrackManagerController implements Initializable,
      */
 
     /**
-	  * calls chooseDirectory to set the new directory in the datamodel
-	  * then calls the method syncTracks to read any new tracks in or delete none exisiting tracks
-	  * -- sideTable method call by nuray
-	  * @author Ozan
-	  * @param event JAVA-FX necessity
-	  */
-	  @FXML
-	  private void setDirectory(ActionEvent event) {
-		  chooseDirectory();
-		  syncTracks();
-		  sideTable.getItems().clear(); //setzt sidetable zurück da sie sonst die letzte instanz anzeigt
-	  }
+	 * calls chooseDirectory to set the new directory in the datamodel
+	 * then calls the method syncTracks to read any new tracks in or delete none exisiting tracks
+	 * -- sideTable method call by nuray
+	 * @author Ozan
+	 * @param event JAVA-FX necessity
+	 */
+	 @FXML
+	 private void setDirectory(ActionEvent event) {
+		 chooseDirectory();
+		 syncTracks();
+		 sideTable.getItems().clear(); //setzt sidetable zurück da sie sonst die letzte instanz anzeigt
+	 }
 	
-	  /**
+	 /**
 	  * calls the setDirectoryFolders method in the datamodel to update the subfolders
 	  * calls changeModel in datamodel to read in the tracks for the new directory folder 
 	  * @author Ozan
@@ -208,14 +208,14 @@ public class TrackManagerController implements Initializable,
 		  }  		
 	  }
 	
-	  /**
-	  * implements the syncTracks method
-	  * reads the difference between folder - database (to add) or database - folder (to delete)
-	  * calls the add or remove method in datamodel accordingly
-	  * @author Ozan
-	  * @param directoryFolder
-	  */
-	  private void syncTracks(String directoryFolder) {
+	/**
+	* implements the syncTracks method
+	* reads the difference between folder - database (to add) or database - folder (to delete)
+	* calls the add or remove method in datamodel accordingly
+	* @author Ozan
+	* @param directoryFolder
+	*/
+	private void syncTracks(String directoryFolder) {
 		List<String> toAddTracks;
 		List<String> toDeleteTracks;
 		try {
@@ -246,9 +246,9 @@ public class TrackManagerController implements Initializable,
 		}
 		
 		for(String s : toDeleteTracks) {
-			model.removeTrack(s, directoryFolder);
+		model.removeTrack(s, directoryFolder);
 		}
-	 }
+	}
 	
 	/**
 	 * loads in a new View/Window for choosing the desired directory
@@ -304,6 +304,25 @@ public class TrackManagerController implements Initializable,
 		  if(first!=null) {
 			  tgMenuTrack.selectToggle(first);
 		  }
+	}
+	   
+	/**
+	 * 
+	 * changes the active subdirectory and updates the model accordingly
+	 * only if a active connection with the database exists
+	 * @param subfolder the desired
+	 * @author Ozan (except changeChart and their exceptions -> Nuray)
+	 * @throws InvocationTargetException  due to changeChart method
+	 * @throws NoSuchMethodException due to changeChart method
+	 * @throws IllegalAccessException due to changeChart method
+	 */
+	private void changeCategory(String subfolder) throws InvocationTargetException, NoSuchMethodException, IllegalAccessException {
+		if(model.checkConnection()) {
+			model.setDirectoryFolder(subfolder);
+			model.updateTrackListFromDB();
+			syncTracks();
+			changeChart();
+		}
 	}
 
     /* erstellt dynamisch abhängig von der trackliste die items für jahresvergleich */
@@ -378,16 +397,6 @@ public class TrackManagerController implements Initializable,
     @FXML
     private CheckMenuItem cmiYearly;@FXML
     private SeparatorMenuItem sep;
-
-    //je nach Index entsprechend holen! (erster Eintrag ausgewählt --> hier erste (bzw 0 auswählen!)
-    private void changeCategory(String category) throws
-            InvocationTargetException,
-            NoSuchMethodException,
-            IllegalAccessException { //index als parameter hinzugefügt - nuray
-            model.adjustDirectoryFolder(category);
-            model.updateModel();
-            changeChart(); //aktualisiert charts
-    }
 
     @FXML
     private TableView < AbstractTrack > mainTable;
@@ -579,7 +588,7 @@ public class TrackManagerController implements Initializable,
                 TableRow < AbstractTrack > row = new TableRow < >();
         row.setOnMouseClicked(event ->{
                 AbstractTrack rowData = row.getItem();
-        showSideTable(sideTable, FXCollections.observableArrayList((model.getTrackPoints((Track) rowData))));
+        showSideTable(sideTable, FXCollections.observableArrayList(getTrackPointsOnClick((Track) rowData)));
 		                	});
              return row;
 		    });
@@ -606,18 +615,18 @@ public class TrackManagerController implements Initializable,
 	   * @param track the track from which trackPoints should be retrieved
 	   * @return TrackPoints of the given track as List
 	   */
-	    private List<TrackPoint> getTrackPointsOnClick(Track track) {
-		    try {
-			    return model.getTrackPoints(track);
-		    } catch (FileNotFoundException e) {
-			    syncTracks();
-			    showErrorPopUpNoWait("TRACK NOT FOUND ANYMORE! REMEMBER TO UPDATE TRACKS AFTER EVERY CHANGE!");
-		    } catch (XMLStreamException e) {
-			    syncTracks();
-			    showErrorPopUpNoWait("TRACK NOT CONFIRMING TO SPECIFICATION!");
-		    }
-		    return new ArrayList<>();
-	  }      
+    private List<TrackPoint> getTrackPointsOnClick(Track track) {
+	    try {
+		    return model.getTrackPoints(track);
+	    } catch (FileNotFoundException e) {
+		    syncTracks();
+		    showErrorPopUpNoWait("TRACK NOT FOUND ANYMORE! REMEMBER TO UPDATE TRACKS AFTER EVERY CHANGE!");
+	    } catch (XMLStreamException e) {
+		    syncTracks();
+		    showErrorPopUpNoWait("TRACK NOT CONFIRMING TO SPECIFICATION!");
+	    }
+	    return new ArrayList<>();
+	}      
           
     @SuppressWarnings("unchecked") //Grund: https://stackoverflow.com/questions/4257883/warning-for-generic-varargs
     private void showSideTable(TableView < AbstractTrack > table, ObservableList < AbstractTrack > tp) {
@@ -991,9 +1000,9 @@ public class TrackManagerController implements Initializable,
     @Override
     public void initialize(URL arg0, ResourceBundle arg1) {
         setUpLists();
-		    chooseDirectory();
-		    setUpMenuTrack();
-		    syncTracks();
+		chooseDirectory();
+		setUpMenuTrack();
+		syncTracks();
         showTrackTable(mainTable, trackList);
         backUp = trackList;
         setUpYearsItems();
