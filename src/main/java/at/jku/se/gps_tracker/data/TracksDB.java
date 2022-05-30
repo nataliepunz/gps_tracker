@@ -1,6 +1,7 @@
 package at.jku.se.gps_tracker.data;
 
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;
@@ -11,62 +12,101 @@ import java.time.Duration;
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
-import java.util.stream.Collectors;
 
-import org.apache.commons.io.FileUtils;
+import javax.xml.stream.XMLStreamException;
+
 import org.apache.commons.io.FilenameUtils;
 
-import at.jku.se.gps_tracker.controller.ErrorPopUpController;
 import at.jku.se.gps_tracker.model.Track;
 import at.jku.se.gps_tracker.model.TrackPoint;
+/**
+ * class to establish connection with the database file and manage tracks
+ * @author Ozan
+ *
+ */
+public class TracksDB {
 
-public class TracksDB implements ErrorPopUpController {
-
-	private static final String ERROR_ROLLBACK_MESSAGE = "ERROR! COULD NOT CONNECT TO DATABASE! ";
-	private final String[] extensions;
+	/**
+	 * variable to hold the connection with the database
+	 * @author Ozan
+	 */
 	private Connection conn;
+	
+	/**
+	 * variable to hold the directory with which the object works with
+	 * @author Ozan
+	 */
 	private String directory;
-
-	public TracksDB(String... extensions) {
-		this.extensions=extensions;
+	
+	/**
+	 * variable to hold an object of the TrackParser; enables parsing operations
+	 * @author Ozan
+	 */
+	private final TrackParser parser;
+	
+	/**
+	 * create and assigns the TrackParser object
+	 * @author Ozan
+	 */
+	public TracksDB() {
+		parser = new TrackParser();
 	}
-
+	
+	/**
+	 * checks if given directory invalid
+	 * establish the connection with the database file. if there is none a new file will be created and populated with the necessary tables
+	 * @author Ozan
+	 * @param directory
+	 * @param dataBaseName
+	 */
 	public void establishConnection(String directory, String dataBaseName) {
+		if(directory==null || directory.equals(this.directory)) {
+			return;
+		}
 		String dataBaseLocation = FilenameUtils.concat(directory, dataBaseName);
 		boolean setUpNecessary = new File(dataBaseLocation).exists();
 		String url = "jdbc:sqlite:"+dataBaseLocation;
 		this.directory=directory;
 		try {
-			if(checkConnection(this.directory)) {
-				closeConnection();
-			}
 			conn = DriverManager.getConnection(url);
 			conn.setAutoCommit(false);
 			if(!setUpNecessary) {
 				setUpTables();
 			}
 		} catch (SQLException e) {
-			showErrorPopUp(ERROR_ROLLBACK_MESSAGE+e.getMessage());
-		}
-	}
-
-	private void setUpTables() {
-		try(Statement stmt = conn.createStatement()){
-			stmt.execute("CREATE TABLE tracks (name TEXT NOT NULL, fileName TEXT NOT NULL, folder TEXT NOT NULL, date TEXT NOT NULL, time TEXT NOT NULL, distance REAL NOT NULL, duration REAL NOT NULL, averageBPM INTEGER NOT NULL, maximumBPM INTEGER NOT NULL, elevation REAL NOT NULL, PRIMARY KEY(fileName,folder));");
-			conn.commit();
-		} catch (SQLException e) {
-			showErrorPopUp("ERROR! COULD NOT CREATE TABLES! "+e.getMessage());
+			this.directory=null;
 			try {
 				conn.rollback();
 			} catch (SQLException e1) {
-				showErrorPopUp(ERROR_ROLLBACK_MESSAGE+e1.getMessage());
+				
 			}
 		}
 	}
-
-	private void addTrackToDataBase(Track track) {
+	
+	/**
+	 * sets the necessary tables up for a newly created trackdatabase file
+	 * @author Ozan
+	 */
+	private void setUpTables() {		
+		try(Statement stmt = conn.createStatement()){
+			stmt.execute("CREATE TABLE tracks (name TEXT NOT NULL, fileName TEXT NOT NULL, folder TEXT NOT NULL, date TEXT NOT NULL, time TEXT NOT NULL, distance REAL NOT NULL, duration REAL NOT NULL, averageBPM INTEGER NOT NULL, maximumBPM INTEGER NOT NULL, elevation REAL NOT NULL, PRIMARY KEY(fileName,folder));");
+            conn.commit();
+        } catch (SQLException e) {  
+            try {
+				conn.rollback();
+			} catch (SQLException e1) {
+				
+			}
+        }  
+	}
+	
+	/**
+	 * adds a given non-null track into the database
+	 * @author Ozan
+	 * @param track to add to database
+	 */
+	public void addTrackToDataBase(Track track) {
 		if(track==null) {
 			return;
 		}
@@ -82,64 +122,96 @@ public class TracksDB implements ErrorPopUpController {
 			stmt.setInt(9, track.getMaximumBPM());
 			stmt.setDouble(10, track.getElevation());
 			stmt.execute();
-
+			
 			conn.commit();
 		} catch (SQLException e) {
-			showErrorPopUp("ERROR! COULD NOT ADD TRACK! "+e.getMessage());
 			try {
 				conn.rollback();
 			} catch (SQLException e1) {
-				showErrorPopUp(ERROR_ROLLBACK_MESSAGE+e1.getMessage());
+				
 			}
 		}
 	}
-
-	public List<Track> getTracks(String directoryFolder){
+	
+	/**
+	 * removes given track from database based on its fileName and directory folder
+	 * @author Ozan
+	 * @param fileName fileName of to be removed track
+	 * @param directoryFolder in which directory folder is located
+	 */
+	public void removeTrackFromDataBase(String fileName, String directoryFolder) {
+		try(PreparedStatement stmt = conn.prepareStatement("DELETE FROM tracks WHERE fileName=? AND folder=?")){
+			stmt.setString(1, fileName);
+			stmt.setString(2, directoryFolder);
+			stmt.execute();
+			conn.commit();
+		} catch (SQLException e) {
+			try {
+				conn.rollback();
+			} catch (SQLException e1) {
+				
+			}
+		}
+	}
+	
+	/**
+	 * returns the saved tracks in database based on their directoryfolder
+	 * @author Ozan
+	 * @param directoryFolder
+	 * @return tracks in given directoryFolder as List
+	 */
+	public List<Track> getTracks(String directoryFolder) {
 		List<Track> trackHelpList = new ArrayList<>();
 		try(PreparedStatement stmt = conn.prepareStatement("SELECT * FROM tracks WHERE folder=?")){
 			stmt.setString(1, directoryFolder);
 			ResultSet rs = stmt.executeQuery();
 			while(rs.next()) {
 				trackHelpList.add(new Track.TrackBuilder(rs.getString("folder"), rs.getString("fileName"), rs.getString("name"), LocalDate.parse(rs.getString("date")), LocalTime.parse(rs.getString("time")))
-						.distance(rs.getDouble("distance"))
-						.duration(Duration.ofSeconds((long) rs.getDouble("duration")))
-						.averageBPM(rs.getInt("averageBPM"))
-						.maximumBPM(rs.getInt("maximumBPM"))
-						.elevation(rs.getDouble("elevation"))
-						.build()
-				);
+					.distance(rs.getDouble("distance"))
+					.duration(Duration.ofSeconds((long) rs.getDouble("duration")))
+					.averageBPM(rs.getInt("averageBPM"))
+					.maximumBPM(rs.getInt("maximumBPM"))
+					.elevation(rs.getDouble("elevation"))
+					.build()
+					);
 			}
 		} catch (SQLException e) {
-			showErrorPopUp("ERROR! COULD NOT GET TRACKS! "+e.getMessage());
+			
 		}
 		return trackHelpList;
 	}
-
-	public List<TrackPoint> getTrackPoints(Track track){
-		String trackFileString = getTrackPath(track.getParentDirectory(),track.getFileName());
-		if(new File(trackFileString).exists()) {
-			return new TrackParser().getTrackPoints(trackFileString);
-		} else {
-			showErrorPopUp("ERROR! REMEMBER TO UPDATE THE PROGRAM AFTER EVERY CHANGE!");
-			return new ArrayList<>();
-		}
+	
+	/**
+	 * parses the track file and returns its trackPoints
+	 * @author Ozan
+	 * @param trackFileString filePath of track
+	 * @return TrackPoints associated track
+	 * @throws FileNotFoundException
+	 * @throws XMLStreamException
+	 */
+	public List<TrackPoint> getTrackPoints(String trackFileString) throws FileNotFoundException, XMLStreamException {
+		return parser.getTrackPoints(trackFileString);
 	}
-
-	private String getTrackPath(String parentDirectory, String fileName) {
-		return FilenameUtils.concat(FilenameUtils.concat(directory, parentDirectory),fileName);
+	
+	/**
+	 * parses and returns track given its filePath
+	 * @author Ozan
+	 * @param trackPath filePath of track
+	 * @return Track
+	 * @throws FileNotFoundException
+	 * @throws XMLStreamException
+	 */
+	public Track parseTrack(String trackPath) throws FileNotFoundException, XMLStreamException {
+		return parser.getTrack(trackPath);
 	}
-
-	private List<String> returnTracksInFolder(String directoryFolder) {
-		List<File> tracksInFolder = (List<File>) FileUtils.listFiles(new File(directory,directoryFolder), extensions, false);
-		return tracksInFolder
-				.stream()
-				.map(f -> FilenameUtils.getName(f.getAbsolutePath()))
-				.collect(Collectors.toList());
-	}
-
-	public List<List<String>> toBeRemovedTracks(String directoryFolder){
-		List<String> driveTracks = returnTracksInFolder(directoryFolder);
-
+	
+	/**
+	 * returns the filenames of tracks based on their directoryFolder
+	 * @author Ozan
+	 * @param directoryFolder
+	 * @return fileNames of saved tracks in database based on directoryFolder
+	 */
+	public List<String> getTracksDBFileName(String directoryFolder){
 		List<String> dataBaseTracks = new ArrayList<>();
 		try(PreparedStatement stmt = conn.prepareStatement("SELECT fileName FROM tracks WHERE folder=?")){
 			stmt.setString(1, directoryFolder);
@@ -148,72 +220,29 @@ public class TracksDB implements ErrorPopUpController {
 				dataBaseTracks.add(rs.getString("fileName"));
 			}
 		} catch (SQLException e) {
-			showErrorPopUp("ERROR! COULD NOT GET TRACKS TO CHECK! "+e.getMessage());
+			
 		}
-
-		dataBaseTracks.removeAll(driveTracks);
-
-		List<List<String>> toBeRemovedTracksDetails = new ArrayList<>();
-		try(PreparedStatement stmt = conn.prepareStatement("DELETE FROM tracks WHERE fileName=? AND folder=?")){
-			for(String track : dataBaseTracks) {
-				toBeRemovedTracksDetails.add(new ArrayList<>(Arrays.asList(track, directoryFolder)));
-				stmt.setString(1, track);
-				stmt.setString(2, directoryFolder);
-				stmt.execute();
-			}
-			conn.commit();
-		} catch (SQLException e) {
-			showErrorPopUp("ERROR! COULD NOT REMOVE TRACK! "+e.getMessage());
-			try {
-				conn.rollback();
-			} catch (SQLException e1) {
-				showErrorPopUp(ERROR_ROLLBACK_MESSAGE+e1.getMessage());
-			}
-		}
-		return toBeRemovedTracksDetails;
+		return dataBaseTracks;
 	}
-
-	public List<Track> toBeAddedTracks(String directoryFolder) {
-		List<String> driveTracks = returnTracksInFolder(directoryFolder);
-
-		List<String> dataBaseFiles = new ArrayList<>();
-		try(PreparedStatement stmt = conn.prepareStatement("SELECT fileName FROM tracks WHERE folder=?")){
-			stmt.setString(1, directoryFolder);
-			ResultSet rs = stmt.executeQuery();
-			while(rs.next()) {
-				dataBaseFiles.add(rs.getString("fileName"));
-			}
-		} catch (SQLException e) {
-			showErrorPopUp("ERROR! COULD NOT GET TRACKS TO CHECK! "+e.getMessage());
-		}
-
-		driveTracks.removeAll(dataBaseFiles);
-
-		List<Track> toBeAddedTracks = new ArrayList<>();
-		TrackParser parser = new TrackParser();
-		Track t = null;
-		for(String track : driveTracks) {
-			t = parser.getTrack(getTrackPath(directoryFolder,track));
-			if(t!=null) {
-				toBeAddedTracks.add(t);
-				addTrackToDataBase(t);
-			}
-		}
-		return toBeAddedTracks;
-	}
-
+	
+	/**
+	 * closes the connection with the databse file
+	 * @author Ozan
+	 */
 	public void closeConnection() {
 		try {
 			conn.close();
 		} catch (SQLException e) {
-			showErrorPopUp("COULD NOT CLOSE DATABASE! "+e.getMessage());
+			
 		}
 	}
-
-	public String getDirectory() {
-		return directory;
-	}
-
+	
+	/**
+	 * checks if a valid connection (not null and in sync with given Directory) is given
+	 * @author Ozan
+	 * @param modelDirectory
+	 * @return true if connection is valid
+	 */
 	public boolean checkConnection(String modelDirectory) {
 		try {
 			if(conn==null || !modelDirectory.equals(this.directory) ) {
@@ -221,7 +250,6 @@ public class TracksDB implements ErrorPopUpController {
 			}
 			return conn.isValid(0);
 		} catch (SQLException e) {
-			showErrorPopUp("No connection to Database! Restart the Application please");
 			return false;
 		}
 	}

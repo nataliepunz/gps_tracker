@@ -90,7 +90,7 @@ public abstract class AbstractTrack {
 	}
 
 	//zum Runden auf zwei Dezimalstellen
-	private static double doubleFormatter(double number) {
+	private double doubleFormatter(double number) {
 		return (double) Math.round(number * 100) / 100;
 	}
 
@@ -114,7 +114,7 @@ public abstract class AbstractTrack {
 	}
 
 	//Quelle: https://stackoverflow.com/a/266846/5750106
-	private static String formatDuration(Duration duration) {
+	private String formatDuration(Duration duration) {
 		long seconds = duration.getSeconds();
 		long absSeconds = Math.abs(seconds);
 		String positive = String.format(
