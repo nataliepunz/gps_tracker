@@ -1,8 +1,17 @@
 package at.jku.se.gps_tracker.Group;
 
 
+import at.jku.se.gps_tracker.model.AbstractTrack;
+import at.jku.se.gps_tracker.model.Track;
+import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
+
 import java.text.SimpleDateFormat;
+import java.time.LocalDate;
+import java.time.temporal.WeekFields;
 import java.util.Calendar;
+import java.util.Comparator;
+import java.util.Locale;
 
 public class WeekGroup extends GroupTrack {
 
@@ -14,10 +23,15 @@ public class WeekGroup extends GroupTrack {
         super();
         this.week = week;
         super.year = year;
-        super.xAxis = week;
+        super.xAxis = "" + week;
         setName();
         super.group = "Week";
     }
+
+    public WeekGroup() {
+
+    }
+
     public Calendar getFirstDayOfWeek(int week) {
 
         int year = super.getYear();
@@ -58,6 +72,43 @@ public class WeekGroup extends GroupTrack {
         return "WeekGroup{" +
                 "week=" + week +
                 '}';
+    }
+
+    public GroupTrack match(Track element, ObservableList<GroupTrack> list, LocalDate day, int week, int month, int year)
+    {
+        for (GroupTrack wg: groupList) {
+            if (wg.getWeek() == week && wg.getYear() == year) {
+              return wg;
+            }
+
+
+    } return null;}
+
+    @Override
+    public ObservableList<GroupTrack> group(ObservableList<AbstractTrack> list) {
+
+        super.groupList = FXCollections.observableArrayList();
+        ObservableList<Track> tracks = FXCollections.observableArrayList();
+
+        for (AbstractTrack at: list) {
+            tracks.add((Track) at);
+        }
+        for (Track track: tracks) {
+
+            int week = track.getDate().get(WeekFields.of(Locale.GERMANY).weekOfWeekBasedYear());
+            int year = track.getDate().getYear();
+            if (match(track,groupList, null, week, 0, year) != null)
+            {
+                match(track,groupList, null, week, 0, year).add(track);
+            }
+            else {
+                groupList.add(new WeekGroup(week, year));
+                groupList.get(groupList.size() - 1).add(track);
+            }
+        }
+        Comparator<GroupTrack> comparator = Comparator.comparingInt(GroupTrack::getYear).thenComparing(GroupTrack::getWeek);
+        FXCollections.sort(groupList, comparator);
+        return groupList;
     }
 
 

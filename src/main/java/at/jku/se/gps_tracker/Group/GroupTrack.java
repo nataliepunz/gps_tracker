@@ -2,6 +2,7 @@ package at.jku.se.gps_tracker.Group;
 
 import at.jku.se.gps_tracker.model.AbstractTrack;
 import at.jku.se.gps_tracker.model.Track;
+import javafx.collections.ObservableList;
 
 import java.time.Duration;
 import java.time.LocalDate;
@@ -18,7 +19,9 @@ public abstract class GroupTrack extends AbstractTrack {
     protected double speed;
     protected Duration pace;
 
-    protected int xAxis; //dient für die vergleichsfunktionalität
+    ObservableList<GroupTrack> groupList;
+
+    protected String xAxis; //dient für die vergleichsfunktionalität
     String group; // dient für die group funktionalität
 
 
@@ -127,7 +130,21 @@ public abstract class GroupTrack extends AbstractTrack {
         return 0;
     }
 
-    public int getxAxis() {
+    public String getxAxis() {
         return xAxis;
+    }
+
+    public ObservableList<GroupTrack> group (ObservableList<AbstractTrack> list)
+    {
+        return null;
+    }
+
+    public GroupTrack match(Track element, ObservableList<GroupTrack> list, LocalDate day, int week, int month, int year){
+        return null;
+    }
+
+    //gets the last object of a list and adds something into the list of the element
+    public void addToLastElementInList (ObservableList<GroupTrack> list, Track track) {
+        list.get(list.size() - 1).add(track);
     }
 }

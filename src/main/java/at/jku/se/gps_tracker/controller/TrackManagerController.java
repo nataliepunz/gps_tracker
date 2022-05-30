@@ -19,6 +19,7 @@ import javafx.fxml.Initializable;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.chart.BarChart;
+import javafx.scene.chart.CategoryAxis;
 import javafx.scene.chart.XYChart;
 import javafx.scene.control. * ;
 import javafx.scene.control.cell.PropertyValueFactory;
@@ -31,7 +32,6 @@ import java.lang.reflect.Method;
 import java.net.URL;
 import java.time.LocalDate;
 import java.time.LocalTime;
-import java.time.temporal.WeekFields;
 import java.util. * ;
 
 public class TrackManagerController implements Initializable,
@@ -199,26 +199,20 @@ public class TrackManagerController implements Initializable,
 
         RadioMenuItem selected = (RadioMenuItem) tgMenuTrack.getSelectedToggle(); //letzte selektion wird gespeichert, damit man sie wiederherstellt
         setTrackListAll(); //alle tracks werden geladen
-        groupYear(); //sie werden gruppiert, da man so die jahre schnelle erhält
+        YearGroup yg = new YearGroup();
+        ObservableList<GroupTrack> years = yg.group(backUp); //sie werden gruppiert, da man so die jahre schnelle erhält
         CheckMenuItem temp;
         CheckMenuItem first;
         List < Integer > items = new ArrayList < >();
 
         //fügt die Jahre in ein Item hinzu und erstellt die MenuItems
-        for (GroupTrack at: group) {
-            temp = null;
-
-            if (!items.contains(at.getYear())) {
-                items.add(at.getYear());
-                temp = new CheckMenuItem(String.valueOf(at.getYear()));
-
-            }
-            if (temp != null) mYears.getItems().add(temp);
+        for (GroupTrack at: years) {
+            mYears.getItems().add(new CheckMenuItem(String.valueOf(at.getYear())));
         }
 
         //Event handler, wurde hier gemacht da die variablen (laut fehlermeldung) fix sein müssen und bei der vorherigen iteration waren sie es nicht
         for (MenuItem cmi: mYears.getItems()) {
-            if (cmi != sep && cmi != cmiYearly) { //es sollen nur actionhandler für dynamische items initialisiert werden
+            if (cmi != sep && cmi != cmiYearly && cmi != cmiAll) { //es sollen nur actionhandler für dynamische items initialisiert werden
                 CheckMenuItem ci = (CheckMenuItem) cmi;
                 ci.setOnAction(e ->{
                 if (ci.isSelected()) {
@@ -305,6 +299,8 @@ public class TrackManagerController implements Initializable,
         }
     }
 
+
+
     //Event Handler für Years -> Yearly Comparison
     @FXML
     private void eventYearly(ActionEvent event) {
@@ -312,18 +308,21 @@ public class TrackManagerController implements Initializable,
             RadioMenuItem graph = (RadioMenuItem) tgGraph.getSelectedToggle();
             RadioMenuItem view = (RadioMenuItem) tgView.getSelectedToggle();
 
+
             if (year1 == null || year2 == null) { //falls jahre noch nicht ausgewählt wurden
                 Alert alert = new Alert(Alert.AlertType.ERROR);
                 alert.setTitle("Error");
                 alert.setHeaderText("One or two selectedy years missing");
                 alert.setContentText("You have to select 2 years");
                 alert.showAndWait();
+                cmiYearly.setSelected(false);
             } else if (graph == null || view == null) { //falls graph und view items nicht ausgewählt wurden
                 Alert alert = new Alert(Alert.AlertType.ERROR);
                 alert.setTitle("Error");
                 alert.setHeaderText("No view or graph item selected");
                 alert.setContentText("Please select both!");
                 alert.showAndWait();
+                cmiYearly.setSelected(false);
 
             } else {
                 String method;
@@ -331,13 +330,17 @@ public class TrackManagerController implements Initializable,
                 setTrackListAll(); //um die Jahre zu vergleichen, muss die trackList alle Tracks zeigen
                 //gruppiert die liste nach letzter selektion bei view
                 if (view.getText().equals("Day")) {
-                    groupDay();
+                  DayGroup dg = new DayGroup();
+                    group = dg.group(backUp);
                 } else if (view.getText().equals("Week")) {
-                    groupWeek();
+                    WeekGroup wg = new WeekGroup();
+                    group =  wg.group(backUp);
                 } else if (view.getText().equals("Month")) {
-                    groupMonth();
+                    MonthGroup mg = new MonthGroup();
+                    group =  mg.group(backUp);
                 } else if (view.getText().equals("Year")) {
-                    groupYear();
+                    YearGroup yg = new YearGroup();
+                    group = yg.group(backUp);
                 }
 
                 try {
@@ -348,6 +351,12 @@ public class TrackManagerController implements Initializable,
             }
         }
     }
+
+
+
+    @FXML
+    CheckMenuItem cmiYears;
+
 
     @FXML
     private void segment10m(ActionEvent event) {
@@ -399,9 +408,40 @@ public class TrackManagerController implements Initializable,
 
     }
 
+    @FXML
+    private void selectAllYears(ActionEvent event) {
+
+        if (cmiAll.isSelected()){
+        for (MenuItem cmi : mYears.getItems()) {
+            if (cmi != sep && cmi != cmiYearly && cmi != cmiAll) {
+                {
+                   if (!((CheckMenuItem) cmi).isSelected()) {
+                    ((CheckMenuItem) cmi).setSelected(true);
+                    cmi.fire();
+                    if (year1 == null)
+                        year1 = cmi.getText();
+                    else if (year2 == null)
+                    {
+                        year2 = cmi.getText();
+                    }}
+
+            }}
+        }
+    }}
+
+
+
+    @FXML
+    private CheckMenuItem cmiAll;
+
+
+
+
     //TODO: UserGuide Methode Implementieren
     @FXML
-    private void openUserGuide(ActionEvent event) {}
+    private void openUserGuide(ActionEvent event) {
+
+    }
 
     /* Tabellen */
 
@@ -587,7 +627,7 @@ public class TrackManagerController implements Initializable,
         ObservableList < GroupTrack > temp = FXCollections.observableArrayList();
         temp.add((GroupTrack) tl.get(0));
 
-        if (temp.get(0).getGroup().equals("Month")) //months cannot be sorted just by string name, added comparator above
+        if (!temp.get(0).getGroup().equals("Month") && !temp.get(0).getGroup().equals("Week")) //months cannot be sorted just by string name, added comparator above
         {
             mainTable.getSortOrder().add(nameCol);
             mainTable.sort();
@@ -615,13 +655,27 @@ public class TrackManagerController implements Initializable,
         chart.setTitle(name);
         chart.getXAxis().setLabel("Track Name");
 
-        switch (methodName) {
-            case "getDistance" ->chart.getYAxis().setLabel("Distance");
-            case "getElevation" ->chart.getYAxis().setLabel("Elevation");
-            case "getDurationMinutes" ->chart.getYAxis().setLabel("Duration");
-            case "getAverageBPM" ->chart.getYAxis().setLabel("HeartBeat");
-            case "getSpeed" ->chart.getYAxis().setLabel("Speed");
-            default ->chart.getYAxis().setLabel("");
+        if (methodName.equals("getDistance"))
+        {
+            chart.getYAxis().setLabel("Distance");
+        }
+
+        else if (methodName.equals("getElevation")){
+            chart.getYAxis().setLabel("Elevation");
+        }
+
+        else if (methodName.equals("getDurationMinutes"))
+       {
+            chart.getYAxis().setLabel("Duration");
+        }
+
+        else if (methodName.equals("getAverageBPM")) {
+            chart.getYAxis().setLabel("HeartBeat");
+        }
+
+        else if (methodName.equals("getSped"))
+        {
+            chart.getYAxis().setLabel("Speed");
         }
 
         chart.getData().clear();
@@ -634,20 +688,37 @@ public class TrackManagerController implements Initializable,
                 xy.getData().add(new XYChart.Data < >(at.getName(), method.invoke(at)));
             }
         }
+        else {
+        boolean weeks = false;
+            //Gruppiert Elemente je nachdem, was ausgewählt wurde
+            if (group.get(0).getGroup().equals("Week")) {
+                chart.getXAxis().setLabel("Wochen");
+                weeks = true;
+            } else if (group.get(0).getGroup().equals("Day")) {
+                chart.getXAxis().setLabel("Tage");
 
-        if (list == turnIntoAbstractTrack((group))) {
-
-            switch (group.get(0).getName()) {
-                case "Woche" ->chart.getXAxis().setLabel("Wochen");
-                case "Monat" ->chart.getXAxis().setLabel("Monate");
-                case "Tag" ->chart.getXAxis().setLabel("Tage");
-                case "Jahr" ->chart.getXAxis().setLabel("Jahre");
-                default ->chart.getYAxis().setLabel("");
+            } else if (group.get(0).getGroup().equals("Month")) {
+                chart.getXAxis().setLabel("Monate");
+            } else if (group.get(0).getGroup().equals("Year")) {
+                chart.getXAxis().setLabel("Jahre");
             }
-        }
 
         for (GroupTrack gt: group)
-            xy.getData().add(new XYChart.Data < >(gt.getName(), method.invoke(gt)));
+            if (weeks)
+            { String val;
+             if (((RadioMenuItem) tgMenuTrack.getSelectedToggle()).getText().equals(DataModel.ALL_TRACK_KEYWORD))
+                {
+                      val = "W: " +  gt.getWeek() + "-" + gt.getYear();
+
+                }
+                else {
+                 val = "W: " +  gt.getWeek();
+            }
+                xy.getData().add(new XYChart.Data < >(val, method.invoke(gt)));
+            }
+        else
+            {xy.getData().add(new XYChart.Data < >(gt.getName(), method.invoke(gt)));}}
+
         chart.setData(FXCollections.observableArrayList(xy));
 
     }
@@ -662,126 +733,7 @@ public class TrackManagerController implements Initializable,
         }
     }
 
-	/*
 
-		--
-		Gruppierungsmethoden
-		* */
-
-    private void groupWeek() {
-
-        group = FXCollections.observableArrayList();
-        ObservableList < Track > tracks = FXCollections.observableArrayList();
-
-        for (AbstractTrack at: backUp) {
-            tracks.add((Track) at);
-        }
-        for (Track track: tracks) {
-            int week = track.getDate().get(WeekFields.of(Locale.GERMANY).weekOfWeekBasedYear());
-            int year = track.getDate().getYear();
-            boolean added = false;
-            for (GroupTrack wg: group) {
-                if (wg.getWeek() == week && wg.getYear() == year) {
-                    wg.add(track);
-                    added = true;
-                    break;
-                }
-            }
-            if (!added) {
-                group.add(new WeekGroup(week, year));
-                group.get(group.size() - 1).add(track);
-            }
-        }
-    }
-
-    private void groupMonth() {
-
-        group = FXCollections.observableArrayList();
-        ObservableList < Track > tracks = FXCollections.observableArrayList();
-
-        for (AbstractTrack at: backUp) {
-            tracks.add((Track) at);
-
-        }
-
-        for (Track track: tracks) {
-
-            int month = track.getDate().getMonthValue();
-            int year = track.getDate().getYear();
-            boolean added = false;
-            for (GroupTrack mg: group) {
-                if (mg.getMonth() == month && mg.getYear() == year) {
-                    mg.add(track);
-                    added = true;
-                    break;
-                }
-            }
-
-            if (!added) {
-                group.add(new MonthGroup(month, year));
-                group.get(group.size() - 1).add(track);
-            }
-        }
-
-        Comparator < GroupTrack > comparator = Comparator.comparingInt(GroupTrack::getMonth);
-        FXCollections.sort(group, comparator);
-    }
-
-    private void groupDay() {
-
-        group = FXCollections.observableArrayList();
-        ObservableList < Track > tracks = FXCollections.observableArrayList();
-
-        for (AbstractTrack at: backUp) {
-            tracks.add((Track) at);
-        }
-        for (Track track: tracks) {
-
-            LocalDate day = track.getDate();
-            boolean added = false;
-            for (GroupTrack dg: group) {
-                if (dg.getDate() == day) {
-                    dg.add(track);
-                    added = true;
-                    break;
-                }
-            }
-
-            if (!added) {
-                group.add(new DayGroup(day));
-                group.get(group.size() - 1).add(track);
-            }
-        }
-    }
-
-    private void groupYear() {
-
-        group = FXCollections.observableArrayList();
-        ObservableList < Track > tracks = FXCollections.observableArrayList();
-
-        for (AbstractTrack at: backUp) {
-            tracks.add((Track) at);
-        }
-
-        for (Track track: tracks) {
-
-            int year = track.getDate().getYear();
-
-            boolean added = false;
-            for (GroupTrack dg: group) {
-                if (dg.getYear() == year) {
-                    dg.add(track);
-                    added = true;
-                    break;
-                }
-            }
-
-            if (!added) {
-                group.add(new YearGroup(year));
-                group.get(group.size() - 1).add(track);
-            }
-        }
-    }
 
     //für die fälle wo man grouptrack benötigt
     private ObservableList < AbstractTrack > turnIntoAbstractTrack(ObservableList < GroupTrack > list) {
@@ -834,26 +786,53 @@ public class TrackManagerController implements Initializable,
         series1.setName("" + year1);
         series2.setName("" + year2);
 
+        boolean days = false;
         //Benennung der X Achse
         if (Objects.equals(group.get(0).getGroup(), "Week")) {
             chart.getXAxis().setLabel("Wochen");
+
         } else if (Objects.equals(group.get(0).getGroup(), "Month")) {
             chart.getXAxis().setLabel("Monate");
+
         } else if (Objects.equals(group.get(0).getGroup(), "Day")) {
             chart.getXAxis().setLabel("Tage");
+            days=true;
+
         } else if (Objects.equals(group.get(0).getGroup(), "Year")) {
             chart.getXAxis().setLabel("Jahre");
-        }
 
+        }
+         Set<String> cat = new LinkedHashSet<>();
         //Hinzufügen von Datenreihen
+
         for (GroupTrack gt: list)
 
             if (gt.getYear() == year1) { //getxAxis dient dazu, dass alle einheitlich heißen ansonsten wäre das nicht der Fall, bsp. August 2020 und August 2021
-                series1.getData().add(new XYChart.Data < >(String.valueOf(gt.getxAxis()), method.invoke(gt)));
+                series1.getData().add(new XYChart.Data<>(gt.getxAxis(), method.invoke(gt)));
+                cat.add(String.valueOf(gt.getxAxis()));
             } else if (gt.getYear() == year2) {
-                series2.getData().add(new XYChart.Data < >(String.valueOf(gt.getxAxis()), method.invoke(gt)));
+                series2.getData().add(new XYChart.Data<>(gt.getxAxis(), method.invoke(gt)));
+                cat.add(String.valueOf(gt.getxAxis()));
             }
+
+
         chart.getData().addAll(series1, series2);
+
+        /* sortiert die x varablen */
+       ObservableList<String> sortedCat = FXCollections.observableArrayList(cat);
+
+       if (days) {
+           Collections.sort(sortedCat); //da xAxis bei groupDay bindestrich enthält
+        }
+        else {
+            sortedCat.sort(Comparator.comparingInt(Integer::parseInt));}
+       ((CategoryAxis) chart.getXAxis()).setCategories(sortedCat);
+       chart.getXAxis().setAutoRanging(true);
+
+
+
+
+
     }
 
     @Override
@@ -923,13 +902,17 @@ public class TrackManagerController implements Initializable,
             }
             //Gruppiert Elemente je nachdem, was ausgewählt wurde
             if (selectedItem.getText().equals("Day")) {
-                groupDay();
+                DayGroup dg = new DayGroup();
+                group = dg.group(backUp);
             } else if (Objects.equals(selectedItem.getText(), "Week")) {
-                groupWeek();
+                WeekGroup wg = new WeekGroup();
+                group = wg.group(backUp);
             } else if (Objects.equals(selectedItem.getText(), "Month")) {
-                groupMonth();
+                MonthGroup mg = new MonthGroup();
+                group = mg.group(backUp);
             } else if (Objects.equals(selectedItem.getText(), "Year")) {
-                groupYear();
+                YearGroup yg = new YearGroup();
+                group = yg.group(backUp);
             }
 
             showGroupTable(turnIntoAbstractTrack(group));

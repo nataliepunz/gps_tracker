@@ -80,11 +80,13 @@
                             <RadioMenuItem fx:id="miMonth" mnemonicParsing="false" text="Month" toggleGroup="$tgView" />
                             <RadioMenuItem fx:id="miYear" mnemonicParsing="false" text="Year" toggleGroup="$tgView" />
 
+
                         </Menu>
                         <Menu fx:id="mYears" mnemonicParsing="false" text="Years">
                      <items>
                         <CheckMenuItem fx:id="cmiYearly" mnemonicParsing="false" onAction="#eventYearly" text="Yearly Comparison" />
-                        <SeparatorMenuItem fx:id="sep" mnemonicParsing="false" />
+                         <CheckMenuItem fx:id="cmiAll" mnemonicParsing="false" onAction="#selectAllYears" text="Select All" />
+                         <SeparatorMenuItem fx:id="sep" mnemonicParsing="false" />
                      </items>
                         </Menu>
 
