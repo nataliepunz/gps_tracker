@@ -1,6 +1,9 @@
 package at.jku.se.gps_tracker.controller;
 
 import java.io.File;
+
+import at.jku.se.gps_tracker.data.SQLOperationException;
+import at.jku.se.gps_tracker.data.SQLRollbackException;
 import at.jku.se.gps_tracker.model.DataModel;
 import javafx.application.Platform;
 import javafx.event.ActionEvent;
@@ -13,7 +16,7 @@ import javafx.stage.Stage;
  * @author Ozan
  *
  */
-public class StartViewController {
+public class StartViewController implements ErrorPopUpController {
 
 	@FXML
 	private Button buttonChoseDirectory;
@@ -59,8 +62,12 @@ public class StartViewController {
         if(selectedDirectory!=null) {
         	model.setDirectory(selectedDirectory.getAbsolutePath());
         	model.setDirectoryFolders();
-        	model.changeModel();
-        	model.updateTrackListFromDB();
+			try {
+				model.changeModel();
+				model.updateTrackListFromDB();
+			} catch (SQLOperationException | SQLRollbackException e) {
+				showErrorPopUp("NOT GOOD CHIEF");
+			}			
         }
 	  }
 }

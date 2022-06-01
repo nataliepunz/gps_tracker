@@ -1,6 +1,8 @@
 package at.jku.se.gps_tracker.controller;
 
-import at.jku.se.gps_tracker.Group. * ;
+import at.jku.se.gps_tracker.Group.*;
+import at.jku.se.gps_tracker.data.SQLOperationException;
+import at.jku.se.gps_tracker.data.SQLRollbackException;
 import at.jku.se.gps_tracker.model.AbstractTrack;
 import at.jku.se.gps_tracker.model.DataModel;
 
@@ -169,7 +171,13 @@ public class TrackManagerController implements Initializable,
 	  @FXML
 	  private void updateDirectoryFolders(ActionEvent event) {
 		  model.setDirectoryFolders();
-		  model.changeModel();
+		  try {
+			model.changeModel();
+		  } catch (SQLOperationException e) {
+			showErrorPopUp(e.getMessage());
+		  } catch (SQLRollbackException e) {
+			showErrorPopUp(e.getMessage());
+		  }
 	  }
 	
 	  /**
@@ -189,7 +197,11 @@ public class TrackManagerController implements Initializable,
 	  */
 	  @FXML
 	  private void closeApplication(ActionEvent event) {
-		  model.closeConnection();
+		  try {
+			model.closeConnection();
+		} catch (SQLOperationException e) {
+			showErrorPopUp(e.getMessage());
+		}
 		  Platform.exit();
 	  }
 	
@@ -216,8 +228,8 @@ public class TrackManagerController implements Initializable,
 	* @param directoryFolder
 	*/
 	private void syncTracks(String directoryFolder) {
-		List<String> toAddTracks;
-		List<String> toDeleteTracks;
+		List<String> toAddTracks = new ArrayList<>();
+		List<String> toDeleteTracks = new ArrayList<>();
 		try {
 			  toAddTracks = model.getDifferenceDriveAndDB(true, directoryFolder);
 			  toDeleteTracks = model.getDifferenceDriveAndDB(false, directoryFolder);
@@ -225,13 +237,20 @@ public class TrackManagerController implements Initializable,
 			  showErrorPopUpNoWait("ERROR! NOT POSSIBLE TO ACCESS DIRECTORY FOLDER "+directoryFolder+". REMEMBER TO UPDATE AFTER EVERY FOLDER STRUCTURE CHANGE!");
 				if(!DataModel.ALL_TRACK_KEYWORD.equals(model.getDirectoryFolder())){
 					model.setDirectoryFolders();
-					model.changeModel();
-					model.updateTrackListFromDB();
+					try {
+						model.changeModel();
+						model.updateTrackListFromDB();
+					} catch (SQLOperationException | SQLRollbackException e) {
+						showErrorPopUp(e.getMessage());
+					}
 					syncTracks();
-			  }
+				}
 			  return;
 		} catch (NullPointerException e2) {
 			showErrorPopUpNoWait("ERROR NOT VALID SETUP!");
+			return;
+		} catch (SQLOperationException e) {
+			showErrorPopUp(e.getMessage());
 			return;
 		}
 		
@@ -242,11 +261,23 @@ public class TrackManagerController implements Initializable,
 				showErrorPopUpNoWait("ERROR! FILE "+ FilenameUtils.getName(s) +" COULD NOT BE FOUND!");
 			} catch (XMLStreamException e) {
 				showErrorPopUpNoWait("ERROR! FILE "+ FilenameUtils.getName(s) +" COULD NOT BE PARSED!");
+			} catch (SQLOperationException e) {
+				showErrorPopUp(e.getMessage());
+			} catch (SQLRollbackException e) {
+				showErrorPopUp(e.getMessage());
+			} catch (IOException e) {
+				showErrorPopUp("ERROR! NOT POSSIBLE ACCESSING DISK");
 			}
 		}
 		
 		for(String s : toDeleteTracks) {
-		model.removeTrack(s, directoryFolder);
+			try {
+				model.removeTrack(s, directoryFolder);
+			} catch (SQLOperationException e) {
+				showErrorPopUp(e.getMessage());
+			} catch (SQLRollbackException e) {
+				showErrorPopUp(e.getMessage());
+			}
 		}
 	}
 	
@@ -319,7 +350,11 @@ public class TrackManagerController implements Initializable,
 	private void changeCategory(String subfolder) throws InvocationTargetException, NoSuchMethodException, IllegalAccessException {
 		if(model.checkConnection()) {
 			model.setDirectoryFolder(subfolder);
-			model.updateTrackListFromDB();
+			try {
+				model.updateTrackListFromDB();
+			} catch (SQLOperationException e) {
+				showErrorPopUp(e.getMessage());
+			}
 			syncTracks();
 			changeChart();
 		}
@@ -430,8 +465,8 @@ public class TrackManagerController implements Initializable,
         RadioMenuItem graph = (RadioMenuItem) tgGraph.getSelectedToggle();
         RadioMenuItem view = (RadioMenuItem) tgView.getSelectedToggle();
         if (cmiYearly.isSelected()) {
-
-
+        	
+        	
 
             if (year1 == null || year2 == null) { //falls jahre noch nicht ausgewählt wurden
                 Alert alert = new Alert(Alert.AlertType.ERROR);
@@ -670,7 +705,9 @@ public class TrackManagerController implements Initializable,
 	    } catch (XMLStreamException e) {
 		    syncTracks();
 		    showErrorPopUpNoWait("TRACK NOT CONFIRMING TO SPECIFICATION!");
-	    }
+	    } catch (IOException e) {
+			showErrorPopUp("NO ACCESS TO DISK! PLEASE CONSULT DOCUMENTATION");
+		}
 	    return new ArrayList<>();
 	}      
           

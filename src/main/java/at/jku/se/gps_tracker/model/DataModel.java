@@ -1,5 +1,7 @@
 package at.jku.se.gps_tracker.model;
 
+import at.jku.se.gps_tracker.data.SQLOperationException;
+import at.jku.se.gps_tracker.data.SQLRollbackException;
 import at.jku.se.gps_tracker.data.TracksDB;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
@@ -9,6 +11,7 @@ import org.apache.commons.io.FilenameUtils;
 
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -112,8 +115,10 @@ public class DataModel {
 	 * if yes a connection with the databsae is established and the first entry of the folders is set as the active one
 	 * if no the tracklist gets cleared
 	 * @author Ozan
+	 * @throws SQLRollbackException 
+	 * @throws SQLOperationException 
 	 */
-	public void changeModel() {
+	public void changeModel() throws SQLOperationException, SQLRollbackException {
 		if(!directoryFolders.isEmpty()){
 			conn.establishConnection(directory, DATABASE_NAME);
 			setDirectoryFolder(directoryFolders.get(0));
@@ -146,8 +151,9 @@ public class DataModel {
 	 * if a active connection with the database is set then the tracks from the database are read
 	 * eiter all tracks or only the ones inside the current set directoryFolder
 	 * @author Ozan
+	 * @throws SQLOperationException 
 	 */
-	public void updateTrackListFromDB(){
+	public void updateTrackListFromDB() throws SQLOperationException{
 		if(checkConnection()) {
 			trackList.clear();
 			if(ALL_TRACK_KEYWORD.equals(directoryFolder)) {
@@ -171,9 +177,10 @@ public class DataModel {
 	 * @return if getTracksFromDrive true return the tracks in folder that are not in the DataBase; if false return tracks in DataBase that are not in the DataBase
 	 * @throws FileNotFoundException if the folder requested from is not found
 	 * @throws NullPointerException if there is no connection with the database or the directory/directoryfolder is null 
+	 * @throws SQLOperationException 
 	 */
 	
-	public List<String> getDifferenceDriveAndDB(boolean getTracksFromDrive, String directoryFolder) throws NullPointerException, FileNotFoundException{
+	public List<String> getDifferenceDriveAndDB(boolean getTracksFromDrive, String directoryFolder) throws NullPointerException, FileNotFoundException, SQLOperationException{
 		if(directory==null || directoryFolder==null || !checkConnection()) {
 			throw new NullPointerException();
 		} else if (!checkFolderExists(directoryFolder)){
@@ -199,10 +206,12 @@ public class DataModel {
 	 * add a given Track to the the database and to the tracklist
 	 * @author Ozan
 	 * @param trackFilePath
-	 * @throws FileNotFoundException
 	 * @throws XMLStreamException
+	 * @throws SQLRollbackException 
+	 * @throws SQLOperationException 
+	 * @throws IOException 
 	 */
-	public void addTrack(String trackFilePath) throws FileNotFoundException, XMLStreamException {
+	public void addTrack(String trackFilePath) throws XMLStreamException, SQLOperationException, SQLRollbackException, IOException {
 		Track t = conn.parseTrack(trackFilePath);
 		trackList.add(t);
 		conn.addTrackToDataBase(t);
@@ -213,8 +222,10 @@ public class DataModel {
 	 * @author Ozan
 	 * @param trackFilePath
 	 * @param directoryFolder
+	 * @throws SQLRollbackException 
+	 * @throws SQLOperationException 
 	 */
-	public void removeTrack(String fileName, String directoryFolder) {
+	public void removeTrack(String fileName, String directoryFolder) throws SQLOperationException, SQLRollbackException {
 		conn.removeTrackFromDataBase(fileName, directoryFolder);
 		removeTrackFromTrackList(new ArrayList<>(Arrays.asList(fileName, directoryFolder)));
 	}
@@ -238,10 +249,10 @@ public class DataModel {
 	 * @author Ozan
 	 * @param track
 	 * @return TrackPoints as List
-	 * @throws FileNotFoundException
 	 * @throws XMLStreamException
+	 * @throws IOException 
 	 */
-	public List<TrackPoint> getTrackPoints(Track track) throws FileNotFoundException, XMLStreamException{
+	public List<TrackPoint> getTrackPoints(Track track) throws XMLStreamException, IOException{
 		if(track==null) {
 			return new ArrayList<>();
 		} else if(track.getTrackPoints()!=null && !track.getTrackPoints().isEmpty()) {
@@ -307,8 +318,9 @@ public class DataModel {
 	/**
 	 * checks and then closes the connection to the database
 	 * @author Ozan
+	 * @throws SQLOperationException 
 	 */
-	public void closeConnection() {
+	public void closeConnection() throws SQLOperationException {
 		if(checkConnection()) {
 			conn.closeConnection();
 		}

@@ -236,7 +236,7 @@ public class TrackParserTest {
 	}
 		
 	@Test
-	void correctTCXTrackTest() throws URISyntaxException, XMLStreamException, FileNotFoundException {
+	void correctTCXTrackTest() throws URISyntaxException, XMLStreamException, IOException {
 		Track track = tParser.getTrack(Paths.get(getClass().getClassLoader().getResource("TCXTracks/River_regular.tcx").toURI()).toFile().getAbsolutePath());
 		assertTrue(track!=null);
 		assertEquals("River", track.getName());
@@ -255,7 +255,7 @@ public class TrackParserTest {
 	}
 	
 	@Test
-	void twoNameTagTCXTrackTest() throws URISyntaxException, XMLStreamException, FileNotFoundException {
+	void twoNameTagTCXTrackTest() throws URISyntaxException, XMLStreamException, IOException {
 		Track track = tParser.getTrack(Paths.get(getClass().getClassLoader().getResource("TCXTracks/River_two_trackNames.tcx").toURI()).toFile().getAbsolutePath());
 		assertTrue(track!=null);
 		assertEquals("River_first_tag", track.getName());
@@ -274,7 +274,7 @@ public class TrackParserTest {
 	}
 	
 	@Test
-	void noNameTagTCXTrackTest() throws URISyntaxException, XMLStreamException, FileNotFoundException {
+	void noNameTagTCXTrackTest() throws URISyntaxException, XMLStreamException, IOException {
 		Track track = tParser.getTrack(Paths.get(getClass().getClassLoader().getResource("TCXTracks/River_no_trackName.tcx").toURI()).toFile().getAbsolutePath());
 		assertTrue(track!=null);
 		assertEquals(Duration.ofSeconds((long) 233.9200000+ (long) 100.6000000), track.getDuration());
@@ -292,7 +292,7 @@ public class TrackParserTest {
 	}
 	
 	@Test
-	void noBPMTagsTCXTrackTest() throws URISyntaxException, XMLStreamException, FileNotFoundException {
+	void noBPMTagsTCXTrackTest() throws URISyntaxException, XMLStreamException, IOException {
 		Track track = tParser.getTrack(Paths.get(getClass().getClassLoader().getResource("TCXTracks/River_no_BPM.tcx").toURI()).toFile().getAbsolutePath());
 		assertTrue(track!=null);
 		assertEquals(Duration.ofSeconds((long) 233.9200000+ (long) 100.6000000), track.getDuration());
@@ -315,7 +315,7 @@ public class TrackParserTest {
 	}
 	
 	@Test
-	void getTrackPointsTest() throws FileNotFoundException, XMLStreamException, URISyntaxException {
+	void getTrackPointsTest() throws XMLStreamException, URISyntaxException, IOException {
 		assertEquals(2, tParser.getTrackPoints(Paths.get(getClass().getClassLoader().getResource("GPXTracks/Koglerau_regular.gpx").toURI()).toFile().getAbsolutePath()).size());
 	}
 }

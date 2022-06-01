@@ -178,18 +178,6 @@ public class TrackParser {
 	private XMLInputFactory inputFactory;
 	
 	/**
-	 * the streamReader instance to read the given xml file
-	 * @author Ozan
-	 */
-	private XMLStreamReader streamReader;
-	
-	/**
-	 * the InputStream with the given file
-	 * @author Ozan
-	 */
-	private InputStream in;
-
-	/**
 	 * instantiate the inputFactory and setProperties for safety
 	 * @author Ozan
 	 */
@@ -203,60 +191,44 @@ public class TrackParser {
 	 * @author Ozan
 	 * @param file filePath of track
 	 * @return parsed Track
+	 * @throws IOException 
 	 * @throws XMLStreamException
-	 * @throws FileNotFoundException
 	 */
-	public Track getTrack(String file) throws XMLStreamException, FileNotFoundException{
+	public Track getTrack(String file) throws IOException, XMLStreamException{
 		Track track = null;
-		cleanUp();
-		setUpTrackParser(file);
-		if(FilenameUtils.getExtension(file).equals("gpx")) {
-			track = GPXParser.readGPXTrack(file, streamReader);
-		} else {
-			track = TCXParser.readTCXTrack(file, streamReader);
+		try(InputStream in = new BufferedInputStream(new FileInputStream(file))){
+			XMLStreamReader streamReader = inputFactory.createXMLStreamReader(in);
+			if(FilenameUtils.getExtension(file).equals("gpx")) {
+				track = GPXParser.readGPXTrack(file, streamReader);
+			} else {
+				track = TCXParser.readTCXTrack(file, streamReader);
+			}
+		} catch (FileNotFoundException e) {
+			resetFields();
+			throw new FileNotFoundException(e.getMessage());
+		} catch (IOException e) {
+			resetFields();
+			throw new IOException(e.getMessage());
+		} catch (XMLStreamException e) {
+			resetFields();
+			throw new XMLStreamException(e.getMessage());
 		}
-		cleanUp();
+		resetFields();
 		return track;
 	}
 	
-	/**
-	 * resets the fields and closes the InputStream
-	 * @author Ozan
-	 */
-	public void cleanUp() {
-		resetFields();
-		if(in!=null) {
-			try {
-				in.close();
-			} catch (IOException e) {
-				in = null;
-			}
-		}
-	}
-
 	/**
 	 * parses and returns the trackpoints of a given file path
 	 * @author Ozan
 	 * @param file filePath of track
 	 * @return TrackPoints of given file as List
 	 * @throws XMLStreamException
-	 * @throws FileNotFoundException
+	 * @throws IOException 
 	 */
-	public List<TrackPoint> getTrackPoints(String file) throws XMLStreamException, FileNotFoundException{
+	public List<TrackPoint> getTrackPoints(String file) throws XMLStreamException, IOException{
 		return this.getTrack(file).getTrackPoints();
 	}
 	
-	/**
-	 * sets up the track parsing 
-	 * @author Ozan
-	 * @param file to be parsed file
-	 * @throws XMLStreamException
-	 * @throws FileNotFoundException
-	 */
-	private void setUpTrackParser(String file) throws XMLStreamException, FileNotFoundException  {
-		in = new BufferedInputStream(new FileInputStream(file));
-		streamReader = inputFactory.createXMLStreamReader(in);
-	}
 		
 	/**
 	 * returns distance based on two coordinate sets

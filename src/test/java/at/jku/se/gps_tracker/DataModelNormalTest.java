@@ -21,6 +21,8 @@ import java.util.stream.Collectors;
 
 import javax.xml.stream.XMLStreamException;
 
+import at.jku.se.gps_tracker.data.SQLOperationException;
+import at.jku.se.gps_tracker.data.SQLRollbackException;
 import at.jku.se.gps_tracker.model.DataModel;
 /**
  * tests a valid DataModel object
@@ -50,11 +52,14 @@ class DataModelNormalTest {
 	/**
 	 * set up the test enviroment before each test
 	 * @throws URISyntaxException
-	 * @throws FileNotFoundException
 	 * @throws XMLStreamException
+	 * @throws SQLRollbackException 
+	 * @throws SQLOperationException 
+	 * @throws IOException 
+	 * @throws NullPointerException 
 	 */
 	@BeforeEach
-	void setUp() throws URISyntaxException, FileNotFoundException, XMLStreamException {
+	void setUp() throws URISyntaxException, XMLStreamException, SQLOperationException, SQLRollbackException, NullPointerException, IOException {
 		model = new DataModel();
 		model.setDirectory(Paths.get(getClass().getClassLoader().getResource("DataModelandTracksDB/help_for_testing.txt").toURI()).toFile().getParentFile().getAbsolutePath());
 		model.setDirectoryFolders();
@@ -69,9 +74,10 @@ class DataModelNormalTest {
 	 * teardown of the test set up
 	 * close the connection and delete the tracks file
 	 * @author Ozan
+	 * @throws SQLOperationException 
 	 */
 	@AfterEach
-	void teardown() {
+	void teardown() throws SQLOperationException {
 		model.closeConnection();
 		File track = new File(tracksFileLocation);
 		track.delete();
@@ -89,9 +95,11 @@ class DataModelNormalTest {
 	/**
 	 * set the a new directory and check if the directory folder is set correctly
 	 * @author Ozan
+	 * @throws SQLRollbackException 
+	 * @throws SQLOperationException 
 	 */
 	@Test
-	void setDirectoryTest() {
+	void setDirectoryTest() throws SQLOperationException, SQLRollbackException {
 		model.setDirectory(FilenameUtils.concat(directoryPath, "z_Alternative_for_set_directory"));
 		model.setDirectoryFolders();
 		model.changeModel();
@@ -126,14 +134,14 @@ class DataModelNormalTest {
 	}
 	
 	@Test
-	void getTrackListAllTracksTest() throws URISyntaxException, FileNotFoundException, XMLStreamException {
+	void getTrackListAllTracksTest() throws URISyntaxException, XMLStreamException, NullPointerException, SQLOperationException, SQLRollbackException, IOException {
 		model.setDirectoryFolder(DataModel.ALL_TRACK_KEYWORD);
 		syncTracks();
 		assertEquals(9, model.getTrackList().size());
 	}
 	
 	@Test
-	void getTrackPointsTest() throws FileNotFoundException, XMLStreamException {
+	void getTrackPointsTest() throws XMLStreamException, IOException {
 		assertNotNull(model.getTrackPoints(model.getTrackList().get(0)));
 	}
 	
@@ -147,7 +155,7 @@ class DataModelNormalTest {
 	}
 	
 	@Test
-	void setDirectoryFolderAndFilterTest() throws FileNotFoundException, XMLStreamException {
+	void setDirectoryFolderAndFilterTest() throws XMLStreamException, NullPointerException, SQLOperationException, SQLRollbackException, IOException {
 		model.setDirectoryFolder("Filter2");
 		syncTracks();
 		List<String> trackNames = model.getTrackList().stream().map(track -> track.getName()).collect(Collectors.toList());
@@ -157,7 +165,7 @@ class DataModelNormalTest {
 	}
 	
 	@Test
-	void deletionOfTrackTest() throws FileNotFoundException, XMLStreamException {
+	void deletionOfTrackTest() throws XMLStreamException, NullPointerException, SQLOperationException, SQLRollbackException, IOException {
 		assertEquals(3, model.getTrackList().size());
 		String folderFilterOne = FilenameUtils.concat(directoryPath, "Filter1");
 		String folderUnderFilterOne = FilenameUtils.concat(folderFilterOne, "move_to_simulate_deletion");
@@ -172,7 +180,7 @@ class DataModelNormalTest {
 	}
 	
 	@Test
-	void deleteFilterFolderDuringRunTimeTest() throws IOException, XMLStreamException {
+	void deleteFilterFolderDuringRunTimeTest() throws IOException, XMLStreamException, SQLOperationException, SQLRollbackException {
 		model.setDirectoryFolder("FilterFolderDeleteSimulation");
 		model.changeModel();
     	model.updateTrackListFromDB();
@@ -185,7 +193,7 @@ class DataModelNormalTest {
 		FileUtils.moveDirectoryToDirectory(new File(FilenameUtils.concat(destinationFolderForSimulation, "FilterFolderDeleteSimulation")), new File(directoryPath), false);
 	}
 	
-	private void syncTracks() throws FileNotFoundException, XMLStreamException {
+	private void syncTracks() throws XMLStreamException, NullPointerException, SQLOperationException, SQLRollbackException, IOException {
 		if(DataModel.ALL_TRACK_KEYWORD.equals(model.getDirectoryFolder())) {
 			for(String folder : model.getDirectoryFolders()) {
 				if(model.checkFolderExists(folder)) {
@@ -197,7 +205,7 @@ class DataModelNormalTest {
 		}		
 	}
 	
-	private void syncTracks(String directoryFolder) throws FileNotFoundException, XMLStreamException {
+	private void syncTracks(String directoryFolder) throws XMLStreamException, NullPointerException, SQLOperationException, SQLRollbackException, IOException {
 		for(String s : model.getDifferenceDriveAndDB(true, directoryFolder)) {
 				model.addTrack(s);
 		}
