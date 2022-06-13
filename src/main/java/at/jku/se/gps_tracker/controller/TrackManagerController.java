@@ -41,15 +41,18 @@ import org.apache.commons.io.FilenameUtils;
 
 public class TrackManagerController implements Initializable,
         ErrorPopUpController {
-    //TODO : Optische Korrekturen
+
     private DataModel model;
     private ObservableList < AbstractTrack > trackList;
     private ObservableList < AbstractTrack > backUp;
     private ObservableList < String > categories;
     final private ToggleGroup tgMenuTrack;
 
+
     String year1;
     String year2;
+
+    int[] yearsArr;
 
     private ObservableList < GroupTrack > group = FXCollections.observableArrayList();
 
@@ -170,6 +173,7 @@ public class TrackManagerController implements Initializable,
 	  private void updateDirectoryFolders(ActionEvent event) {
 		  model.setDirectoryFolders();
 		  model.changeModel();
+          setUpYearsItems();
 	  }
 	
 	  /**
@@ -327,34 +331,52 @@ public class TrackManagerController implements Initializable,
 
     /* erstellt dynamisch abhängig von der trackliste die items für jahresvergleich */
     @SuppressWarnings("null")
+
+    /**
+     * set up the years to for the function to compare years with
+     */
+
+    /**
+     * executed at start of the application and whenever the folders are changed
+     * sets the necessary menuitems to compare years with depending on the years that are available at the tracklist
+     * and initializes actionhandlers for when the items are selected, making sure comparing years only works when 2 items are selected
+     * currently only works to compare two selected years
+     * @author Nuray
+     */
     private void setUpYearsItems() {
 
-        RadioMenuItem selected = (RadioMenuItem) tgMenuTrack.getSelectedToggle(); //letzte selektion wird gespeichert, damit man sie wiederherstellt
-        setTrackListAll(); //alle tracks werden geladen
+        RadioMenuItem selected = (RadioMenuItem) tgMenuTrack.getSelectedToggle(); //letzte selektion wird gespeichert, damit man sie später wiederherstellt
+        setTrackListAll(); //alle tracks werden geladen (nicht nur von einem jahr)
+
+        /* ruft die gruppierungsfunktion für jahr auf, da man so auf die jahre kommt */
         YearGroup yg = new YearGroup();
-        ObservableList<GroupTrack> years = yg.group(backUp); //sie werden gruppiert, da man so die jahre schnelle erhält
+
+        ObservableList<GroupTrack> years = yg.group(backUp);
         CheckMenuItem temp;
         CheckMenuItem first;
-        List < Integer > items = new ArrayList < >();
 
-        //fügt die Jahre in ein Item hinzu und erstellt die MenuItems
+        List<Integer> items = new ArrayList<>();
+
+        /* erstellt menuitems mit den jahren in der gruppe years */
+        int j = 0;
         for (GroupTrack at: years) {
             mYears.getItems().add(new CheckMenuItem(String.valueOf(at.getYear())));
         }
 
-        //Event handler, wurde hier gemacht da die variablen (laut fehlermeldung) fix sein müssen und bei der vorherigen iteration waren sie es nicht
+        //Event handler, wurde hier implementiert, da die variablen (laut fehlermeldung) fix sein müssen und bei der vorherigen iteration waren sie es nicht
         for (MenuItem cmi: mYears.getItems()) {
             if (cmi != sep && cmi != cmiYearly && cmi != cmiAll) { //es sollen nur actionhandler für dynamische items initialisiert werden
                 CheckMenuItem ci = (CheckMenuItem) cmi;
                 ci.setOnAction(e ->{
                 if (ci.isSelected()) {
+                    /* Fall: zwei Jahre wurden schon ausgewählt */
                     if (year1 != null && year2 != null) {
                         Alert alert = new Alert(Alert.AlertType.WARNING);
                         alert.setTitle("WARNING");
                         alert.setHeaderText("You can only compare 2 ");
                         alert.setContentText("The first one you selected got deselected");
 
-                        //deselektieren eines items
+                        //Deselektieren eines Items
                         for (MenuItem mi: mYears.getItems()) {
                             CheckMenuItem findSelected = (CheckMenuItem) mi;
                             if (findSelected.isSelected()) {
@@ -364,33 +386,34 @@ public class TrackManagerController implements Initializable,
 
                             }}
                      else {
-                        if (year1 == null) // setzt die jahr1 für vergleich
+                        if (year1 == null) // falls nur 0 oder 1 Jahr ausgewählt...
                         {
                             year1 = ci.getText();
                         }
 
-                        else //noinspection ConstantConditions
-                            if (year2 == null) // setzt die jahr1 für vergleich
+                        else
+                            if (year2 == null) // falls 0 oder 1 Jahr ausgewählt...
                         {
                             year2= ci.getText();
                         }
                     }
                 }
-                else { //bei deselektion
+                /* Fall für Deselektion */
+                else {
                     if (year1!= null)
                     year1 = null;
                     else year2 = null;}
-
-
                 });
             }
         }
 
-        selected.setSelected(true); //ursprüngliche selektikon
+        selected.setSelected(true); //setzt die ursprüngliche selektion zurück
     }
 
     @FXML
-    private CheckMenuItem cmiYearly;@FXML
+    private CheckMenuItem cmiYearly;
+
+    @FXML
     private SeparatorMenuItem sep;
 
     @FXML
@@ -409,7 +432,15 @@ public class TrackManagerController implements Initializable,
 
     }
 
-    //spult alle Tracks in die Liste, ist notwendig für Vergleichsfunktionalität
+    /**
+     * sets the list tracklist to choose all years
+     */
+
+    /**
+     * executed for years comparison
+     * sets the tracklist to all years
+     * @author Nuray
+     */
     private void setTrackListAll() {
         RadioMenuItem allTracks;
         for (Toggle mi: tgMenuTrack.getToggles()) {
@@ -422,25 +453,34 @@ public class TrackManagerController implements Initializable,
         }
     }
 
+    /**
+     * sets the actionevents for years comparison, makes sure graphing and grouping item and two years items are
+     * selected in order to compare the years
+     */
 
-
-    //Event Handler für Years -> Yearly Comparison
+    /**
+     * executed when clicked on year comparsion, makes sure graphing and grouping item and two years items are
+     * elected in order to compare the years, if not, informs the user about what to do with errors
+     * @author Nuray
+     */
     @FXML
     private void eventYearly(ActionEvent event) throws InvocationTargetException, NoSuchMethodException, IllegalAccessException {
         RadioMenuItem graph = (RadioMenuItem) tgGraph.getSelectedToggle();
         RadioMenuItem view = (RadioMenuItem) tgView.getSelectedToggle();
+
         if (cmiYearly.isSelected()) {
 
-
-
-            if (year1 == null || year2 == null) { //falls jahre noch nicht ausgewählt wurden
+            /* Fall: Jahre noch nicht ausgewählt oder nur eins ausgewählt */
+            if (year1 == null || year2 == null) {
                 Alert alert = new Alert(Alert.AlertType.ERROR);
                 alert.setTitle("Error");
                 alert.setHeaderText("One or two selectedy years missing");
                 alert.setContentText("You have to select 2 years");
                 alert.showAndWait();
                 cmiYearly.setSelected(false);
-            } else if (graph == null || view == null) { //falls graph und view items nicht ausgewählt wurden
+            }
+            /* Graphing oder Grouping Items nicht ausgewähtl */
+            else if (graph == null || view == null) { //falls graph und view items nicht ausgewählt wurden
                 Alert alert = new Alert(Alert.AlertType.ERROR);
                 alert.setTitle("Error");
                 alert.setHeaderText("No view or graph item selected");
@@ -448,15 +488,19 @@ public class TrackManagerController implements Initializable,
                 alert.showAndWait();
                 cmiYearly.setSelected(false);
 
-            } else {
+            }
+            else {
                 String method;
                 method = "get" + graph.getText();
                 setTrackListAll(); //um die Jahre zu vergleichen, muss die trackList alle Tracks zeigen
-                //gruppiert die liste nach letzter selektion bei view
+
+                /* Gruppiert alle Elemente je nachdem, welcher Grouping Item zuletzt gewählt wurde */
                 if (view.getText().equals("Day")) {
                   DayGroup dg = new DayGroup();
                     group = dg.group(backUp);
-                } else if (view.getText().equals("Week")) {
+                }
+
+                else if (view.getText().equals("Week")) {
                     WeekGroup wg = new WeekGroup();
                     group =  wg.group(backUp);
                 } else if (view.getText().equals("Month")) {
@@ -467,6 +511,7 @@ public class TrackManagerController implements Initializable,
                     group = yg.group(backUp);
                 }
 
+                /* erstellt Vergleichsdiagramme */
                 try {
                     createBarChart(method, group, Integer.parseInt(year1), Integer.parseInt(year2));
                 } catch(NoSuchMethodException | InvocationTargetException | IllegalAccessException ex) {
@@ -474,9 +519,9 @@ public class TrackManagerController implements Initializable,
                 }
             }
         }
+        /* bei Deselektion werden die Diagramme zurückgsetzt */
         else {
            changeChart();
-
         }
     }
 
@@ -535,7 +580,15 @@ public class TrackManagerController implements Initializable,
     private void segmentTrackPoints(ActionEvent event) {
 
     }
+    /**
+     * sets the actionevent for when "All Years" are selected, currently only works for 2 years comparison.
+     *
+     */
 
+    /**
+     * executed when clicked on year "All Years", selects 2 years
+     * @author Nuray
+     */
     @FXML
     private void selectAllYears(ActionEvent event) {
 
@@ -557,13 +610,8 @@ public class TrackManagerController implements Initializable,
         }
     }}
 
-
-
     @FXML
     private CheckMenuItem cmiAll;
-
-
-
 
     //TODO: UserGuide Methode Implementieren
     @FXML
@@ -572,6 +620,13 @@ public class TrackManagerController implements Initializable,
     }
 
     /* Tabellen */
+    /**
+     *
+     * creates a table at the maintable with the current tracklist
+     * @author Nuray
+     * @param tl - the tracklist, that should be turned into a table,
+     *        tabl - e which should be initialized (maintable in this case)
+     */
 
     @SuppressWarnings("unchecked") //Grund: https://stackoverflow.com/questions/4257883/warning-for-generic-varargs
     private void showTrackTable(TableView < AbstractTrack > table, ObservableList < AbstractTrack > tl) {
