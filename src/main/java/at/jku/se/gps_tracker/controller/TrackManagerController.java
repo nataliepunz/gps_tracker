@@ -128,7 +128,7 @@ public class TrackManagerController implements Initializable,
             }
         }
         setUpTrackMenuItems();
-        setUpYearsItems(); // menu items for years according to tracklist
+      //  setUpYearsItems(); // menu items for years according to tracklist
 		});
     }
     
@@ -546,7 +546,7 @@ public class TrackManagerController implements Initializable,
     /**
      * sets the actionevents for years comparison, makes sure graphing and grouping item and two years items are
      * selected in order to compare the years
-     */
+     *
 
     /**
      * executed when clicked on year comparsion, makes sure graphing and grouping item and two years items are
@@ -580,7 +580,6 @@ public class TrackManagerController implements Initializable,
                 alert.setContentText("Please select both!");
                 alert.showAndWait();
                 cmiYearly.setSelected(false);
-
             }
             else {
                 String method;
@@ -786,7 +785,7 @@ public class TrackManagerController implements Initializable,
              return row;
 		    });
 
-        /* search functon */
+        /* search function */
         FilteredList < AbstractTrack > filteredData = new FilteredList < >(tl, b ->true);
         keywordTextField.textProperty().addListener((observable, oldValue, newValue) ->filteredData.setPredicate(AbstractTrack ->{
         if (newValue.isEmpty() || newValue.isBlank() || newValue == null) {
