@@ -21,20 +21,26 @@ import java.util.stream.Collectors;
 import static org.junit.jupiter.api.Assertions.*;
 
 /**
- * test Group Track
+ * test Week Group
  * @author Nuray
  *
  */
 
 class WeekGroupTest {
 
-
+    /**
+     * variables that will be used for tests
+     * @author Nuray
+     */
     WeekGroup wg;
     Track track;
     Track track2;
     ObservableList<AbstractTrack> at = FXCollections.observableArrayList();
     ObservableList<GroupTrack> gt = FXCollections.observableArrayList();
-
+    /**
+     * performed before each test
+     * @author Nuray
+     */
     @BeforeEach
     void setup()  {
         wg = new WeekGroup(10, 2021);
@@ -56,15 +62,17 @@ class WeekGroupTest {
                 .trackPoints(Arrays.asList(new TrackPoint("1", 0, null, 0)))
                 .build();
 
-            at.add(track);
-            at.add(track2);
+                at.add(track);
+                at.add(track2);
 
-              wg.add(track);
-              gt.add(wg);
-
-
+                wg.add(track);
+                gt.add(wg);
     }
 
+    /**
+     * checks if first day of the week is selected for given week
+     * @author Nuray
+     */
     @Test
     void getFirstDayOfWeekTest() {
 
@@ -72,6 +80,11 @@ class WeekGroupTest {
         calendar.set(2021, Calendar.MARCH, 8);
         assertEquals(calendar.getTime(), wg.getFirstDayOfWeek(10).getTime());
     }
+
+    /**
+     * checks if last day of the week is selected for given week
+     * @author Nuray
+     */
 
     @Test
     void getLastDayOfWeekTest() {
@@ -81,11 +94,19 @@ class WeekGroupTest {
         assertEquals(calendar.getTime(), wg.getLastDayOfWeek(10).getTime());
     }
 
+    /**
+     * checks if set name produces the expected result
+     * @author Nuray
+     */
     @Test
     void setNameTest() {
         assertEquals("W: 10 (08.03 - 14.03.2021)", wg.getName());
     }
 
+    /**
+     * checks if toString produces the expected result
+     * @author Nuray
+     */
     @Test
     void  toStringTest() {
         assertEquals("WeekGroup{" +
@@ -93,12 +114,20 @@ class WeekGroupTest {
                     '}', wg.toString());
     }
 
+    /**
+     * checks if getWeek gets the right week
+     * @author Nuray
+     */
     @Test
     void  getWeekTest() {
         assertEquals(10, wg.getWeek());
 
 }
 
+    /**
+     * checks if match correctly returns null, when no match is found
+     * @author Nuray
+     */
     @Test
     void  matchTest() {
 
@@ -106,16 +135,14 @@ class WeekGroupTest {
 
     }
 
+    /**
+     * checks if group correctly groups groputrack into weekgroup list
+     * @author Nuray
+     */
     @Test
     void  groupTest() {
         WeekGroup newGroup = new WeekGroup(35, 2021);
         gt.add(newGroup);
         assertEquals(gt.toString(), (wg.group(at)).toString());
-
     }
-
-
-
-
-
 }
