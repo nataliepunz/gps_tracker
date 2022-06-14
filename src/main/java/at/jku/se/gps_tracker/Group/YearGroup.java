@@ -16,7 +16,7 @@ public class YearGroup extends GroupTrack {
         super.year = year;
         setName();
         super.group = "Year";
-        super.xAxis = ""+year;
+        super.xAxis = ""+year; // name for x axis
     }
 
     public YearGroup() {}

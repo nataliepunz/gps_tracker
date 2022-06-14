@@ -49,10 +49,10 @@ public class TrackManagerController implements Initializable,
     final private ToggleGroup tgMenuTrack;
 
 
-    String year1;
-    String year2;
+    String year1; //for year comparison
+    String year2; // for year comparison
 
-    int[] yearsArr;
+    //int[] yearsArr;
 
     private ObservableList < GroupTrack > group = FXCollections.observableArrayList();
 
@@ -75,9 +75,8 @@ public class TrackManagerController implements Initializable,
 
     /**
      * set up the lists and add listeners
-     */
-    
-    /**
+     *
+    **
      * executed at start of the application
      * sets the necessary lists up by loading them in from the datamodel and adding a listener to keep them in sync throughout the runtime
      * @author Ozan 
@@ -109,7 +108,8 @@ public class TrackManagerController implements Initializable,
     /**
      * sets the categories based on the directory folders inside the choosen folder
      * also calls the setUpTrackMenuItems method to re-setUp the RadioMenuItems for the filter choices after changes in the directory
-     * @author Ozan
+     * and calls setUpyearItems, to re initialize years elements
+     *  @author Ozan, Nuray
      * 
      */
     private void setCategories() {
@@ -124,6 +124,7 @@ public class TrackManagerController implements Initializable,
             }
         }
         setUpTrackMenuItems();
+        setUpYearsItems(); // menu items for years according to tracklist
 		});
     }
     
@@ -145,9 +146,6 @@ public class TrackManagerController implements Initializable,
 		});
     }
 
-    /**
-     * set up Menu File
-     */
 
     /**
 	 * calls chooseDirectory to set the new directory in the datamodel
@@ -175,27 +173,7 @@ public class TrackManagerController implements Initializable,
 		  model.changeModel();
           setUpYearsItems();
 	  }
-	
-	  /**
-	  * synchronises the current folder and the database entries
-	  * @author Ozan
-	  * @param event JAVA-FX necessity
-	  */
-	  @FXML
-	  private void updateModel(ActionEvent event) {
-		  syncTracks();
-	  }
 
-	  /**
-	  * closes the connection to the database and closes the application
-	  * @author Ozan
-	  * @param event JAVA-FX necessity
-	  */
-	  @FXML
-	  private void closeApplication(ActionEvent event) {
-		  model.closeConnection();
-		  Platform.exit();
-	  }
 	
 	  /**
 	  * synchronises the current folder and the database entries
@@ -432,21 +410,43 @@ public class TrackManagerController implements Initializable,
 
     }
 
+
+    /**
+     * synchronises the current folder and the database entries
+     * @author Ozan
+     * @param event JAVA-FX necessity
+     */
+    @FXML
+    private void updateModel(ActionEvent event) {
+        syncTracks();
+    }
+
+    /**
+     * closes the connection to the database and closes the application
+     * @author Ozan
+     * @param event JAVA-FX necessity
+     */
+    @FXML
+    private void closeApplication(ActionEvent event) {
+        model.closeConnection();
+        Platform.exit();
+    }
+
     /**
      * sets the list tracklist to choose all years
      */
 
     /**
      * executed for years comparison
-     * sets the tracklist to all years
+     * sets the tracklist to all years by setting set selected of allyears menu items true
      * @author Nuray
      */
+
     private void setTrackListAll() {
         RadioMenuItem allTracks;
         for (Toggle mi: tgMenuTrack.getToggles()) {
             allTracks = (RadioMenuItem) mi;
             if (Objects.equals(allTracks.getText(), DataModel.ALL_TRACK_KEYWORD)) {
-
                 allTracks.setSelected(true);
             }
             break;
@@ -462,6 +462,9 @@ public class TrackManagerController implements Initializable,
      * executed when clicked on year comparsion, makes sure graphing and grouping item and two years items are
      * elected in order to compare the years, if not, informs the user about what to do with errors
      * @author Nuray
+     * @throws InvocationTargetException  due to changeChart method
+     * @throws NoSuchMethodException due to changeChart method
+     * @throws IllegalAccessException due to changeChart method
      */
     @FXML
     private void eventYearly(ActionEvent event) throws InvocationTargetException, NoSuchMethodException, IllegalAccessException {
@@ -525,8 +528,6 @@ public class TrackManagerController implements Initializable,
         }
     }
 
-
-
     @FXML
     CheckMenuItem cmiYears;
 
@@ -588,6 +589,7 @@ public class TrackManagerController implements Initializable,
     /**
      * executed when clicked on year "All Years", selects 2 years
      * @author Nuray
+     * @param event, that is being treated
      */
     @FXML
     private void selectAllYears(ActionEvent event) {
@@ -623,9 +625,9 @@ public class TrackManagerController implements Initializable,
     /**
      *
      * creates a table at the maintable with the current tracklist
-     * @author Nuray
+     * @author Nuray except search function
      * @param tl - the tracklist, that should be turned into a table,
-     *        tabl - e which should be initialized (maintable in this case)
+     *        table - table, which should be populated (maintable in this case)
      */
 
     @SuppressWarnings("unchecked") //Grund: https://stackoverflow.com/questions/4257883/warning-for-generic-varargs
@@ -694,6 +696,7 @@ public class TrackManagerController implements Initializable,
              return row;
 		    });
 
+        /* search functon */
         FilteredList < AbstractTrack > filteredData = new FilteredList < >(tl, b ->true);
         keywordTextField.textProperty().addListener((observable, oldValue, newValue) ->filteredData.setPredicate(AbstractTrack ->{
         if (newValue.isEmpty() || newValue.isBlank() || newValue == null) {
@@ -727,7 +730,17 @@ public class TrackManagerController implements Initializable,
 		    showErrorPopUpNoWait("TRACK NOT CONFIRMING TO SPECIFICATION!");
 	    }
 	    return new ArrayList<>();
-	}      
+	}
+
+    /**
+     * turns given list into table
+     *
+     * creates a table at the sideTable table with a given list,
+     * in this case, trackpoints of a given track
+     * @author Nuray
+     * @param tp - the trackpoints, that should be turned into a sidetable
+     * table - table, which should be populated (sideTable in this case)
+     */
           
     @SuppressWarnings("unchecked") //Grund: https://stackoverflow.com/questions/4257883/warning-for-generic-varargs
     private void showSideTable(TableView < AbstractTrack > table, ObservableList < AbstractTrack > tp) {
@@ -777,12 +790,21 @@ public class TrackManagerController implements Initializable,
         sideTable = table;
     }
 
-    @SuppressWarnings("unchecked")
+    /**
+     * turns given list into table with grouped elements
+     *
+     * creates a table at the mainTable table with a given list,
+     * in this case, grouped tracklist
+     * @author Nuray
+     * @param tl - the list that should be turned into table
+     */
+
     private void showGroupTable(ObservableList < AbstractTrack > tl) {
 
+        //clear table
         mainTable.getColumns().clear();
 
-        //Create columns
+        //create columns
         TableColumn < AbstractTrack,
                 String > nameCol = new TableColumn < >("Name");
 
@@ -820,41 +842,65 @@ public class TrackManagerController implements Initializable,
                 Number > elevationCol = new TableColumn < >("Elevation");
         elevationCol.setCellValueFactory(cellValue ->new SimpleDoubleProperty((cellValue.getValue().getElevation())));
 
+        //populate table
         mainTable.getColumns().addAll(nameCol, countCol, distanceCol, durationCol, paceCol, speedCol, avgBpmCol, maxBpmCol, elevationCol);
         mainTable.setItems(tl);
 
         //further adjustments
         mainTable.getSelectionModel().setSelectionMode(SelectionMode.SINGLE);
 
+        // sort by namecol if not month group (month group should not be sorted by name for logical reasonss)
         ObservableList < GroupTrack > temp = FXCollections.observableArrayList();
-        temp.add((GroupTrack) tl.get(0));
+        temp.add((GroupTrack) tl.get(0)); //to check first element
 
-        if (!temp.get(0).getGroup().equals("Month") && !temp.get(0).getGroup().equals("Week")) //months cannot be sorted just by string name, added comparator above
+        if (!temp.get(0).getGroup().equals("Month") && !temp.get(0).getGroup().equals("Week"))
         {
             mainTable.getSortOrder().add(nameCol);
             mainTable.sort();
         }
+
         mainTable.refresh();
     }
 
     @FXML
-    BarChart < String,
-            Object > chart;
+    BarChart < String, Object > chart;
 
-    @SuppressWarnings("unchecked") //
+    /**
+     * turns list into a barchart
+     *
+     * creates a barchart with a given list, name and method type
+     * in this case, grouped tracklist
+     * @author Nuray
+     * @param name - title of barchart
+     * @param methodName, the method name, that will be called to get the data (getDistance, getDuration etc.) of the list elements
+     * @param  list, the list, that the barchart will turned into a barchart with
+     * @throws NoSuchMethodException because of getMethod
+     * @throws InvocationTargetException because of getMethod
+     * @throws IllegalAccessException because of getMethod
+     *
+     *
+     */
+    @SuppressWarnings("unchecked")
     private void createBarChart(String name, String methodName, ObservableList < AbstractTrack > list) throws NoSuchMethodException,
             InvocationTargetException,
             IllegalAccessException {
 
+        // in case of duration, in order to sum, we turn them into minutes
         if (methodName.equals("getDuration")) {
             methodName = "getDurationMinutes";
         }
+
+        // we only show a barchart of average heartbeat
         if (methodName.equals("getHeartbeat")) {
             methodName = "getAverageBPM";
         }
 
+        // gets the method with the methodName
         Method method = Track.class.getMethod(methodName);
+
         chart.setTitle(name);
+
+        /* Setting the Label for Y Axis depending on method */
         chart.getXAxis().setLabel("Track Name");
 
         if (methodName.equals("getDistance"))
@@ -880,11 +926,15 @@ public class TrackManagerController implements Initializable,
             chart.getYAxis().setLabel("Speed");
         }
 
+        /* clears existing data */
         chart.getData().clear();
+
         chart.layout();
         XYChart.Series < String,
                 Object > xy = new XYChart.Series < >();
         xy.setName(name);
+
+        /* in case this is just a regular tracklist, that gets converted into a barchart */
         if (list == trackList) {
             for (AbstractTrack at: trackList) {
                 xy.getData().add(new XYChart.Data < >(at.getName(), method.invoke(at)));
@@ -892,8 +942,8 @@ public class TrackManagerController implements Initializable,
         }
         else {
         boolean weeks = false;
-            //Gruppiert Elemente je nachdem, was ausgewählt wurde
-            if (group.get(0).getGroup().equals("Week")) {
+         /* Setting the label of Y Axis depending on grouping type  */
+            if (group.get(0).getGroup().equals("Week")) { //first elemenent is enough to determinate the grouping type
                 chart.getXAxis().setLabel("Wochen");
                 weeks = true;
             } else if (group.get(0).getGroup().equals("Day")) {
@@ -905,6 +955,9 @@ public class TrackManagerController implements Initializable,
                 chart.getXAxis().setLabel("Jahre");
             }
 
+            /* since XYChart.Data<>(x,y) groups elements according to their x name, we he have to change the name
+            *  of week elements to make sure they are grouped correctly, depending on if all years
+            *  are grouped or only a single year */
         for (GroupTrack gt: group)
             if (weeks)
             { String val;
@@ -916,28 +969,45 @@ public class TrackManagerController implements Initializable,
                 else {
                  val = "W: " +  gt.getWeek();
             }
-                xy.getData().add(new XYChart.Data < >(val, method.invoke(gt)));
+                xy.getData().add(new XYChart.Data < >(val, method.invoke(gt))); // adds data to barchart
             }
         else
-            {xy.getData().add(new XYChart.Data < >(gt.getName(), method.invoke(gt)));}}
+         /* if not week group */
+            {xy.getData().add(new XYChart.Data < >(gt.getName(), method.invoke(gt)));}} //adds data to barchart
 
-        chart.setData(FXCollections.observableArrayList(xy));
+        chart.setData(FXCollections.observableArrayList(xy)); //sets data
 
     }
 
-    /* aktualisiert chart nach änderung der kategorie */
+    /**
+     * refreshes chart
+     *
+     * creates a barchart  based on last selected toggle, calls createBarChart
+     * in this case, grouped tracklist
+     * @author Nuray
+     * @throws NoSuchMethodException because of createBarchart
+     * @throws InvocationTargetException because of createBarchart
+     * @throws IllegalAccessException because of createBarchart
+     *
+     *
+     */
     private void changeChart() throws InvocationTargetException,
             NoSuchMethodException,
             IllegalAccessException {
-        RadioMenuItem rmi = (RadioMenuItem) tgGraph.getSelectedToggle();
+            RadioMenuItem rmi = (RadioMenuItem) tgGraph.getSelectedToggle();
         if (rmi != null) {
             createBarChart(rmi.getText(), "get" + rmi.getText(), trackList);
         }
     }
 
-
-
-    //für die fälle wo man grouptrack benötigt
+    /**
+     * turns a grouptrack list into a abstract track list for those cases, where only
+     * ObservableList < AbstractTrack > are accepted as parameter
+     *
+     * @author Nuray
+     * @return result, returns list of  ObservableList < AbstractTrack > - returns list of this type
+     *
+     */
     private ObservableList < AbstractTrack > turnIntoAbstractTrack(ObservableList < GroupTrack > list) {
 
         ObservableList < AbstractTrack > result = FXCollections.observableArrayList();
@@ -947,8 +1017,23 @@ public class TrackManagerController implements Initializable,
 
     }
 
-    //View Funktionalitäten
-    //Create BarChart mit View Funktionalität wurde hier ausgelagert, um endlose if bedingungen bei chreatebarChart zu vermeiden
+    /**
+     * turns list into a barchart, method different parameters to the other createbarchart
+     * and is meant for creating barcharts for years comparison
+     *
+     * creates a barchart with a given list, name, method type and years
+
+     * @author Nuray
+     * @param year1 - first year to compare with other year
+     * @param year2 - second year to compare with other year
+     * @param methodName, the method name, that will be called to get the data (getDistance, getDuration etc.) of the list elements
+     * @param  list, the list, that the barchart will turned into a barchart with
+     * @throws NoSuchMethodException because of getMethod
+     * @throws InvocationTargetException because of getMethod
+     * @throws IllegalAccessException because of getMethod
+     *
+     *
+     */
     @SuppressWarnings("unchecked")
     private void createBarChart(String methodName, ObservableList < GroupTrack > list, int year1, int year2) throws NoSuchMethodException,
             InvocationTargetException,
@@ -1005,18 +1090,17 @@ public class TrackManagerController implements Initializable,
 
         }
          Set<String> cat = new LinkedHashSet<>();
-        //Hinzufügen von Datenreihen
 
         for (GroupTrack gt: list)
+            /* populates either first or second series with data, depending on year */
 
             if (gt.getYear() == year1) { //getxAxis dient dazu, dass alle einheitlich heißen ansonsten wäre das nicht der Fall, bsp. August 2020 und August 2021
                 series1.getData().add(new XYChart.Data<>(gt.getxAxis(), method.invoke(gt)));
-                cat.add(String.valueOf(gt.getxAxis()));
+                cat.add(String.valueOf(gt.getxAxis())); //adds x axis name values to categoires list for sorting them later
             } else if (gt.getYear() == year2) {
                 series2.getData().add(new XYChart.Data<>(gt.getxAxis(), method.invoke(gt)));
-                cat.add(String.valueOf(gt.getxAxis()));
+                cat.add(String.valueOf(gt.getxAxis()));  //adds x axis name values to categoires list for sorting them later
             }
-
 
         chart.getData().addAll(series1, series2);
 
@@ -1024,19 +1108,27 @@ public class TrackManagerController implements Initializable,
        ObservableList<String> sortedCat = FXCollections.observableArrayList(cat);
 
        if (days) {
-           Collections.sort(sortedCat); //da xAxis bei groupDay bindestrich enthält
+           Collections.sort(sortedCat); //da xAxis bei groupDay bindestrich enthält -> string
         }
         else {
-            sortedCat.sort(Comparator.comparingInt(Integer::parseInt));}
+            sortedCat.sort(Comparator.comparingInt(Integer::parseInt));} //sorts according to int values
+
+        //changes the category  y axis names
        ((CategoryAxis) chart.getXAxis()).setCategories(sortedCat);
-       chart.getXAxis().setAutoRanging(true);
 
-
-
-
-
+        // sorts the categories
+        chart.getXAxis().setAutoRanging(true);
     }
 
+    /**
+     * intializes and
+     * calls a bunch of methods with initialization to set necessary elements and
+     * directories
+     *
+     * @author Ozan, Nuray
+     * @param arg0
+     * @param arg1
+     */
     @Override
     public void initialize(URL arg0, ResourceBundle arg1) {
         setUpLists();
@@ -1044,17 +1136,18 @@ public class TrackManagerController implements Initializable,
 		setUpMenuTrack();
 		syncTracks();
         showTrackTable(mainTable, trackList);
-        backUp = trackList;
-        setUpYearsItems();
+        backUp = trackList; //since filteredLists cause issue when used again
+        setUpYearsItems(); // menu items for years according to tracklist
         initializeHandlers();
-
     }
-
+    /**
+     * intializes  action event handlers of toggle group view and graph
+     * to avoid click events being ignored at first click
+     * @author  Nuray
+     */
     public void initializeHandlers() {
-		/* vergewissert, dass events beim ersten klick nicht ignoriert werden.
-			deshalb werden handlers so angelegt, statt in fxml zu definieren
-			 */
 
+        /* action event handler for tgGraph */
         tgGraph.selectedToggleProperty().addListener((ov, old_toggle, new_toggle) ->{
         if (tgGraph.getSelectedToggle() != null) {
             RadioMenuItem selectedItem = (RadioMenuItem) tgGraph.getSelectedToggle();
@@ -1062,8 +1155,10 @@ public class TrackManagerController implements Initializable,
 
             String method = "get" + selectedItem.getText();
 
+            /* if view was selected, group and create a barchart with group list */
             if (rmi != null) {
-                if (cmiYearly.isSelected()) { //falls ausgewählt, während yearly comparison noch immer selektiert ist
+                /* if yearly comparison is selected, call the createbarchart method for yearly comparisons */
+                if (cmiYearly.isSelected()) {
                     if (year1 != null && year2 != null) {
                         try {
                             createBarChart(method, group, Integer.parseInt(year1), Integer.parseInt(year2));
@@ -1071,8 +1166,8 @@ public class TrackManagerController implements Initializable,
                             e.printStackTrace();
                         }
                     }
-                } else {
-
+                } else
+                {
                     try {
                         createBarChart(selectedItem.getText(), method, turnIntoAbstractTrack(group));
                     } catch(NoSuchMethodException | IllegalAccessException | InvocationTargetException e) {
@@ -1092,6 +1187,7 @@ public class TrackManagerController implements Initializable,
         }
 		});
 
+        /* action event handler for tgView */
         tgView.selectedToggleProperty().addListener((ov, old_toggle, new_toggle) ->{
         if (tgView.getSelectedToggle() != null) {
             RadioMenuItem selectedItem = (RadioMenuItem) tgView.getSelectedToggle();
@@ -1099,10 +1195,11 @@ public class TrackManagerController implements Initializable,
             String method;
 
             group.clear();
+            // calls setTrackList in order to have access to tracklist of all years
             if (year1 != null && year2 != null && cmiYearly.isSelected()) {
                 setTrackListAll();
             }
-            //Gruppiert Elemente je nachdem, was ausgewählt wurde
+           /* groups elements according to selected menu item */
             if (selectedItem.getText().equals("Day")) {
                 DayGroup dg = new DayGroup();
                 group = dg.group(backUp);
@@ -1117,9 +1214,10 @@ public class TrackManagerController implements Initializable,
                 group = yg.group(backUp);
             }
 
+            //create group table
             showGroupTable(turnIntoAbstractTrack(group));
 
-            //wenn auch ein graph item ausgewählt...
+            /* if tgView wa selected, create barchars accordingly */
             if (rmi != null) {
                 method = "get" + rmi.getText();
                 if (cmiYearly.isSelected() && year1 != null & year2 != null) { //falls auch view funktionalität ausgewählt
@@ -1139,7 +1237,5 @@ public class TrackManagerController implements Initializable,
             }
         }
 		});
-
     }
-
 }
