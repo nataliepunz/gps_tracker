@@ -462,10 +462,12 @@ public class TrackManagerController implements Initializable,
 
             //if test feld über Segment dann werden die Werte gepeichert sonst weiter
             if ((d + track.getDistance()) >= meters) {
-                if(speed != 0) speed = speed / count;
-                if(a_bpm != 0) a_bpm = a_bpm / count;
-                if(eva != 0) eva = eva / count;
-                n = new TrackPoint(seg + number, d, duration, pace.dividedBy(count), speed, a_bpm, m_bpm, eva);
+                if(speed != 0 && count != 0) speed = speed / count;
+                if(a_bpm != 0 && count != 0) a_bpm = a_bpm / count;
+                if(eva != 0 && count != 0) eva = eva / count;
+                if(pace != null && count != 0) pace.dividedBy(count);
+
+                n = new TrackPoint(seg + number, d, duration, pace, speed, a_bpm, m_bpm, eva);
                 at.add((TrackPoint) n);
                 number++;
                 count = 0;
@@ -492,7 +494,11 @@ public class TrackManagerController implements Initializable,
             test = test + d;
         }
         if(ausgabe == false) {
-            n = new TrackPoint(seg + number, d, duration, pace.dividedBy(count), speed / count, a_bpm / count, m_bpm, eva/count);
+            if(speed != 0 && count != 0) speed = speed / count;
+            if(a_bpm != 0 && count != 0) a_bpm = a_bpm / count;
+            if(eva != 0 && count != 0) eva = eva / count;
+            if(pace != null && count != 0) pace.dividedBy(count);
+            n = new TrackPoint(seg + number, d, duration, pace, speed, a_bpm, m_bpm, eva);
             at.add((TrackPoint) n);
         }
 
