@@ -8,6 +8,10 @@ import java.time.Duration;
  */
 public class TrackPoint extends AbstractTrack {
 
+	//for SideTable
+	protected Duration pace;
+	protected double speed;
+
 	/**
 	 * constructor for a TrackPoint without averageBPM and maxmimumBPM, like for GPX-Tracks
 	 * @author Ozan
@@ -34,4 +38,16 @@ public class TrackPoint extends AbstractTrack {
 					  int maximumBPM, double elevation) {
 		super(number,distance,duration,averageBPM,maximumBPM,elevation);
 	}
+
+	public TrackPoint(){
+
+	}
+
+	public TrackPoint(String number, double distance, Duration duration, Duration pace, double speed, int averageBPM, int maximumBPM, double elevation) {
+		super(number,distance,duration, averageBPM,maximumBPM,elevation);
+		//
+		this.pace = pace;
+		this.speed = speed;
+	}
+
 }

@@ -6,8 +6,9 @@ import at.jku.se.gps_tracker.data.SQLRollbackException;
 import at.jku.se.gps_tracker.model.AbstractTrack;
 import at.jku.se.gps_tracker.model.DataModel;
 
-import at.jku.se.gps_tracker.model.Track;
 import at.jku.se.gps_tracker.model.TrackPoint;
+import java.time.Duration;
+import at.jku.se.gps_tracker.model.Track;
 import javafx.application.Platform;
 import javafx.beans.property. * ;
 import javafx.collections.FXCollections;
@@ -66,6 +67,10 @@ public class TrackManagerController implements Initializable,
 
     @FXML
     private Menu mYears;
+
+    @FXML
+    private ToggleGroup tgSegment;
+
 
     public TrackManagerController(DataModel model) {
         this.model = model;
@@ -435,13 +440,99 @@ public class TrackManagerController implements Initializable,
     private TableView < AbstractTrack > sideTable;
 
     @FXML
+    private TableView < AbstractTrack > sideTableBackup;
+
+    @FXML
     private TextField keywordTextField;
 
     /* Action Handler für die Segment MenuItems
      * TODO Methoden sinnvoll implementieren */
     @FXML
-    private void segment1m(ActionEvent event) {
+    private void segmentTracks(ActionEvent event) {
 
+        /**
+         * Der Inhalt des Sidetables wird mittels sideTableBackup geladen
+         * die enthaltenen Tracks werden durchlaufen und Segmentiert
+         * Die Segmentierte Tabele wird der neue SideTable
+         */
+
+        ObservableList<AbstractTrack> t = FXCollections.observableArrayList(sideTableBackup.getItems());
+        ObservableList<AbstractTrack> at = sideTableBackup.getItems();
+        at.clear();
+
+        int meters = 10;
+        boolean check_trackPoints = false;
+
+        RadioMenuItem rmi = (RadioMenuItem) tgSegment.getSelectedToggle();
+
+        switch (rmi.getText()) {
+            case "1 m" -> meters = 1;
+            case "10 m" -> meters = 10;
+            case "100 m" -> meters = 100;
+            case "400 m" -> meters = 400;
+            case "500 m" -> meters = 500;
+            case "1.000 m" -> meters = 1000;
+            case "5.000 m" -> meters = 5000;
+            case "10.000 m" -> meters = 10000;
+            case "1/4 Marathon" -> meters = 10550;
+            case "1/2 Marathon" -> meters = 21100;
+            case "TrackPoints" -> check_trackPoints = true;
+        }
+
+        int count = 0;
+        int number = 1;
+        String seg = "s ";
+        double d = 0.0;
+        Duration duration = Duration.ofSeconds(0);
+        Duration pace = Duration.ofSeconds(0);
+        double speed = 0.0;
+        int a_bpm = 0;
+        int m_bpm = 0;
+        double eva = 0.0;
+        double test = 0;
+
+        AbstractTrack n;
+        boolean ausgabe = true;
+        for (AbstractTrack track : t) {
+
+            //if test feld über Segment dann werden die Werte gepeichert sonst weiter
+            if ((d + track.getDistance()) >= meters) {
+                if(speed != 0) speed = speed / count;
+                if(a_bpm != 0) a_bpm = a_bpm / count;
+                if(eva != 0) eva = eva / count;
+                n = new TrackPoint(seg + number, d, duration, pace.dividedBy(count), speed, a_bpm, m_bpm, eva);
+                at.add((TrackPoint) n);
+                number++;
+                count = 0;
+                d = 0.0;
+                duration = Duration.ofSeconds(0);
+                pace = Duration.ofSeconds(0);
+                speed = 0.0;
+                a_bpm = 0;
+                m_bpm = 0;
+                eva = 0.0;
+                test = 0;
+                ausgabe = true;
+            }
+
+            ausgabe = false;
+            count++;
+            d = d + track.getDistance();
+            duration = duration.plus(track.getDuration());
+            pace = pace.plus(track.getPace());
+            speed = speed + track.getSpeed();
+            a_bpm = a_bpm + track.getAverageBPM();
+            if (m_bpm < track.getMaximumBPM()) m_bpm = track.getMaximumBPM();
+            eva = eva + track.getElevation();
+            test = test + d;
+        }
+        if(ausgabe == false) {
+            n = new TrackPoint(seg + number, d, duration, pace.dividedBy(count), speed / count, a_bpm / count, m_bpm, eva/count);
+            at.add((TrackPoint) n);
+        }
+
+        sideTable.setItems(at);
+        if(check_trackPoints) sideTable = sideTableBackup;
     }
 
     //spult alle Tracks in die Liste, ist notwendig für Vergleichsfunktionalität
@@ -456,8 +547,6 @@ public class TrackManagerController implements Initializable,
             break;
         }
     }
-
-
 
     //Event Handler für Years -> Yearly Comparison
     @FXML
@@ -520,56 +609,6 @@ public class TrackManagerController implements Initializable,
     @FXML
     CheckMenuItem cmiYears;
 
-
-    @FXML
-    private void segment10m(ActionEvent event) {
-
-    }
-
-    @FXML
-    private void segment100m(ActionEvent event) {
-
-    }
-
-    @FXML
-    private void segment400m(ActionEvent event) {
-
-    }
-
-    @FXML
-    private void segment500m(ActionEvent event) {
-
-    }
-
-    @FXML
-    private void segment1000m(ActionEvent event) {
-
-    }
-
-    @FXML
-    private void segment5000m(ActionEvent event) {
-
-    }
-
-    @FXML
-    private void segment10000m(ActionEvent event) {
-
-    }
-
-    @FXML
-    private void segmentQuarterMarathon(ActionEvent event) {
-
-    }
-
-    @FXML
-    private void segmentHalfMarathon(ActionEvent event) {
-
-    }
-
-    @FXML
-    private void segmentTrackPoints(ActionEvent event) {
-
-    }
 
     @FXML
     private void selectAllYears(ActionEvent event) {
@@ -757,6 +796,7 @@ public class TrackManagerController implements Initializable,
         table.refresh();
 
         sideTable = table;
+        sideTableBackup = table;
     }
 
     @SuppressWarnings("unchecked")
