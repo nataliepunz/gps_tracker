@@ -34,4 +34,19 @@ public class TrackPoint extends AbstractTrack {
 					  int maximumBPM, double elevation) {
 		super(number,distance,duration,averageBPM,maximumBPM,elevation);
 	}
+
+	public TrackPoint(){
+
+	}
+
+	//for SideTable
+	protected Duration pace;
+	protected double speed;
+
+	public TrackPoint(String number, double distance, Duration duration, Duration pace, double speed, int averageBPM, int maximumBPM, double elevation) {
+		super(number,distance,duration, averageBPM,maximumBPM,elevation);
+		//
+		this.pace = pace;
+		this.speed = speed;
+	}
 }
