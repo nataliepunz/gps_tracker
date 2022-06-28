@@ -507,6 +507,7 @@ public class TrackManagerController implements Initializable,
             test = test + d;
         }
 
+
         if(ausgabe == false) {
             if(speed != 0 && count != 0) speed = speed / count;
             if(a_bpm != 0 && count != 0) a_bpm = a_bpm / count;
