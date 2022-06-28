@@ -914,7 +914,7 @@ public class TrackManagerController implements Initializable,
 
         TableColumn < GroupTrack,
                 Number > distanceCol = new TableColumn < >("Distance");
-        distanceCol.setCellValueFactory(cellValue ->new SimpleDoubleProperty(cellValue.getValue().getDistance()));
+        distanceCol.setCellValueFactory(cellValue ->cellValue.getValue().getDistanceProperty());
 
         TableColumn < GroupTrack,
                 String > durationCol = new TableColumn < >("Duration");
@@ -926,7 +926,7 @@ public class TrackManagerController implements Initializable,
 
         TableColumn < GroupTrack,
                 Number > speedCol = new TableColumn < >("Speed");
-        speedCol.setCellValueFactory(cellValue ->new SimpleDoubleProperty((cellValue.getValue().getSpeed())));
+        speedCol.setCellValueFactory(cellValue ->cellValue.getValue().getSpeedProperty());
 
         TableColumn < GroupTrack,
                 Number > avgBpmCol = new TableColumn < >("Average bpm");
@@ -938,7 +938,7 @@ public class TrackManagerController implements Initializable,
 
         TableColumn < GroupTrack,
                 Number > elevationCol = new TableColumn < >("Elevation");
-        elevationCol.setCellValueFactory(cellValue ->new SimpleDoubleProperty((cellValue.getValue().getElevation())));
+        elevationCol.setCellValueFactory(cellValue ->cellValue.getValue().getElevationProperty());
 
         //populate table
         mainTable.getColumns().addAll(nameCol, countCol, distanceCol, durationCol, paceCol, speedCol, avgBpmCol, maxBpmCol, elevationCol);
