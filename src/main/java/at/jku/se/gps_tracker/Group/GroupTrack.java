@@ -19,7 +19,7 @@ public abstract class GroupTrack extends AbstractTrack {
     protected double speed;
     protected Duration pace;
 
-    ObservableList<GroupTrack> groupList;
+    protected ObservableList<GroupTrack> groupList;
 
     protected String xAxis; //dient für die vergleichsfunktionalität
     String group; // dient für die group funktionalität
@@ -146,5 +146,10 @@ public abstract class GroupTrack extends AbstractTrack {
     //gets the last object of a list and adds something into the list of the element
     public void addToLastElementInList (ObservableList<GroupTrack> list, Track track) {
         list.get(list.size() - 1).add(track);
+    }
+
+    public List<AbstractTrack> getList()
+    {
+        return tracks;
     }
 }

@@ -60,7 +60,6 @@ public class MonthGroup extends GroupTrack {
     @Override
     public ObservableList<GroupTrack> group(ObservableList<AbstractTrack> list) {
 
-
         super.groupList = FXCollections.observableArrayList();
         ObservableList<Track> tracks = FXCollections.observableArrayList();
 
@@ -84,5 +83,5 @@ public class MonthGroup extends GroupTrack {
         Comparator<GroupTrack> comparator = Comparator.comparingInt(GroupTrack::getYear).thenComparing(GroupTrack::getMonth);
         FXCollections.sort(groupList, comparator);
         return groupList;
-
-    }}
+    }
+}

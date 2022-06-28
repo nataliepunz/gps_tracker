@@ -53,7 +53,6 @@ public class DataModel {
 	 * @author Ozan
 	 */
 	private String directory;
-	
 	/**
 	 * the directory folders inside the directory folder
 	 * basis for the filtering options
@@ -162,7 +161,6 @@ public class DataModel {
 			}
 		}
 	}
-	
 
 	/**
 	 * checks and returns (based on the boolean value) either the difference between drive and database or the difference between database and drive in a specified folder
@@ -194,7 +192,6 @@ public class DataModel {
 			return dataBaseTracks;
 		}
 	}
-	
 	/**
 	 * add a given Track to the the database and to the tracklist
 	 * @author Ozan
@@ -207,7 +204,6 @@ public class DataModel {
 		trackList.add(t);
 		conn.addTrackToDataBase(t);
 	}
-	
 	/**
 	 * remove a given FileName from the tracklist and the database
 	 * @author Ozan
@@ -218,7 +214,6 @@ public class DataModel {
 		conn.removeTrackFromDataBase(fileName, directoryFolder);
 		removeTrackFromTrackList(new ArrayList<>(Arrays.asList(fileName, directoryFolder)));
 	}
-	
 	/**
 	 * implementation of the remove logic for the tracklist
 	 * @author Ozan
@@ -231,7 +226,6 @@ public class DataModel {
 			.orElse(null)
 		);
 	}
-	
 	/**
 	 * get the trackpoints for a given track
 	 * either returns the trackPoints already loaded into the program or reads them from the associated file
@@ -251,7 +245,6 @@ public class DataModel {
 			return track.getTrackPoints();
 		}
 	}
-	
 	/**
 	 * returns the tracks inside of a given folder
 	 * @author Ozan
@@ -276,7 +269,6 @@ public class DataModel {
 	private String getTrackPath(String fileName, String directoryFolder) {
 		return FilenameUtils.concat(FilenameUtils.concat(directory, directoryFolder),fileName);
 	}
-	
 	/**
 	 * returns the list of tracks
 	 * @author Ozan
@@ -322,6 +314,4 @@ public class DataModel {
 	public boolean checkFolderExists(String directoryFolder) {
 		return new File(FilenameUtils.concat(directory,directoryFolder)).exists();
 	}
-	
-	
 }

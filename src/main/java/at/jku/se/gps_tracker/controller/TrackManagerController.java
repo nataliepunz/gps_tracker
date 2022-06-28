@@ -399,10 +399,11 @@ public class TrackManagerController implements Initializable,
     private SeparatorMenuItem sep;
 
     @FXML
-    private TableView < AbstractTrack > mainTable;
+    private TableView  mainTable;
 
     @FXML
-    private TableView < AbstractTrack > sideTable;
+    private TableView sideTable;
+
 
     @FXML
     private TextField keywordTextField;
@@ -895,46 +896,46 @@ public class TrackManagerController implements Initializable,
      * @param tl - the list that should be turned into table
      */
 
-    private void showGroupTable(ObservableList < AbstractTrack > tl) {
+    private void showGroupTable(ObservableList < GroupTrack > tl) {
 
         //clear table
         mainTable.getColumns().clear();
 
         //create columns
-        TableColumn < AbstractTrack,
+        TableColumn < GroupTrack,
                 String > nameCol = new TableColumn < >("Name");
 
         nameCol.setCellValueFactory(cellValue ->new SimpleStringProperty(cellValue.getValue().getName()));
 
-        TableColumn < AbstractTrack,
+        TableColumn < GroupTrack,
                 Number > countCol = new TableColumn < >("Count");
         countCol.setCellValueFactory(cellValue ->new SimpleDoubleProperty(cellValue.getValue().getCount()));
 
-        TableColumn < AbstractTrack,
+        TableColumn < GroupTrack,
                 Number > distanceCol = new TableColumn < >("Distance");
         distanceCol.setCellValueFactory(cellValue ->new SimpleDoubleProperty(cellValue.getValue().getDistance()));
 
-        TableColumn < AbstractTrack,
+        TableColumn < GroupTrack,
                 String > durationCol = new TableColumn < >("Duration");
         durationCol.setCellValueFactory(cellValue ->cellValue.getValue().getDurationProperty());
 
-        TableColumn < AbstractTrack,
+        TableColumn < GroupTrack,
                 String > paceCol = new TableColumn < >("Pace");
         paceCol.setCellValueFactory(cellValue ->(cellValue.getValue().getPaceProperty()));
 
-        TableColumn < AbstractTrack,
+        TableColumn < GroupTrack,
                 Number > speedCol = new TableColumn < >("Speed");
         speedCol.setCellValueFactory(cellValue ->new SimpleDoubleProperty((cellValue.getValue().getSpeed())));
 
-        TableColumn < AbstractTrack,
+        TableColumn < GroupTrack,
                 Number > avgBpmCol = new TableColumn < >("Average bpm");
         avgBpmCol.setCellValueFactory(cellValue ->new SimpleIntegerProperty((cellValue.getValue().getAverageBPM())));
 
-        TableColumn < AbstractTrack,
+        TableColumn < GroupTrack,
                 Number > maxBpmCol = new TableColumn < >("Max bpm");
         maxBpmCol.setCellValueFactory(cellValue ->new SimpleIntegerProperty((cellValue.getValue().getMaximumBPM())));
 
-        TableColumn < AbstractTrack,
+        TableColumn < GroupTrack,
                 Number > elevationCol = new TableColumn < >("Elevation");
         elevationCol.setCellValueFactory(cellValue ->new SimpleDoubleProperty((cellValue.getValue().getElevation())));
 
@@ -956,7 +957,19 @@ public class TrackManagerController implements Initializable,
         }
 
         mainTable.refresh();
+
+        // add event for rows
+            mainTable.setRowFactory(tv ->{
+            TableRow <GroupTrack > row = new TableRow <>();
+            row.setOnMouseClicked(event ->{
+                GroupTrack rowData = row.getItem();
+                showSideTable(sideTable, FXCollections.observableArrayList(rowData.getList()));
+            });
+            return row;
+        });
     }
+
+
 
     @FXML
     BarChart < String, Object > chart;
@@ -1311,7 +1324,7 @@ public class TrackManagerController implements Initializable,
             }
 
             //create group table
-            showGroupTable(turnIntoAbstractTrack(group));
+            showGroupTable(group);
 
             /* if tgView wa selected, create barchars accordingly */
             if (rmi != null) {
