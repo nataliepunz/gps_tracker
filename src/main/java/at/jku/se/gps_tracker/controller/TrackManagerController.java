@@ -6,6 +6,8 @@ import at.jku.se.gps_tracker.model.DataModel;
 
 import at.jku.se.gps_tracker.model.Track;
 import at.jku.se.gps_tracker.model.TrackPoint;
+
+import java.awt.geom.NoninvertibleTransformException;
 import java.time.Duration;
 import javafx.application.Platform;
 import javafx.beans.property. * ;
@@ -308,6 +310,16 @@ public class TrackManagerController implements Initializable,
 			model.updateTrackListFromDB();
 			syncTracks();
 			changeChart();
+
+            RadioMenuItem selected = (RadioMenuItem) tgView.getSelectedToggle();
+            if (selected!=null)
+            {
+                selected.setSelected(false);
+                selected.setSelected(true);
+                mainTable.refresh();
+            }
+            else {
+            showTrackTable(mainTable, trackList);}
 		}
 	}
 
@@ -565,11 +577,13 @@ public class TrackManagerController implements Initializable,
      */
     @FXML
     private void eventYearly(ActionEvent event) throws InvocationTargetException, NoSuchMethodException, IllegalAccessException {
+
+        TableView temp = mainTable;
+        ObservableList<AbstractTrack> tl = trackList;
         RadioMenuItem graph = (RadioMenuItem) tgGraph.getSelectedToggle();
         RadioMenuItem view = (RadioMenuItem) tgView.getSelectedToggle();
 
         if (cmiYearly.isSelected()) {
-
             /* Fall: Jahre noch nicht ausgewählt oder nur eins ausgewählt */
             if (year1 == null || year2 == null) {
                 Alert alert = new Alert(Alert.AlertType.ERROR);
@@ -621,11 +635,16 @@ public class TrackManagerController implements Initializable,
         /* bei Deselektion werden die Diagramme zurückgsetzt */
         else {
            changeChart();
+           mainTable.refresh();
+
         }
     }
 
     @FXML
     CheckMenuItem cmiYears;
+
+    @FXML
+    Menu mColumns;
 
 
     @FXML
@@ -729,7 +748,7 @@ public class TrackManagerController implements Initializable,
     @SuppressWarnings("unchecked") //Grund: https://stackoverflow.com/questions/4257883/warning-for-generic-varargs
     private void showTrackTable(TableView < AbstractTrack > table, ObservableList < AbstractTrack > tl) {
         //clear table
-        table.getItems().clear();
+        //table.getItems().clear();
         table.getColumns().clear();
 
         //Create columns
@@ -903,40 +922,40 @@ public class TrackManagerController implements Initializable,
         mainTable.getColumns().clear();
 
         //create columns
-        TableColumn < GroupTrack,
+        TableColumn < AbstractTrack,
                 String > nameCol = new TableColumn < >("Name");
 
         nameCol.setCellValueFactory(cellValue ->new SimpleStringProperty(cellValue.getValue().getName()));
 
-        TableColumn < GroupTrack,
+        TableColumn < AbstractTrack,
                 Number > countCol = new TableColumn < >("Count");
         countCol.setCellValueFactory(cellValue ->new SimpleDoubleProperty(cellValue.getValue().getCount()));
 
-        TableColumn < GroupTrack,
+        TableColumn < AbstractTrack,
                 Number > distanceCol = new TableColumn < >("Distance");
         distanceCol.setCellValueFactory(cellValue ->cellValue.getValue().getDistanceProperty());
 
-        TableColumn < GroupTrack,
+        TableColumn < AbstractTrack,
                 String > durationCol = new TableColumn < >("Duration");
         durationCol.setCellValueFactory(cellValue ->cellValue.getValue().getDurationProperty());
 
-        TableColumn < GroupTrack,
+        TableColumn < AbstractTrack,
                 String > paceCol = new TableColumn < >("Pace");
         paceCol.setCellValueFactory(cellValue ->(cellValue.getValue().getPaceProperty()));
 
-        TableColumn < GroupTrack,
+        TableColumn < AbstractTrack,
                 Number > speedCol = new TableColumn < >("Speed");
         speedCol.setCellValueFactory(cellValue ->cellValue.getValue().getSpeedProperty());
 
-        TableColumn < GroupTrack,
+        TableColumn < AbstractTrack,
                 Number > avgBpmCol = new TableColumn < >("Average bpm");
         avgBpmCol.setCellValueFactory(cellValue ->new SimpleIntegerProperty((cellValue.getValue().getAverageBPM())));
 
-        TableColumn < GroupTrack,
+        TableColumn < AbstractTrack,
                 Number > maxBpmCol = new TableColumn < >("Max bpm");
         maxBpmCol.setCellValueFactory(cellValue ->new SimpleIntegerProperty((cellValue.getValue().getMaximumBPM())));
 
-        TableColumn < GroupTrack,
+        TableColumn < AbstractTrack,
                 Number > elevationCol = new TableColumn < >("Elevation");
         elevationCol.setCellValueFactory(cellValue ->cellValue.getValue().getElevationProperty());
 
@@ -1045,7 +1064,8 @@ public class TrackManagerController implements Initializable,
         xy.setName(name);
 
         /* in case this is just a regular tracklist, that gets converted into a barchart */
-        if (list == trackList) {
+        if (tgView.getSelectedToggle() == null || (((RadioMenuItem) tgView.getSelectedToggle()).getText().equals("Clear Selection")))
+        {
             for (AbstractTrack at: trackList) {
                 xy.getData().add(new XYChart.Data < >(at.getName(), method.invoke(at)));
             }
@@ -1083,7 +1103,8 @@ public class TrackManagerController implements Initializable,
             }
         else
          /* if not week group */
-            {xy.getData().add(new XYChart.Data < >(gt.getName(), method.invoke(gt)));}} //adds data to barchart
+            {xy.getData().add(new XYChart.Data < >(gt.getName(), method.invoke(gt)));}
+        } //adds data to barchart
 
         chart.setData(FXCollections.observableArrayList(xy)); //sets data
 
@@ -1230,6 +1251,14 @@ public class TrackManagerController implements Initializable,
         chart.getXAxis().setAutoRanging(true);
     }
 
+    public void clearChart(){
+        chart.getData().clear();
+        chart.setTitle("");
+        chart.getYAxis().setLabel("");
+        chart.getXAxis().setLabel("");
+
+    }
+
     /**
      * intializes and
      * calls a bunch of methods with initialization to set necessary elements and
@@ -1251,7 +1280,7 @@ public class TrackManagerController implements Initializable,
         initializeHandlers();
     }
     /**
-     * intializes  action event handlers of toggle group view and graph
+     * intializes  action event handlers of toggle group view and graph and for menu items of columns
      * to avoid click events being ignored at first click
      * @author  Nuray
      */
@@ -1262,6 +1291,12 @@ public class TrackManagerController implements Initializable,
         if (tgGraph.getSelectedToggle() != null) {
             RadioMenuItem selectedItem = (RadioMenuItem) tgGraph.getSelectedToggle();
             RadioMenuItem rmi = (RadioMenuItem) tgView.getSelectedToggle();
+
+            if (Objects.equals(selectedItem.getText(), "None")) {
+            clearChart();
+            }
+            else{
+
 
             String method = "get" + selectedItem.getText();
 
@@ -1294,17 +1329,37 @@ public class TrackManagerController implements Initializable,
 
             }
 
-        }
+        }}
 		});
 
         /* action event handler for tgView */
         tgView.selectedToggleProperty().addListener((ov, old_toggle, new_toggle) ->{
-        if (tgView.getSelectedToggle() != null) {
+            if (tgView.getSelectedToggle() != null) {
+
             RadioMenuItem selectedItem = (RadioMenuItem) tgView.getSelectedToggle();
             RadioMenuItem rmi = (RadioMenuItem) tgGraph.getSelectedToggle();
             String method;
 
-            group.clear();
+            for ( MenuItem mi: mColumns.getItems())
+            {
+                ((CheckMenuItem) mi).setSelected(true);
+            }
+
+            if (Objects.equals(selectedItem.getText(), "Clear Selection")) {
+
+                showTrackTable(mainTable, trackList);
+                try {
+                    changeChart();
+                } catch (InvocationTargetException e) {
+                    e.printStackTrace();
+                } catch (NoSuchMethodException e) {
+                    e.printStackTrace();
+                } catch (IllegalAccessException e) {
+                    e.printStackTrace();
+                }
+            }
+            else {
+                group.clear();
             // calls setTrackList in order to have access to tracklist of all years
             if (year1 != null && year2 != null && cmiYearly.isSelected()) {
                 setTrackListAll();
@@ -1323,6 +1378,7 @@ public class TrackManagerController implements Initializable,
                 YearGroup yg = new YearGroup();
                 group = yg.group(backUp);
             }
+
 
             //create group table
             showGroupTable(group);
@@ -1346,6 +1402,33 @@ public class TrackManagerController implements Initializable,
                 }
             }
         }
+            }
 		});
+
+        /* action handler for menu columns, hides columns  */
+        for ( MenuItem cmi: mColumns.getItems())
+        {
+            ((CheckMenuItem) cmi).setOnAction(e ->{
+
+                TableColumn selected = null;
+                for (Object tc: mainTable.getColumns())
+
+                {
+                    System.out.println(((TableColumn)tc).getText());
+                    if (((TableColumn)tc).getText().equals(cmi.getText()))
+                {
+                     selected = (TableColumn) tc;
+                break;}}
+
+                if (!((CheckMenuItem) cmi).isSelected())
+                {
+                  selected.setVisible(false);
+                }
+                else {
+                    selected.setVisible(true);
+                }
+            });
+            }
+
+        }
     }
-}

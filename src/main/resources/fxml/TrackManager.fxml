@@ -66,6 +66,9 @@
                             <RadioMenuItem fx:id="miElevation" mnemonicParsing="false" text="Elevation" toggleGroup="$tgGraph" />
                             <RadioMenuItem fx:id="miSpeed" mnemonicParsing="false" text="Speed" toggleGroup="$tgGraph" />
                             <RadioMenuItem fx:id="miHeartbeat" mnemonicParsing="false" text="Heartbeat" toggleGroup="$tgGraph" />
+                     <RadioMenuItem fx:id="miNone" mnemonicParsing="false" text="None" toggleGroup="$tgGraph">
+
+                     </RadioMenuItem>
 
 
                         </Menu>
@@ -79,8 +82,7 @@
                             <RadioMenuItem fx:id="miWeek" mnemonicParsing="false" text="Week" toggleGroup="$tgView" />
                             <RadioMenuItem fx:id="miMonth" mnemonicParsing="false" text="Month" toggleGroup="$tgView" />
                             <RadioMenuItem fx:id="miYear" mnemonicParsing="false" text="Year" toggleGroup="$tgView" />
-
-
+                     <RadioMenuItem fx:id="miView1" mnemonicParsing="false" selected="true" text="Clear Selection" toggleGroup="$tgView" />
                         </Menu>
                         <Menu fx:id="mYears" mnemonicParsing="false" text="Years">
                      <items>
@@ -95,6 +97,17 @@
                             <MenuItem fx:id="miUserGuide" mnemonicParsing="false" onAction="#openUserGuide" text="Open User Guide" />
 
                         </Menu>
+                  <Menu id="m" fx:id="mColumns" mnemonicParsing="false" text="Columns">
+                     <items>
+                        <CheckMenuItem fx:id="cmiMaxBPM" mnemonicParsing="false" selected="true" text="Max bpm" />
+                        <CheckMenuItem fx:id="cmiAvgBPM" mnemonicParsing="false" selected="true" text="Average bpm" />
+                        <CheckMenuItem fx:id="cmiDuration" mnemonicParsing="false" selected="true" text="Duration" />
+                        <CheckMenuItem fx:id="cmiDistance" mnemonicParsing="false" selected="true" text="Distance" />
+                        <CheckMenuItem fx:id="cmiSpeed" mnemonicParsing="false" selected="true" text="Speed" />
+                        <CheckMenuItem fx:id="cmiPace" mnemonicParsing="false" selected="true" text="Pace" />
+                         <CheckMenuItem fx:id="cmiElevation" mnemonicParsing="false" selected="true" text="Elevation" />
+                     </items>
+                  </Menu>
                     </menus>
                 </MenuBar>
             </top>
