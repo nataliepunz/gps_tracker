@@ -987,6 +987,22 @@ public class TrackManagerController implements Initializable,
             });
             return row;
         });
+
+        /* search function */
+        FilteredList < GroupTrack > filteredData = new FilteredList < >(tl, b ->true);
+        keywordTextField.textProperty().addListener((observable, oldValue, newValue) ->filteredData.setPredicate(AbstractTrack ->{
+            if (newValue.isEmpty() || newValue.isBlank() || newValue == null) {
+                return true;
+            }
+            String searchKeyword = newValue.toLowerCase();
+            return AbstractTrack.getName().toLowerCase().contains(searchKeyword);
+        }));
+
+        SortedList < AbstractTrack > sortedData = new SortedList < >(filteredData);
+        sortedData.comparatorProperty().bind(mainTable.comparatorProperty());
+        mainTable.setItems(sortedData);
+
+
     }
 
 
