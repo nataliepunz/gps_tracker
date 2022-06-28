@@ -114,7 +114,7 @@
             <center>
                 <GridPane BorderPane.alignment="CENTER">
                     <columnConstraints>
-                        <ColumnConstraints hgrow="SOMETIMES" maxWidth="565.0" minWidth="10.0" prefWidth="555.0" />
+                        <ColumnConstraints hgrow="SOMETIMES" maxWidth="800.0" minWidth="10.0" prefWidth="555.0" />
                         <ColumnConstraints hgrow="SOMETIMES" maxWidth="584.0" minWidth="10.0" prefWidth="445.0" />
                     </columnConstraints>
                     <rowConstraints>
@@ -123,7 +123,7 @@
                         <RowConstraints maxHeight="572.0" minHeight="10.0" prefHeight="288.0" vgrow="SOMETIMES" />
                     </rowConstraints>
                     <children>
-                        <TableView fx:id="mainTable" minHeight="283.0" prefHeight="283.0" prefWidth="400.0" stylesheets="@../css/mainTable.css" GridPane.hgrow="SOMETIMES" GridPane.rowIndex="1" GridPane.vgrow="SOMETIMES" />
+                        <TableView fx:id="mainTable" minHeight="283.0" prefHeight="283.0" prefWidth="500.0" stylesheets="@../css/mainTable.css" GridPane.hgrow="SOMETIMES" GridPane.rowIndex="1" GridPane.vgrow="SOMETIMES" />
                         <BarChart fx:id="chart" animated="false" maxHeight="550.0" minHeight="550.0" prefHeight="1285.0" prefWidth="400.0" GridPane.columnIndex="1" GridPane.hgrow="SOMETIMES" GridPane.rowIndex="1" GridPane.valignment="TOP" GridPane.vgrow="SOMETIMES">
                             <xAxis>
                                 <CategoryAxis side="BOTTOM" />
