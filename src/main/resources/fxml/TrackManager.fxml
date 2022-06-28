@@ -18,7 +18,7 @@
 <?import javafx.scene.layout.GridPane?>
 <?import javafx.scene.layout.RowConstraints?>
 
-<AnchorPane prefHeight="630.0" prefWidth="800.0" xmlns="http://javafx.com/javafx/18" xmlns:fx="http://javafx.com/fxml/1">
+<AnchorPane minWidth="1000.0" prefHeight="630.0" prefWidth="1000.0" xmlns="http://javafx.com/javafx/18" xmlns:fx="http://javafx.com/fxml/1">
     <children>
         <BorderPane fx:id="borderpane" prefHeight="630.0" prefWidth="1300.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
             <top>
@@ -70,11 +70,11 @@
 
                      </RadioMenuItem>
 
-
-                        </Menu>
+      
+                              </Menu>
                         <Menu fx:id="mView" mnemonicParsing="false" text="View">
 
-                            <RadioMenuItem fx:id="miView" mnemonicParsing="false" text="Day">
+                                  <RadioMenuItem fx:id="miView" mnemonicParsing="false" text="Day">
                                 <toggleGroup>
                                     <ToggleGroup fx:id="tgView" />
                                 </toggleGroup>
@@ -92,11 +92,11 @@
                      </items>
                         </Menu>
 
-                        <Menu fx:id="mHelp" mnemonicParsing="false" text="Help">
+                              <Menu fx:id="mHelp" mnemonicParsing="false" text="Help">
 
-                            <MenuItem fx:id="miUserGuide" mnemonicParsing="false" onAction="#openUserGuide" text="Open User Guide" />
+                                  <MenuItem fx:id="miUserGuide" mnemonicParsing="false" onAction="#openUserGuide" text="Open User Guide" />
 
-                        </Menu>
+                              </Menu>
                   <Menu id="m" fx:id="mColumns" mnemonicParsing="false" text="Columns">
                      <items>
                         <CheckMenuItem fx:id="cmiMaxBPM" mnemonicParsing="false" selected="true" text="Max bpm" />
@@ -114,17 +114,17 @@
             <center>
                 <GridPane BorderPane.alignment="CENTER">
                     <columnConstraints>
-                        <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" prefWidth="100.0" />
-                        <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" prefWidth="100.0" />
+                        <ColumnConstraints hgrow="SOMETIMES" maxWidth="800.0" minWidth="10.0" prefWidth="555.0" />
+                        <ColumnConstraints hgrow="SOMETIMES" maxWidth="584.0" minWidth="10.0" prefWidth="445.0" />
                     </columnConstraints>
                     <rowConstraints>
-                        <RowConstraints maxHeight="-Infinity" minHeight="30.0" prefHeight="30.0" vgrow="SOMETIMES" />
-                        <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
-                        <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
+                        <RowConstraints maxHeight="109.0" minHeight="30.0" prefHeight="33.0" vgrow="SOMETIMES" />
+                        <RowConstraints maxHeight="325.0" minHeight="0.0" prefHeight="281.0" vgrow="SOMETIMES" />
+                        <RowConstraints maxHeight="572.0" minHeight="10.0" prefHeight="288.0" vgrow="SOMETIMES" />
                     </rowConstraints>
                     <children>
-                        <TableView fx:id="mainTable" minHeight="300.0" stylesheets="@../css/mainTable.css" GridPane.hgrow="SOMETIMES" GridPane.rowIndex="1" GridPane.vgrow="SOMETIMES" />
-                        <BarChart fx:id="chart" animated="false" GridPane.hgrow="SOMETIMES" GridPane.rowIndex="2" GridPane.valignment="TOP" GridPane.vgrow="SOMETIMES">
+                        <TableView fx:id="mainTable" minHeight="283.0" prefHeight="283.0" prefWidth="500.0" stylesheets="@../css/mainTable.css" GridPane.hgrow="SOMETIMES" GridPane.rowIndex="1" GridPane.vgrow="SOMETIMES" />
+                        <BarChart fx:id="chart" animated="false" maxHeight="550.0" minHeight="550.0" prefHeight="1285.0" prefWidth="400.0" GridPane.columnIndex="1" GridPane.hgrow="SOMETIMES" GridPane.rowIndex="1" GridPane.valignment="TOP" GridPane.vgrow="SOMETIMES">
                             <xAxis>
                                 <CategoryAxis side="BOTTOM" />
                             </xAxis>
@@ -132,7 +132,7 @@
                                 <NumberAxis side="LEFT" />
                             </yAxis>
                         </BarChart>
-                        <TableView fx:id="sideTable" editable="true" maxHeight="1.7976931348623157E308" minHeight="-Infinity" prefHeight="426.0" prefWidth="500.0" stylesheets="@../css/mainTable.css" GridPane.columnIndex="1" GridPane.hgrow="SOMETIMES" GridPane.rowIndex="1" GridPane.rowSpan="2147483647" GridPane.vgrow="SOMETIMES" />
+                        <TableView fx:id="sideTable" editable="true" maxHeight="1.7976931348623157E308" minHeight="-Infinity" prefHeight="199.0" prefWidth="400.0" stylesheets="@../css/mainTable.css" GridPane.hgrow="SOMETIMES" GridPane.rowIndex="2" GridPane.rowSpan="2147483647" GridPane.vgrow="SOMETIMES" />
                         <TextField fx:id="keywordTextField" promptText="Suche..." />
                     </children>
                 </GridPane>
