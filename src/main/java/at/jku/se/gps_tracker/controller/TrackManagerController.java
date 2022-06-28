@@ -892,6 +892,7 @@ public class TrackManagerController implements Initializable,
      *
      * creates a table at the mainTable table with a given list,
      * in this case, grouped tracklist
+     * when rows are clicked, the tracks in the groups are viewed
      * @author Nuray
      * @param tl - the list that should be turned into table
      */
